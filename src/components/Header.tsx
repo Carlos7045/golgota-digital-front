@@ -2,9 +2,11 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const navigate = useNavigate();
 
   const navItems = [
     { name: 'Sobre', href: '#sobre' },
@@ -13,6 +15,10 @@ const Header = () => {
     { name: 'Agenda', href: '#agenda' },
     { name: 'Inscreva-se', href: '#inscricao' },
   ];
+
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-military-black/95 backdrop-blur-sm border-b border-military-gold/20">
@@ -48,6 +54,7 @@ const Header = () => {
             <Button 
               variant="outline" 
               className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
+              onClick={handleLoginClick}
             >
               Login
             </Button>
@@ -80,6 +87,10 @@ const Header = () => {
                 <Button 
                   variant="outline" 
                   className="w-full border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
+                  onClick={() => {
+                    handleLoginClick();
+                    setIsMenuOpen(false);
+                  }}
                 >
                   Login
                 </Button>

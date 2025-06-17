@@ -1,7 +1,14 @@
 
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const CTA = () => {
+  const navigate = useNavigate();
+
+  const handleLoginClick = () => {
+    navigate('/login');
+  };
+
   return (
     <section id="inscricao" className="py-20 bg-hero-gradient hero-pattern">
       <div className="container mx-auto px-4">
@@ -30,6 +37,7 @@ const CTA = () => {
                 size="lg" 
                 variant="outline" 
                 className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold px-12 py-4 text-xl"
+                onClick={handleLoginClick}
               >
                 FAZER LOGIN
               </Button>
