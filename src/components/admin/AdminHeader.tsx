@@ -1,45 +1,34 @@
-
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Menu, LogOut, Settings } from 'lucide-react';
-import { User, ChannelType } from '@/pages/Community';
+import { Menu, LogOut, Settings, ArrowLeft } from 'lucide-react';
+import { User } from '@/pages/Community';
+import { AdminView } from '@/pages/AdminDashboard';
 import { useNavigate } from 'react-router-dom';
 
-interface CommunityHeaderProps {
+interface AdminHeaderProps {
   user: User;
-  activeChannel: ChannelType;
+  activeView: AdminView;
   onMenuToggle: () => void;
 }
 
-const channelNames: Record<ChannelType, string> = {
-  'geral': 'Geral',
-  'treinamentos': 'Treinamentos',
-  'acampamentos': 'Acampamentos',
-  'ensine-aprenda': 'Ensine/Aprenda',
-  'eventos': 'Eventos',
-  'oportunidades': 'Oportunidades',
-  'painel-cia': 'Painel da Cia'
+const viewNames: Record<AdminView, string> = {
+  'overview': 'Painel Geral',
+  'users': 'Gestão de Usuários',
+  'stats': 'Estatísticas',
+  'content': 'Gestão de Conteúdo',
+  'events': 'Gestão de Eventos'
 };
 
-const rankColors: Record<string, string> = {
-  'aluno': 'bg-gray-500',
-  'soldado': 'bg-green-600',
-  'cabo': 'bg-green-700',
-  'sargento': 'bg-blue-600',
-  'tenente': 'bg-blue-700',
-  'capitao': 'bg-purple-600',
-  'major': 'bg-purple-700',
-  'coronel': 'bg-red-600',
-  'comandante': 'bg-red-700',
-  'admin': 'bg-military-gold'
-};
-
-const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderProps) => {
+const AdminHeader = ({ user, activeView, onMenuToggle }: AdminHeaderProps) => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
     localStorage.removeItem('user');
     navigate('/');
+  };
+
+  const handleBackToCommunity = () => {
+    navigate('/comunidade');
   };
 
   return (
@@ -54,12 +43,22 @@ const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderP
           <Menu size={20} />
         </Button>
         
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={handleBackToCommunity}
+          className="text-gray-400 hover:text-white hover:bg-military-gold/20"
+        >
+          <ArrowLeft size={16} className="mr-2" />
+          Comunidade
+        </Button>
+        
         <div>
           <h1 className="text-xl font-bold text-white">
-            #{channelNames[activeChannel]}
+            {viewNames[activeView]}
           </h1>
           <p className="text-sm text-gray-400">
-            Comando Gólgota - Comunidade Interna
+            Painel Administrativo - Comando Gólgota
           </p>
         </div>
       </div>
@@ -67,24 +66,12 @@ const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderP
       <div className="flex items-center space-x-4">
         <div className="flex items-center space-x-2">
           <span className="text-white font-medium hidden sm:block">{user.name}</span>
-          <Badge className={`${rankColors[user.rank]} text-white text-xs uppercase`}>
-            {user.rank}
+          <Badge className="bg-military-gold text-black text-xs uppercase font-bold">
+            ADMIN
           </Badge>
-          <span className="text-gray-400 text-sm hidden md:block">Cia {user.company}</span>
         </div>
 
         <div className="flex items-center space-x-2">
-          {user.rank === 'admin' && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => navigate('/admin')}
-              className="text-military-gold hover:text-white hover:bg-military-gold/20"
-            >
-              <Settings size={16} />
-              <span className="ml-1 hidden sm:block">Admin</span>
-            </Button>
-          )}
           <Button
             variant="ghost"
             size="sm"
@@ -106,4 +93,4 @@ const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderP
   );
 };
 
-export default CommunityHeader;
+export default AdminHeader;
