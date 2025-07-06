@@ -12,6 +12,7 @@ const Header = () => {
     { name: 'Sobre', href: '#sobre' },
     { name: 'Treinamentos', href: '#treinamentos' },
     { name: 'Acampamentos', href: '#acampamentos' },
+    { name: 'Cursos', href: '/cursos', isRoute: true },
     { name: 'Agenda', href: '#agenda' },
     { name: 'Inscreva-se', href: '#inscricao' },
   ];
@@ -39,13 +40,23 @@ const Header = () => {
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-6">
             {navItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className="text-white hover:text-military-gold transition-colors duration-200 font-medium"
-              >
-                {item.name}
-              </a>
+              item.isRoute ? (
+                <button
+                  key={item.name}
+                  onClick={() => navigate(item.href)}
+                  className="text-white hover:text-military-gold transition-colors duration-200 font-medium"
+                >
+                  {item.name}
+                </button>
+              ) : (
+                <a
+                  key={item.name}
+                  href={item.href}
+                  className="text-white hover:text-military-gold transition-colors duration-200 font-medium"
+                >
+                  {item.name}
+                </a>
+              )
             ))}
           </nav>
 
@@ -74,14 +85,27 @@ const Header = () => {
           <div className="md:hidden bg-military-black/98 border-t border-military-gold/20">
             <nav className="flex flex-col space-y-4 py-4">
               {navItems.map((item) => (
-                <a
-                  key={item.name}
-                  href={item.href}
-                  className="text-white hover:text-military-gold transition-colors duration-200 font-medium px-4"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  {item.name}
-                </a>
+                item.isRoute ? (
+                  <button
+                    key={item.name}
+                    onClick={() => {
+                      navigate(item.href);
+                      setIsMenuOpen(false);
+                    }}
+                    className="text-white hover:text-military-gold transition-colors duration-200 font-medium px-4 text-left"
+                  >
+                    {item.name}
+                  </button>
+                ) : (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className="text-white hover:text-military-gold transition-colors duration-200 font-medium px-4"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.name}
+                  </a>
+                )
               ))}
               <div className="px-4 pt-2">
                 <Button 
