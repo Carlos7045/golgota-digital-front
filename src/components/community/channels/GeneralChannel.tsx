@@ -1,51 +1,29 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Heart, MessageSquare, Pin } from 'lucide-react';
 import { User } from '@/pages/Community';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface GeneralChannelProps {
   user: User;
 }
 
-const sampleMessages = [
-  {
-    id: '1',
-    author: 'Comandante Silva',
-    rank: 'comandante',
-    company: 'Alpha',
-    content: 'Bem-vindos ao canal geral! Aqui compartilhamos informações importantes e conversamos sobre assuntos gerais do Comando Gólgota.',
-    timestamp: new Date('2024-01-15T10:30:00'),
-    pinned: true,
-    likes: 12,
-    replies: 3
-  },
-  {
-    id: '2',
-    author: 'Sargento Costa',
-    rank: 'sargento',
-    company: 'Bravo',
-    content: 'Pessoal, não esqueçam de conferir o cronograma de treinamentos para este mês. Há vagas abertas no Rally Missionário!',
-    timestamp: new Date('2024-01-15T14:45:00'),
-    pinned: false,
-    likes: 8,
-    replies: 5
-  },
-  {
-    id: '3',
-    author: 'Soldado Maria',
-    rank: 'soldado',
-    company: 'Alpha',
-    content: 'Que bênção foi o último acampamento! Já estou ansiosa pelo próximo. A experiência na selva foi transformadora 🙏',
-    timestamp: new Date('2024-01-15T16:20:00'),
-    pinned: false,
-    likes: 15,
-    replies: 7
-  }
-];
+interface Message {
+  id: string;
+  title: string;
+  body: string;
+  author_id: string;
+  created_at: string;
+  interactions: number;
+  views: number;
+  author_name?: string;
+  author_rank?: string;
+}
 
 const rankColors: Record<string, string> = {
   'aluno': 'bg-gray-500',
@@ -62,11 +40,94 @@ const rankColors: Record<string, string> = {
 
 const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    fetchMessages();
+  }, []);
+
+  const fetchMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('content')
+        .select(`
+          id,
+          title,
+          body,
+          author_id,
+          created_at,
+          interactions,
+          views
+        `)
+        .eq('channel', 'geral')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Buscar dados dos autores
+      const messagesWithAuthors = await Promise.all(
+        (data || []).map(async (message) => {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('name, rank')
+            .eq('user_id', message.author_id)
+            .single();
+
+          return {
+            ...message,
+            author_name: profile?.name || 'Usuário',
+            author_rank: profile?.rank || 'soldado'
+          };
+        })
+      );
+
+      setMessages(messagesWithAuthors);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: "Erro ao carregar mensagens",
+        description: "Não foi possível carregar as mensagens.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
     if (newMessage.trim()) {
-      console.log('Enviando mensagem:', newMessage);
-      setNewMessage('');
+      try {
+        const { error } = await supabase
+          .from('content')
+          .insert({
+            title: 'Mensagem no Canal Geral',
+            body: newMessage,
+            author_id: user.id,
+            channel: 'geral',
+            type: 'announcement',
+            status: 'published'
+          });
+
+        if (error) throw error;
+
+        setNewMessage('');
+        await fetchMessages(); // Recarregar mensagens
+        
+        toast({
+          title: "Mensagem enviada",
+          description: "Sua mensagem foi publicada com sucesso!",
+        });
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: "Erro ao enviar mensagem",
+          description: "Não foi possível enviar a mensagem.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
@@ -100,49 +161,61 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             </p>
           </div>
           <Badge className="bg-green-600 text-white">
-            {sampleMessages.length} mensagens
+            {messages.length} mensagens
           </Badge>
         </div>
       </div>
 
       {/* Mensagens */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {sampleMessages.map((message) => (
-          <Card key={message.id} className={`bg-military-black-light border-military-gold/20 ${message.pinned ? 'border-military-gold/50' : ''}`}>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <span className="font-semibold text-white">{message.author}</span>
-                    <Badge className={`${rankColors[message.rank]} text-white text-xs`}>
-                      {message.rank.toUpperCase()}
-                    </Badge>
-                    <span className="text-gray-400 text-sm">Cia {message.company}</span>
+        {loading ? (
+          <div className="text-center text-gray-400 py-8">
+            Carregando mensagens...
+          </div>
+        ) : messages.length === 0 ? (
+          <div className="text-center text-gray-400 py-8">
+            <MessageSquare className="mx-auto mb-4" size={48} />
+            <p>Nenhuma mensagem ainda.</p>
+            <p className="text-sm">Seja o primeiro a enviar uma mensagem!</p>
+          </div>
+        ) : (
+          messages.map((message) => (
+            <Card key={message.id} className="bg-military-black-light border-military-gold/20">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold text-white">{message.author_name}</span>
+                      <Badge className={`${rankColors[message.author_rank || 'soldado']} text-white text-xs`}>
+                        {(message.author_rank || 'soldado').toUpperCase()}
+                      </Badge>
+                      <span className="text-gray-400 text-sm">Cia Alpha</span>
+                    </div>
                   </div>
-                  {message.pinned && (
-                    <Pin size={16} className="text-military-gold" />
-                  )}
+                  <div className="text-xs text-gray-400">
+                    {formatDate(new Date(message.created_at))} às {formatTime(new Date(message.created_at))}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-400">
-                  {formatDate(message.timestamp)} às {formatTime(message.timestamp)}
+              </CardHeader>
+              <CardContent>
+                {message.title && message.title !== 'Mensagem no Canal Geral' && (
+                  <h4 className="font-semibold text-white mb-2">{message.title}</h4>
+                )}
+                <p className="text-gray-300 mb-3">{message.body}</p>
+                <div className="flex items-center space-x-4">
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-400 p-1">
+                    <Heart size={16} className="mr-1" />
+                    {message.interactions || 0}
+                  </Button>
+                  <Button variant="ghost" size="sm" className="text-gray-400 hover:text-military-gold p-1">
+                    <MessageSquare size={16} className="mr-1" />
+                    {message.views || 0}
+                  </Button>
                 </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-300 mb-3">{message.content}</p>
-              <div className="flex items-center space-x-4">
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-red-400 p-1">
-                  <Heart size={16} className="mr-1" />
-                  {message.likes}
-                </Button>
-                <Button variant="ghost" size="sm" className="text-gray-400 hover:text-military-gold p-1">
-                  <MessageSquare size={16} className="mr-1" />
-                  {message.replies}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+              </CardContent>
+            </Card>
+          ))
+        )}
       </div>
 
       {/* Input de Nova Mensagem */}
