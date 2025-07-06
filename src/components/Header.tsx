@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const navItems = [
     { name: 'Sobre', href: '#sobre' },
@@ -17,8 +19,12 @@ const Header = () => {
     { name: 'Inscreva-se', href: '#inscricao' },
   ];
 
-  const handleLoginClick = () => {
-    navigate('/login');
+  const handleAuthClick = () => {
+    if (user) {
+      navigate('/comunidade');
+    } else {
+      navigate('/auth');
+    }
   };
 
   return (
@@ -65,9 +71,9 @@ const Header = () => {
             <Button 
               variant="outline" 
               className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
-              onClick={handleLoginClick}
+              onClick={handleAuthClick}
             >
-              Login
+              {user ? 'Comunidade' : 'Entrar'}
             </Button>
           </div>
 
@@ -112,11 +118,11 @@ const Header = () => {
                   variant="outline" 
                   className="w-full border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
                   onClick={() => {
-                    handleLoginClick();
+                    handleAuthClick();
                     setIsMenuOpen(false);
                   }}
                 >
-                  Login
+                  {user ? 'Comunidade' : 'Entrar'}
                 </Button>
               </div>
             </nav>

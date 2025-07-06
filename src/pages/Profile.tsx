@@ -1,67 +1,101 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User, Calendar, Award, Activity, Settings, Shield, Users, BookOpen, Camera, Edit } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
+  const { user, signOut } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
+  const [profile, setProfile] = useState<any>(null);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [achievements, setAchievements] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Mock user data - em produção viria do backend/contexto
-  const userData = {
-    id: '1',
-    name: 'João Silva',
-    rank: 'Sargento',
-    company: 'Alpha',
-    joinedAt: '2023-06-15',
-    email: 'joao.silva@comandogolgota.com',
-    phone: '(11) 99999-9999',
-    birthDate: '1985-03-20',
-    address: 'São Paulo, SP',
-    avatar: '/placeholder.svg',
-    bio: 'Militar dedicado com 15 anos de experiência em operações especiais e treinamento de tropas.',
-    specialties: ['Liderança', 'Tática', 'Primeiros Socorros'],
-    achievements: [
-      { name: 'Melhor Soldado 2023', date: '2023-12-01', type: 'award' },
-      { name: 'Curso de Liderança Avançada', date: '2023-10-15', type: 'course' },
-      { name: '100 Dias de Atividade', date: '2023-11-30', type: 'milestone' }
-    ],
-    stats: {
-      totalTrainings: 45,
-      completedCourses: 8,
-      totalPoints: 2340,
-      rank: 3
-    },
-    activities: [
-      {
-        id: '1',
-        type: 'training',
-        title: 'Participou do Rally Missionário',
-        description: 'Completou com sucesso o rally de resistência física',
-        date: '2024-01-10',
-        points: 50
-      },
-      {
-        id: '2',
-        type: 'course',
-        title: 'Concluiu curso de Primeiros Socorros',
-        description: 'Certificação em atendimento de emergência',
-        date: '2024-01-05',
-        points: 100
-      },
-      {
-        id: '3',
-        type: 'achievement',
-        title: 'Alcançou posição #3 no ranking',
-        description: 'Subiu 2 posições no ranking mensal',
-        date: '2024-01-01',
-        points: 25
-      }
-    ]
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchActivities();
+      fetchAchievements();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
   };
+
+  const fetchActivities = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('user_activities')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setActivities(data || []);
+    } catch (error) {
+      console.error('Error fetching activities:', error);
+    }
+  };
+
+  const fetchAchievements = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('achievements')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setAchievements(data || []);
+    } catch (error) {
+      console.error('Error fetching achievements:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-military-black flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-military-gold border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-white">Carregando perfil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-military-black flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-4">Perfil não encontrado</h2>
+          <Button onClick={() => navigate('/comunidade')} className="bg-military-gold text-black">
+            Voltar à Comunidade
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const getActivityIcon = (type: string) => {
     switch (type) {
@@ -108,8 +142,8 @@ const Profile = () => {
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-military-gold/20 flex items-center justify-center overflow-hidden border-4 border-military-gold/30">
                   <img 
-                    src={userData.avatar} 
-                    alt={userData.name}
+                    src={profile.avatar_url || '/placeholder.svg'} 
+                    alt={profile.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -123,21 +157,21 @@ const Profile = () => {
 
               {/* Info Principal */}
               <div className="flex-1">
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <h2 className="text-3xl font-bold text-white mb-2">{userData.name}</h2>
-                    <div className="flex items-center gap-4 mb-3">
-                      <Badge className="bg-military-gold text-black flex items-center gap-2">
-                        <Shield className="h-4 w-4" />
-                        {userData.rank}
-                      </Badge>
-                      <Badge className="bg-military-olive text-white flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        CIA {userData.company}
-                      </Badge>
-                    </div>
-                    <p className="text-gray-300 mb-4 max-w-2xl">{userData.bio}</p>
-                  </div>
+          <div className="flex items-center justify-between mb-4">
+                   <div>
+                     <h2 className="text-3xl font-bold text-white mb-2">{profile.name}</h2>
+                     <div className="flex items-center gap-4 mb-3">
+                       <Badge className="bg-military-gold text-black flex items-center gap-2">
+                         <Shield className="h-4 w-4" />
+                         {profile.rank || 'Soldado'}
+                       </Badge>
+                       <Badge className="bg-military-olive text-white flex items-center gap-2">
+                         <Users className="h-4 w-4" />
+                         CIA Alpha
+                       </Badge>
+                     </div>
+                     <p className="text-gray-300 mb-4 max-w-2xl">{profile.bio || 'Membro do Comando Gólgota'}</p>
+                   </div>
                   <Button 
                     variant="outline"
                     onClick={() => setIsEditing(!isEditing)}
@@ -151,19 +185,19 @@ const Profile = () => {
                 {/* Stats */}
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="text-center p-3 bg-military-black border border-military-gold/20 rounded-lg">
-                    <div className="text-2xl font-bold text-military-gold">{userData.stats.totalTrainings}</div>
+                    <div className="text-2xl font-bold text-military-gold">{activities.filter(a => a.type === 'training').length}</div>
                     <div className="text-sm text-gray-400">Treinamentos</div>
                   </div>
                   <div className="text-center p-3 bg-military-black border border-military-gold/20 rounded-lg">
-                    <div className="text-2xl font-bold text-military-gold">{userData.stats.completedCourses}</div>
+                    <div className="text-2xl font-bold text-military-gold">{activities.filter(a => a.type === 'course').length}</div>
                     <div className="text-sm text-gray-400">Cursos</div>
                   </div>
                   <div className="text-center p-3 bg-military-black border border-military-gold/20 rounded-lg">
-                    <div className="text-2xl font-bold text-military-gold">{userData.stats.totalPoints}</div>
+                    <div className="text-2xl font-bold text-military-gold">{activities.reduce((sum, a) => sum + (a.points || 0), 0)}</div>
                     <div className="text-sm text-gray-400">Pontos</div>
                   </div>
                   <div className="text-center p-3 bg-military-black border border-military-gold/20 rounded-lg">
-                    <div className="text-2xl font-bold text-military-gold">#{userData.stats.rank}</div>
+                    <div className="text-2xl font-bold text-military-gold">#-</div>
                     <div className="text-sm text-gray-400">Ranking</div>
                   </div>
                 </div>
@@ -194,19 +228,19 @@ const Profile = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-400">Email</label>
-                    <p className="text-white">{userData.email}</p>
+                    <p className="text-white">{profile.email}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Telefone</label>
-                    <p className="text-white">{userData.phone}</p>
+                    <p className="text-white">{profile.phone || 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Data de Nascimento</label>
-                    <p className="text-white">{new Date(userData.birthDate).toLocaleDateString('pt-BR')}</p>
+                    <p className="text-white">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Endereço</label>
-                    <p className="text-white">{userData.address}</p>
+                    <p className="text-white">{profile.address || 'Não informado'}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -221,22 +255,25 @@ const Profile = () => {
                 <CardContent className="space-y-4">
                   <div>
                     <label className="text-sm font-medium text-gray-400">Patente</label>
-                    <p className="text-white">{userData.rank}</p>
+                    <p className="text-white">{profile.rank || 'Soldado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Companhia</label>
-                    <p className="text-white">CIA {userData.company}</p>
+                    <p className="text-white">CIA Alpha</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Data de Ingresso</label>
-                    <p className="text-white">{new Date(userData.joinedAt).toLocaleDateString('pt-BR')}</p>
+                    <p className="text-white">{profile.joined_at ? new Date(profile.joined_at).toLocaleDateString('pt-BR') : 'Não informado'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Especialidades</label>
                     <div className="flex flex-wrap gap-2 mt-2">
-                      {userData.specialties.map((specialty) => (
-                        <Badge key={specialty} className="bg-military-gold text-black">{specialty}</Badge>
-                      ))}
+                      {profile.specialties && profile.specialties.length > 0 ? 
+                        profile.specialties.map((specialty: string) => (
+                          <Badge key={specialty} className="bg-military-gold text-black">{specialty}</Badge>
+                        )) : 
+                        <span className="text-gray-400">Nenhuma especialidade cadastrada</span>
+                      }
                     </div>
                   </div>
                 </CardContent>
@@ -255,7 +292,7 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {userData.activities.map((activity) => (
+                  {activities.length > 0 ? activities.map((activity) => (
                     <div key={activity.id} className="flex items-start gap-4 p-4 border border-military-gold/20 rounded-lg bg-military-black/50">
                       <div className={`w-10 h-10 rounded-full ${getActivityColor(activity.type)} flex items-center justify-center text-white`}>
                         {getActivityIcon(activity.type)}
@@ -266,15 +303,19 @@ const Profile = () => {
                         <div className="flex items-center gap-4 text-xs text-gray-400">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {new Date(activity.date).toLocaleDateString('pt-BR')}
+                            {new Date(activity.activity_date).toLocaleDateString('pt-BR')}
                           </span>
-                          <Badge className="bg-military-gold text-black text-xs">
-                            +{activity.points} pts
-                          </Badge>
+                          {activity.points && (
+                            <Badge className="bg-military-gold text-black text-xs">
+                              +{activity.points} pts
+                            </Badge>
+                          )}
                         </div>
                       </div>
                     </div>
-                  ))}
+                  )) : (
+                    <p className="text-gray-400 text-center py-8">Nenhuma atividade registrada ainda.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -291,17 +332,21 @@ const Profile = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {userData.achievements.map((achievement, index) => (
+                  {achievements.length > 0 ? achievements.map((achievement, index) => (
                     <div key={index} className="p-4 border border-military-gold/20 rounded-lg text-center bg-military-black/50">
                       <div className="w-16 h-16 bg-military-gold rounded-full flex items-center justify-center mx-auto mb-3">
                         <Award className="h-8 w-8 text-black" />
                       </div>
                       <h4 className="font-medium text-white mb-2">{achievement.name}</h4>
                       <p className="text-sm text-gray-400">
-                        {new Date(achievement.date).toLocaleDateString('pt-BR')}
+                        {new Date(achievement.achieved_date).toLocaleDateString('pt-BR')}
                       </p>
                     </div>
-                  ))}
+                  )) : (
+                    <div className="col-span-full text-center py-8">
+                      <p className="text-gray-400">Nenhuma conquista registrada ainda.</p>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

@@ -5,8 +5,8 @@ import { useNavigate } from 'react-router-dom';
 const CTA = () => {
   const navigate = useNavigate();
 
-  const handleLoginClick = () => {
-    navigate('/login');
+  const handleAuthClick = () => {
+    navigate('/auth');
   };
 
   return (
@@ -30,7 +30,7 @@ const CTA = () => {
               <Button 
                 size="lg" 
                 className="bg-military-gold hover:bg-military-gold-light text-military-black font-bold px-12 py-4 text-xl"
-                onClick={() => navigate('/cadastro')}
+                onClick={() => navigate('/auth')}
               >
                 INSCREVA-SE AGORA
               </Button>
@@ -38,7 +38,7 @@ const CTA = () => {
                 size="lg" 
                 variant="outline" 
                 className="border-military-gold text-military-gold hover:bg-military-gold hover:text-military-black font-bold px-12 py-4 text-xl"
-                onClick={handleLoginClick}
+                onClick={handleAuthClick}
               >
                 FAZER LOGIN
               </Button>

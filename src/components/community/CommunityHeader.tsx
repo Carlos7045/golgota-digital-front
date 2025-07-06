@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Menu, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { User, ChannelType } from '@/pages/Community';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface CommunityHeaderProps {
   user: User;
@@ -36,9 +37,10 @@ const rankColors: Record<string, string> = {
 
 const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderProps) => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    await signOut();
     navigate('/');
   };
 
