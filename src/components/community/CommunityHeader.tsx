@@ -1,7 +1,7 @@
 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Menu, LogOut, Settings } from 'lucide-react';
+import { Menu, LogOut, Settings, User as UserIcon } from 'lucide-react';
 import { User, ChannelType } from '@/pages/Community';
 import { useNavigate } from 'react-router-dom';
 
@@ -85,6 +85,15 @@ const CommunityHeader = ({ user, activeChannel, onMenuToggle }: CommunityHeaderP
               <span className="ml-1 hidden sm:block">Admin</span>
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate('/perfil')}
+            className="text-gray-400 hover:text-white hover:bg-military-gold/20"
+          >
+            <UserIcon size={16} />
+            <span className="ml-1 hidden sm:block">Perfil</span>
+          </Button>
           <Button
             variant="ghost"
             size="sm"
