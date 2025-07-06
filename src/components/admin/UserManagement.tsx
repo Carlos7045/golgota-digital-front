@@ -5,9 +5,14 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Search, UserPlus, MoreHorizontal, Shield, UserCheck } from 'lucide-react';
 import { UserRank } from '@/pages/Community';
 import { useToast } from '@/hooks/use-toast';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
 
 interface CommunityUser {
   id: string;
@@ -18,7 +23,24 @@ interface CommunityUser {
   joinDate: string;
   lastActive: string;
   status: 'active' | 'inactive';
+  cpglRegister?: string;
+  city?: string;
+  cpglYear?: number;
+  cpglMonth?: number;
 }
+
+const addUserSchema = z.object({
+  cpglRegister: z.string().min(1, 'Registro CPGL é obrigatório'),
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  city: z.string().min(1, 'Cidade é obrigatória'),
+  company: z.string().min(1, 'Companhia é obrigatória'),
+  rank: z.string().min(1, 'Patente é obrigatória'),
+  cpglYear: z.string().min(1, 'Ano do CPGL é obrigatório'),
+  cpglMonth: z.string().min(1, 'Mês do CPGL é obrigatório'),
+});
+
+type AddUserForm = z.infer<typeof addUserSchema>;
 
 const mockUsers: CommunityUser[] = [
   { id: '1', name: 'João Silva', email: 'joao@email.com', rank: 'soldado', company: 'A', joinDate: '2024-01-15', lastActive: '2024-12-20', status: 'active' },
@@ -45,7 +67,48 @@ const UserManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [rankFilter, setRankFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const { toast } = useToast();
+
+  const form = useForm<AddUserForm>({
+    resolver: zodResolver(addUserSchema),
+    defaultValues: {
+      cpglRegister: '',
+      name: '',
+      email: '',
+      city: '',
+      company: '',
+      rank: '',
+      cpglYear: '',
+      cpglMonth: '',
+    },
+  });
+
+  const handleAddUser = (data: AddUserForm) => {
+    const newUser: CommunityUser = {
+      id: Date.now().toString(),
+      name: data.name,
+      email: data.email,
+      rank: data.rank as UserRank,
+      company: data.company,
+      joinDate: new Date().toISOString().split('T')[0],
+      lastActive: new Date().toISOString().split('T')[0],
+      status: 'active',
+      cpglRegister: data.cpglRegister,
+      city: data.city,
+      cpglYear: parseInt(data.cpglYear),
+      cpglMonth: parseInt(data.cpglMonth),
+    };
+
+    setUsers([...users, newUser]);
+    setIsAddUserOpen(false);
+    form.reset();
+    
+    toast({
+      title: "Usuário adicionado",
+      description: `${data.name} foi adicionado com sucesso`,
+    });
+  };
 
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -100,10 +163,234 @@ const UserManagement = () => {
             <h2 className="text-2xl font-bold text-white">Gestão de Usuários</h2>
             <p className="text-gray-400">Gerencie membros da comunidade</p>
           </div>
-          <Button className="bg-military-gold text-black hover:bg-military-gold/80">
-            <UserPlus className="w-4 h-4 mr-2" />
-            Adicionar Usuário
-          </Button>
+          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-military-gold text-black hover:bg-military-gold/80">
+                <UserPlus className="w-4 h-4 mr-2" />
+                Adicionar Usuário
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-military-black-light border-military-gold/20 text-white max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-military-gold">Adicionar Novo Membro</DialogTitle>
+              </DialogHeader>
+              
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(handleAddUser)} className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="cpglRegister"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Registro CPGL</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-military-black border-gray-600 text-white"
+                              placeholder="Ex: CPGL-2024-001"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Nome Completo</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-military-black border-gray-600 text-white"
+                              placeholder="Nome completo do membro"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Email</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              type="email"
+                              className="bg-military-black border-gray-600 text-white"
+                              placeholder="email@exemplo.com"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="city"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Cidade</FormLabel>
+                          <FormControl>
+                            <Input 
+                              {...field} 
+                              className="bg-military-black border-gray-600 text-white"
+                              placeholder="Cidade onde mora"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Companhia</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="A">Cia A</SelectItem>
+                              <SelectItem value="B">Cia B</SelectItem>
+                              <SelectItem value="C">Cia C</SelectItem>
+                              <SelectItem value="D">Cia D</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="rank"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Patente</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
+                                <SelectValue placeholder="Selecione" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="aluno">Aluno</SelectItem>
+                              <SelectItem value="soldado">Soldado</SelectItem>
+                              <SelectItem value="cabo">Cabo</SelectItem>
+                              <SelectItem value="sargento">Sargento</SelectItem>
+                              <SelectItem value="tenente">Tenente</SelectItem>
+                              <SelectItem value="capitao">Capitão</SelectItem>
+                              <SelectItem value="major">Major</SelectItem>
+                              <SelectItem value="coronel">Coronel</SelectItem>
+                              <SelectItem value="comandante">Comandante</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="cpglYear"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Ano do CPGL</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
+                                <SelectValue placeholder="Selecione o ano" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {Array.from({ length: 10 }, (_, i) => {
+                                const year = new Date().getFullYear() - i;
+                                return (
+                                  <SelectItem key={year} value={year.toString()}>
+                                    {year}
+                                  </SelectItem>
+                                );
+                              })}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={form.control}
+                      name="cpglMonth"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-gray-300">Mês do CPGL</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
+                                <SelectValue placeholder="Selecione o mês" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="1">Janeiro</SelectItem>
+                              <SelectItem value="2">Fevereiro</SelectItem>
+                              <SelectItem value="3">Março</SelectItem>
+                              <SelectItem value="4">Abril</SelectItem>
+                              <SelectItem value="5">Maio</SelectItem>
+                              <SelectItem value="6">Junho</SelectItem>
+                              <SelectItem value="7">Julho</SelectItem>
+                              <SelectItem value="8">Agosto</SelectItem>
+                              <SelectItem value="9">Setembro</SelectItem>
+                              <SelectItem value="10">Outubro</SelectItem>
+                              <SelectItem value="11">Novembro</SelectItem>
+                              <SelectItem value="12">Dezembro</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="flex justify-end space-x-2 pt-4">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsAddUserOpen(false)}
+                      className="border-gray-600 text-gray-300 hover:bg-gray-700"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button 
+                      type="submit" 
+                      className="bg-military-gold text-black hover:bg-military-gold/80"
+                    >
+                      Adicionar Membro
+                    </Button>
+                  </div>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </div>
 
         {/* Filters */}
