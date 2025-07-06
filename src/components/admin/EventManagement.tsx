@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Plus, Edit, Trash2, Users, Calendar, MapPin, Clock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 interface Event {
   id: string;
@@ -23,47 +24,11 @@ interface Event {
   description: string;
 }
 
-const mockEvents: Event[] = [
-  {
-    id: '1',
-    name: 'Rally Missionário 2025',
-    type: 'rally',
-    date: '2025-03-15',
-    location: 'Campo de Treinamento - SP',
-    duration: '3 dias',
-    maxParticipants: 150,
-    registeredParticipants: 89,
-    status: 'active',
-    description: 'Rally focado em criatividade, resistência e missão.'
-  },
-  {
-    id: '2',
-    name: 'Acampamento Gólgota - Julho',
-    type: 'camp',
-    date: '2025-07-20',
-    location: 'Mata Atlântica - RJ',
-    duration: '5 dias',
-    maxParticipants: 100,
-    registeredParticipants: 34,
-    status: 'planning',
-    description: 'Treinamento na selva para fortalecimento espiritual.'
-  },
-  {
-    id: '3',
-    name: 'FEG - Fase 1',
-    type: 'training',
-    date: '2025-05-10',
-    location: 'Base Gólgota',
-    duration: '2 dias',
-    maxParticipants: 50,
-    registeredParticipants: 23,
-    status: 'planning',
-    description: 'Primeira fase do treinamento de sobrevivência.'
-  }
-];
+// Dados fictícios removidos - agora conectado ao Supabase
 
 const EventManagement = () => {
-  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const [events, setEvents] = useState<Event[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('events');
   const [newEvent, setNewEvent] = useState({
     name: '',
@@ -76,7 +41,46 @@ const EventManagement = () => {
   });
   const { toast } = useToast();
 
-  const handleCreateEvent = () => {
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
+  const fetchEvents = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .order('event_date', { ascending: true });
+
+      if (error) throw error;
+
+      const formattedEvents: Event[] = data.map(event => ({
+        id: event.id,
+        name: event.name,
+        type: event.type,
+        date: event.event_date,
+        location: event.location,
+        duration: event.duration || '',
+        maxParticipants: event.max_participants,
+        registeredParticipants: event.registered_participants,
+        status: event.status,
+        description: event.description || ''
+      }));
+
+      setEvents(formattedEvents);
+    } catch (error) {
+      console.error('Error fetching events:', error);
+      toast({
+        title: "Erro ao carregar eventos",
+        description: "Não foi possível carregar a lista de eventos.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateEvent = async () => {
     if (!newEvent.name || !newEvent.date || !newEvent.location) {
       toast({
         title: "Erro",
@@ -86,42 +90,71 @@ const EventManagement = () => {
       return;
     }
 
-    const event: Event = {
-      id: Date.now().toString(),
-      name: newEvent.name,
-      type: newEvent.type,
-      date: newEvent.date,
-      location: newEvent.location,
-      duration: newEvent.duration,
-      maxParticipants: newEvent.maxParticipants,
-      registeredParticipants: 0,
-      status: 'planning',
-      description: newEvent.description
-    };
+    try {
+      const { error } = await supabase
+        .from('events')
+        .insert({
+          name: newEvent.name,
+          type: newEvent.type,
+          event_date: newEvent.date,
+          location: newEvent.location,
+          duration: newEvent.duration,
+          max_participants: newEvent.maxParticipants,
+          description: newEvent.description,
+          status: 'planning'
+        });
 
-    setEvents(prev => [event, ...prev]);
-    setNewEvent({
-      name: '',
-      type: 'rally',
-      date: '',
-      location: '',
-      duration: '',
-      maxParticipants: 50,
-      description: ''
-    });
-    
-    toast({
-      title: "Evento criado",
-      description: "O evento foi criado com sucesso",
-    });
+      if (error) throw error;
+
+      // Reload events
+      await fetchEvents();
+      
+      setNewEvent({
+        name: '',
+        type: 'rally',
+        date: '',
+        location: '',
+        duration: '',
+        maxParticipants: 50,
+        description: ''
+      });
+      
+      toast({
+        title: "Evento criado",
+        description: "O evento foi criado com sucesso",
+      });
+    } catch (error) {
+      console.error('Error creating event:', error);
+      toast({
+        title: "Erro ao criar evento",
+        description: "Não foi possível criar o evento.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleDeleteEvent = (id: string) => {
-    setEvents(prev => prev.filter(event => event.id !== id));
-    toast({
-      title: "Evento removido",
-      description: "O evento foi removido com sucesso",
-    });
+  const handleDeleteEvent = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from('events')
+        .delete()
+        .eq('id', id);
+
+      if (error) throw error;
+
+      await fetchEvents();
+      toast({
+        title: "Evento removido",
+        description: "O evento foi removido com sucesso",
+      });
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      toast({
+        title: "Erro ao remover evento",
+        description: "Não foi possível remover o evento.",
+        variant: "destructive"
+      });
+    }
   };
 
   const getTypeColor = (type: string) => {

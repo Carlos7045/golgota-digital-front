@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -13,6 +13,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { supabase } from '@/integrations/supabase/client';
 
 interface CommunityUser {
   id: string;
@@ -42,12 +43,7 @@ const addUserSchema = z.object({
 
 type AddUserForm = z.infer<typeof addUserSchema>;
 
-const mockUsers: CommunityUser[] = [
-  { id: '1', name: 'João Silva', email: 'joao@email.com', rank: 'soldado', company: 'A', joinDate: '2024-01-15', lastActive: '2024-12-20', status: 'active' },
-  { id: '2', name: 'Maria Santos', email: 'maria@email.com', rank: 'cabo', company: 'B', joinDate: '2024-02-20', lastActive: '2024-12-19', status: 'active' },
-  { id: '3', name: 'Pedro Costa', email: 'pedro@email.com', rank: 'sargento', company: 'A', joinDate: '2024-03-10', lastActive: '2024-12-18', status: 'active' },
-  { id: '4', name: 'Ana Oliveira', email: 'ana@email.com', rank: 'tenente', company: 'C', joinDate: '2024-04-05', lastActive: '2024-12-15', status: 'inactive' },
-];
+// Dados fictícios removidos - agora conectado ao Supabase
 
 const rankColors: Record<UserRank, string> = {
   'aluno': 'bg-gray-500',
@@ -63,12 +59,56 @@ const rankColors: Record<UserRank, string> = {
 };
 
 const UserManagement = () => {
-  const [users, setUsers] = useState<CommunityUser[]>(mockUsers);
+  const [users, setUsers] = useState<CommunityUser[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [rankFilter, setRankFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
   const { toast } = useToast();
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select(`
+          user_id,
+          name,
+          email,
+          rank,
+          created_at,
+          updated_at
+        `);
+
+      if (error) throw error;
+
+      const formattedUsers: CommunityUser[] = profiles.map(profile => ({
+        id: profile.user_id,
+        name: profile.name,
+        email: profile.email,
+        rank: (profile.rank as UserRank) || 'soldado',
+        company: 'Alpha', // Simplificado por enquanto
+        joinDate: profile.created_at.split('T')[0],
+        lastActive: profile.updated_at.split('T')[0],
+        status: 'active' as const
+      }));
+
+      setUsers(formattedUsers);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast({
+        title: "Erro ao carregar usuários",
+        description: "Não foi possível carregar a lista de usuários.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const form = useForm<AddUserForm>({
     resolver: zodResolver(addUserSchema),
