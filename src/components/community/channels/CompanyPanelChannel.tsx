@@ -48,27 +48,27 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
 
   if (!isLeader) {
     return (
-      <div className="flex-1 overflow-y-auto p-6 bg-background">
+      <div className="flex-1 overflow-y-auto p-6 bg-military-black">
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
-            <h2 className="text-2xl font-bold text-foreground flex items-center mb-2">
-              <Shield className="mr-3 text-secondary" size={24} />
+            <h2 className="text-2xl font-bold text-white flex items-center mb-2">
+              <Shield className="mr-3" size={24} />
               Painel da Companhia
             </h2>
-            <p className="text-muted-foreground">
+            <p className="text-gray-400">
               Área restrita para comandantes e administradores
             </p>
           </div>
 
-          <Card className="bg-card border-border">
+          <Card className="bg-military-black-light border-military-gold/20">
             <CardHeader>
-              <CardTitle className="text-secondary flex items-center">
+              <CardTitle className="text-military-gold flex items-center">
                 <AlertCircle className="mr-2" size={20} />
                 Acesso Restrito
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-muted-foreground">
+              <p className="text-gray-300">
                 Este painel é exclusivo para líderes (Capitão ou superior). 
                 Sua patente atual: <Badge variant="secondary">{user.rank}</Badge>
               </p>
@@ -80,38 +80,38 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
   }
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 bg-background">
+    <div className="flex-1 overflow-y-auto p-6 bg-military-black">
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground flex items-center mb-2">
-            <Shield className="mr-3 text-secondary" size={24} />
+          <h2 className="text-2xl font-bold text-white flex items-center mb-2">
+            <Shield className="mr-3" size={24} />
             Painel da CIA {user.company}
           </h2>
-          <p className="text-muted-foreground">
+          <p className="text-gray-400">
             Painel de controle e gestão da companhia
           </p>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="flex space-x-4 mb-6 border-b border-border pb-2">
+        <div className="flex space-x-4 mb-6 border-b border-military-gold/20 pb-2">
           <Button 
-            variant={activeTab === 'overview' ? 'secondary' : 'ghost'}
+            variant={activeTab === 'overview' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('overview')}
-            className="text-sm"
+            className={activeTab === 'overview' ? 'bg-military-gold text-black' : 'text-gray-400 hover:text-white'}
           >
             Visão Geral
           </Button>
           <Button 
-            variant={activeTab === 'members' ? 'secondary' : 'ghost'}
+            variant={activeTab === 'members' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('members')}
-            className="text-sm"
+            className={activeTab === 'members' ? 'bg-military-gold text-black' : 'text-gray-400 hover:text-white'}
           >
             Membros
           </Button>
           <Button 
-            variant={activeTab === 'announcements' ? 'secondary' : 'ghost'}
+            variant={activeTab === 'announcements' ? 'default' : 'ghost'}
             onClick={() => setActiveTab('announcements')}
-            className="text-sm"
+            className={activeTab === 'announcements' ? 'bg-military-gold text-black' : 'text-gray-400 hover:text-white'}
           >
             Comunicados
           </Button>
@@ -122,74 +122,74 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
           <div className="space-y-6">
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="bg-card border-border">
+              <Card className="bg-military-black-light border-military-gold/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm text-muted-foreground">Total de Membros</CardTitle>
-                    <Users className="h-4 w-4 text-secondary" />
+                    <CardTitle className="text-sm text-gray-400">Total de Membros</CardTitle>
+                    <Users className="h-4 w-4 text-military-gold" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{companyStats.totalMembers}</div>
+                  <div className="text-2xl font-bold text-white">{companyStats.totalMembers}</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border">
+              <Card className="bg-military-black-light border-military-gold/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm text-muted-foreground">Membros Ativos</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm text-gray-400">Membros Ativos</CardTitle>
+                    <TrendingUp className="h-4 w-4 text-green-500" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{companyStats.activeMembers}</div>
+                  <div className="text-2xl font-bold text-white">{companyStats.activeMembers}</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border">
+              <Card className="bg-military-black-light border-military-gold/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm text-muted-foreground">Aprovações Pendentes</CardTitle>
-                    <UserPlus className="h-4 w-4 text-secondary" />
+                    <CardTitle className="text-sm text-gray-400">Aprovações Pendentes</CardTitle>
+                    <UserPlus className="h-4 w-4 text-yellow-500" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{companyStats.pendingApprovals}</div>
+                  <div className="text-2xl font-bold text-white">{companyStats.pendingApprovals}</div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-card border-border">
+              <Card className="bg-military-black-light border-military-gold/20">
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
-                    <CardTitle className="text-sm text-muted-foreground">Novos Este Mês</CardTitle>
-                    <Calendar className="h-4 w-4 text-accent" />
+                    <CardTitle className="text-sm text-gray-400">Novos Este Mês</CardTitle>
+                    <Calendar className="h-4 w-4 text-blue-500" />
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-foreground">{companyStats.thisMonthJoined}</div>
+                  <div className="text-2xl font-bold text-white">{companyStats.thisMonthJoined}</div>
                 </CardContent>
               </Card>
             </div>
 
             {/* Recent Activity */}
-            <Card className="bg-card border-border">
+            <Card className="bg-military-black-light border-military-gold/20">
               <CardHeader>
-                <CardTitle className="text-foreground">Atividade Recente</CardTitle>
+                <CardTitle className="text-white">Atividade Recente</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentMembers.slice(0, 3).map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
+                    <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-military-gold/20">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-secondary" />
+                        <div className="w-8 h-8 bg-military-gold/20 rounded-full flex items-center justify-center">
+                          <Users className="h-4 w-4 text-military-gold" />
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">Ingressou em {member.joinedAt}</p>
+                          <p className="font-medium text-white">{member.name}</p>
+                          <p className="text-sm text-gray-400">Ingressou em {member.joinedAt}</p>
                         </div>
                       </div>
-                      <Badge variant={member.status === 'ativo' ? 'secondary' : 'outline'}>
+                      <Badge className={member.status === 'ativo' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
                         {member.status}
                       </Badge>
                     </div>
@@ -203,29 +203,29 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
         {/* Members Tab */}
         {activeTab === 'members' && (
           <div className="space-y-6">
-            <Card className="bg-card border-border">
+            <Card className="bg-military-black-light border-military-gold/20">
               <CardHeader>
-                <CardTitle className="text-foreground">Membros da CIA {user.company}</CardTitle>
+                <CardTitle className="text-white">Membros da CIA {user.company}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {recentMembers.map((member) => (
-                    <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-border">
+                    <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-military-gold/20">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-secondary" />
+                        <div className="w-10 h-10 bg-military-gold/20 rounded-full flex items-center justify-center">
+                          <Users className="h-5 w-5 text-military-gold" />
                         </div>
                         <div>
-                          <p className="font-medium text-foreground">{member.name}</p>
-                          <p className="text-sm text-muted-foreground">Patente: {member.rank}</p>
-                          <p className="text-sm text-muted-foreground">Ingressou: {member.joinedAt}</p>
+                          <p className="font-medium text-white">{member.name}</p>
+                          <p className="text-sm text-gray-400">Patente: {member.rank}</p>
+                          <p className="text-sm text-gray-400">Ingressou: {member.joinedAt}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge variant={member.status === 'ativo' ? 'secondary' : 'outline'}>
+                        <Badge className={member.status === 'ativo' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
                           {member.status}
                         </Badge>
-                        <Button variant="outline" size="sm">
+                        <Button variant="outline" size="sm" className="border-military-gold/50 text-military-gold hover:bg-military-gold/10">
                           Ver Perfil
                         </Button>
                       </div>
@@ -241,8 +241,8 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
         {activeTab === 'announcements' && (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-semibold text-foreground">Comunicados da Companhia</h3>
-              <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
+              <h3 className="text-lg font-semibold text-white">Comunicados da Companhia</h3>
+              <Button className="bg-military-gold hover:bg-military-gold-dark text-black">
                 <Bell className="mr-2 h-4 w-4" />
                 Novo Comunicado
               </Button>
@@ -250,20 +250,20 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
 
             <div className="space-y-4">
               {announcements.map((announcement) => (
-                <Card key={announcement.id} className="bg-card border-border">
+                <Card key={announcement.id} className="bg-military-black-light border-military-gold/20">
                   <CardHeader>
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-foreground">{announcement.title}</CardTitle>
+                      <CardTitle className="text-white">{announcement.title}</CardTitle>
                       <Badge 
-                        variant={announcement.priority === 'alta' ? 'destructive' : 'secondary'}
+                        className={announcement.priority === 'alta' ? 'bg-red-600 text-white' : 'bg-yellow-600 text-white'}
                       >
                         {announcement.priority}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground mb-2">{announcement.content}</p>
-                    <p className="text-sm text-muted-foreground">Criado em: {announcement.createdAt}</p>
+                    <p className="text-gray-300 mb-2">{announcement.content}</p>
+                    <p className="text-sm text-gray-400">Criado em: {announcement.createdAt}</p>
                   </CardContent>
                 </Card>
               ))}
