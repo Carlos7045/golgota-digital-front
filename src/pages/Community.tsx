@@ -49,11 +49,19 @@ const Community = () => {
 
       if (error) throw error;
 
+      // Verificar se o usuário tem role de admin
+      const { data: roles } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', authUser.id);
+
+      const isAdmin = roles?.some(r => r.role === 'admin') || false;
+
       setUser({
         id: authUser.id,
         name: profile.name || authUser.email || 'Usuário',
         email: authUser.email || '',
-        rank: (profile.rank as UserRank) || 'aluno',
+        rank: isAdmin ? 'admin' : ((profile.rank as UserRank) || 'aluno'),
         company: 'Alpha' // Por enquanto padrão, depois implementaremos companies
       });
     } catch (error) {
