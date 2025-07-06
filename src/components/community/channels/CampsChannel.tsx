@@ -90,7 +90,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-foreground flex items-center mb-2">
-            <Tent className="mr-3 text-military-gold" size={24} />
+            <Tent className="mr-3 text-secondary" size={24} />
             Acampamentos
           </h2>
           <p className="text-muted-foreground">
@@ -139,7 +139,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
           <div className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {upcomingCamps.map((camp) => (
-                <Card key={camp.id} className="bg-card border-border hover:border-military-gold/50 transition-colors">
+                <Card key={camp.id} className="bg-card border-border hover:border-secondary/50 transition-colors">
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div>
@@ -148,7 +148,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                           {getStatusText(camp.status)}
                         </Badge>
                       </div>
-                      <Badge variant="outline" className="text-military-gold border-military-gold">
+                      <Badge variant="outline" className="text-secondary border-secondary">
                         {camp.level}
                       </Badge>
                     </div>
@@ -170,7 +170,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                         {camp.enrolledCount}/{camp.maxParticipants} inscritos
                       </div>
                       <div className="flex items-center text-muted-foreground">
-                        <span className="mr-2 text-military-gold">R$</span>
+                        <span className="mr-2 text-secondary">R$</span>
                         {camp.price}
                       </div>
                     </div>
@@ -188,7 +188,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
 
                     <div className="flex gap-2 pt-2">
                       <Button 
-                        className="flex-1 bg-military-gold hover:bg-military-gold-light text-military-black"
+                        className="flex-1 bg-secondary hover:bg-secondary/90 text-secondary-foreground"
                         disabled={camp.status === 'full'}
                       >
                         <UserPlus className="mr-2 h-4 w-4" />

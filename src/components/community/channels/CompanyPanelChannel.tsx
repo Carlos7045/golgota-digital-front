@@ -52,7 +52,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
         <div className="max-w-4xl mx-auto">
           <div className="mb-6">
             <h2 className="text-2xl font-bold text-foreground flex items-center mb-2">
-              <Shield className="mr-3 text-military-gold" size={24} />
+              <Shield className="mr-3 text-secondary" size={24} />
               Painel da Companhia
             </h2>
             <p className="text-muted-foreground">
@@ -62,7 +62,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
 
           <Card className="bg-card border-border">
             <CardHeader>
-              <CardTitle className="text-military-gold flex items-center">
+              <CardTitle className="text-secondary flex items-center">
                 <AlertCircle className="mr-2" size={20} />
                 Acesso Restrito
               </CardTitle>
@@ -84,7 +84,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
       <div className="max-w-6xl mx-auto">
         <div className="mb-6">
           <h2 className="text-2xl font-bold text-foreground flex items-center mb-2">
-            <Shield className="mr-3 text-military-gold" size={24} />
+            <Shield className="mr-3 text-secondary" size={24} />
             Painel da CIA {user.company}
           </h2>
           <p className="text-muted-foreground">
@@ -126,7 +126,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm text-muted-foreground">Total de Membros</CardTitle>
-                    <Users className="h-4 w-4 text-military-gold" />
+                    <Users className="h-4 w-4 text-secondary" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -138,7 +138,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm text-muted-foreground">Membros Ativos</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-green-500" />
+                    <TrendingUp className="h-4 w-4 text-primary" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -150,7 +150,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm text-muted-foreground">Aprovações Pendentes</CardTitle>
-                    <UserPlus className="h-4 w-4 text-yellow-500" />
+                    <UserPlus className="h-4 w-4 text-secondary" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -162,7 +162,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                 <CardHeader className="pb-2">
                   <div className="flex items-center justify-between">
                     <CardTitle className="text-sm text-muted-foreground">Novos Este Mês</CardTitle>
-                    <Calendar className="h-4 w-4 text-blue-500" />
+                    <Calendar className="h-4 w-4 text-accent" />
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -181,8 +181,8 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   {recentMembers.slice(0, 3).map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-border">
                       <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-military-gold/20 rounded-full flex items-center justify-center">
-                          <Users className="h-4 w-4 text-military-gold" />
+                        <div className="w-8 h-8 bg-secondary/20 rounded-full flex items-center justify-center">
+                          <Users className="h-4 w-4 text-secondary" />
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{member.name}</p>
@@ -212,8 +212,8 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   {recentMembers.map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-border">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-military-gold/20 rounded-full flex items-center justify-center">
-                          <Users className="h-5 w-5 text-military-gold" />
+                        <div className="w-10 h-10 bg-secondary/20 rounded-full flex items-center justify-center">
+                          <Users className="h-5 w-5 text-secondary" />
                         </div>
                         <div>
                           <p className="font-medium text-foreground">{member.name}</p>
@@ -242,7 +242,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
           <div className="space-y-6">
             <div className="flex justify-between items-center">
               <h3 className="text-lg font-semibold text-foreground">Comunicados da Companhia</h3>
-              <Button className="bg-military-gold hover:bg-military-gold-light text-military-black">
+              <Button className="bg-secondary hover:bg-secondary/90 text-secondary-foreground">
                 <Bell className="mr-2 h-4 w-4" />
                 Novo Comunicado
               </Button>
