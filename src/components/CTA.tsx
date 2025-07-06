@@ -29,7 +29,7 @@ const CTA = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
               <Button 
                 size="lg" 
-                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-12 py-4 text-xl"
+                className="bg-military-gold hover:bg-military-gold-light text-military-black font-bold px-12 py-4 text-xl"
                 onClick={() => navigate('/cadastro')}
               >
                 INSCREVA-SE AGORA
@@ -37,7 +37,7 @@ const CTA = () => {
               <Button 
                 size="lg" 
                 variant="outline" 
-                className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold px-12 py-4 text-xl"
+                className="border-military-gold text-military-gold hover:bg-military-gold hover:text-military-black font-bold px-12 py-4 text-xl"
                 onClick={handleLoginClick}
               >
                 FAZER LOGIN

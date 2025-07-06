@@ -110,7 +110,7 @@ const Register = () => {
             alt="Comando Gólgota" 
             className="h-16 w-16 mx-auto mb-4"
           />
-          <h1 className="text-2xl font-bold text-secondary">COMANDO GÓLGOTA</h1>
+          <h1 className="text-2xl font-bold text-military-gold">COMANDO GÓLGOTA</h1>
           <p className="text-foreground/70">Cadastro de Novo Membro</p>
         </div>
 
@@ -289,7 +289,7 @@ const Register = () => {
 
               <Button 
                 type="submit" 
-                className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold"
+                className="w-full bg-military-gold hover:bg-military-gold-light text-military-black font-bold"
                 disabled={isLoading}
               >
                 {isLoading ? 'Enviando cadastro...' : 'Finalizar Cadastro'}
@@ -301,7 +301,7 @@ const Register = () => {
                 Já tem uma conta? 
                 <button 
                   onClick={() => navigate('/login')}
-                  className="text-secondary hover:text-accent ml-1 underline"
+                  className="text-military-gold hover:text-accent ml-1 underline"
                 >
                   Faça login aqui
                 </button>

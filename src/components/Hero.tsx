@@ -36,7 +36,7 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
               size="lg" 
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-8 py-3 text-lg"
+              className="bg-military-gold hover:bg-military-gold-light text-military-black font-bold px-8 py-3 text-lg"
               onClick={() => navigate('/cadastro')}
             >
               INSCREVA-SE AGORA
@@ -44,7 +44,7 @@ const Hero = () => {
             <Button 
               size="lg" 
               variant="outline" 
-              className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold px-8 py-3 text-lg"
+              className="border-military-gold text-military-gold hover:bg-military-gold hover:text-military-black font-bold px-8 py-3 text-lg"
             >
               SAIBA MAIS
             </Button>
