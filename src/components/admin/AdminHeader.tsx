@@ -16,7 +16,9 @@ const viewNames: Record<AdminView, string> = {
   'users': 'Gestão de Usuários',
   'stats': 'Estatísticas',
   'content': 'Gestão de Conteúdo',
-  'events': 'Gestão de Eventos'
+  'events': 'Gestão de Eventos',
+  'financial': 'Controle Financeiro',
+  'companies': 'Gestão de Companhias'
 };
 
 const AdminHeader = ({ user, activeView, onMenuToggle }: AdminHeaderProps) => {

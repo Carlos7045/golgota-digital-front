@@ -8,8 +8,10 @@ import UserManagement from '@/components/admin/UserManagement';
 import CommunityStats from '@/components/admin/CommunityStats';
 import ContentManagement from '@/components/admin/ContentManagement';
 import EventManagement from '@/components/admin/EventManagement';
+import FinancialManagement from '@/components/admin/FinancialManagement';
+import CompanyManagement from '@/components/admin/CompanyManagement';
 
-export type AdminView = 'overview' | 'users' | 'stats' | 'content' | 'events';
+export type AdminView = 'overview' | 'users' | 'stats' | 'content' | 'events' | 'financial' | 'companies';
 
 const AdminDashboard = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,6 +49,10 @@ const AdminDashboard = () => {
         return <ContentManagement />;
       case 'events':
         return <EventManagement />;
+      case 'financial':
+        return <FinancialManagement />;
+      case 'companies':
+        return <CompanyManagement />;
       default:
         return <DashboardOverview />;
     }

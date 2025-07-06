@@ -5,6 +5,8 @@ import {
   BarChart3, 
   FileText, 
   Calendar,
+  DollarSign,
+  Building,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -26,6 +28,8 @@ const menuItems = [
   { id: 'stats' as AdminView, label: 'Estatísticas', icon: BarChart3 },
   { id: 'content' as AdminView, label: 'Conteúdo', icon: FileText },
   { id: 'events' as AdminView, label: 'Eventos', icon: Calendar },
+  { id: 'financial' as AdminView, label: 'Financeiro', icon: DollarSign },
+  { id: 'companies' as AdminView, label: 'Companhias', icon: Building },
 ];
 
 const AdminSidebar = ({ user, activeView, onViewChange, isOpen, onToggle }: AdminSidebarProps) => {
