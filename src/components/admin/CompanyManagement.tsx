@@ -145,7 +145,10 @@ const CompanyManagement = () => {
     try {
       const { data, error } = await supabase
         .from('companies')
-        .select('*')
+        .select(`
+          *,
+          commander:commander_id(name, rank)
+        `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -381,7 +384,9 @@ const CompanyManagement = () => {
                           />
                           <div>
                             <h3 className="font-bold text-white text-lg">CIA {company.name}</h3>
-                            <p className="text-sm text-gray-400">Sem comandante</p>
+                            <p className="text-sm text-gray-400">
+                              {company.commander ? `Comandante: ${company.commander.name}` : 'Sem comandante'}
+                            </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
