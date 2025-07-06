@@ -1,7 +1,10 @@
 
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient hero-pattern">
       {/* Background Overlay */}
@@ -33,7 +36,8 @@ const Hero = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <Button 
               size="lg" 
-              className="bg-military-gold hover:bg-military-gold-dark text-black font-bold px-8 py-3 text-lg"
+              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-8 py-3 text-lg"
+              onClick={() => navigate('/cadastro')}
             >
               INSCREVA-SE AGORA
             </Button>

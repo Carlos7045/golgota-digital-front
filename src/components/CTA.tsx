@@ -29,7 +29,8 @@ const CTA = () => {
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-12">
               <Button 
                 size="lg" 
-                className="bg-military-gold hover:bg-military-gold-dark text-black font-bold px-12 py-4 text-xl"
+                className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-12 py-4 text-xl"
+                onClick={() => navigate('/cadastro')}
               >
                 INSCREVA-SE AGORA
               </Button>
