@@ -22,9 +22,9 @@ const Login = () => {
     setTimeout(() => {
       localStorage.setItem('user', JSON.stringify({
         id: '1',
-        name: 'Soldado João Silva',
+        name: 'Admin João Silva',
         email: email,
-        rank: 'soldado',
+        rank: 'admin',
         company: 'Alpha'
       }));
       setIsLoading(false);
