@@ -29,11 +29,117 @@ const CompanyManagement = () => {
   const [companies, setCompanies] = useState<any[]>([]);
   const [companyMembers, setCompanyMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [commanders, setCommanders] = useState<any[]>([]);
+  
+  // Form states
+  const [formData, setFormData] = useState({
+    name: '',
+    commander_id: '',
+    description: '',
+    color: '#FFD700'
+  });
+  
   const { toast } = useToast();
 
   useEffect(() => {
     fetchCompanies();
+    fetchCommanders();
   }, []);
+
+  const fetchCommanders = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('user_id, name, rank')
+        .in('rank', ['capitao', 'major', 'coronel', 'comandante', 'admin']);
+
+      if (error) throw error;
+      setCommanders(data || []);
+    } catch (error) {
+      console.error('Error fetching commanders:', error);
+    }
+  };
+
+  const handleCreateCompany = async () => {
+    if (!formData.name.trim()) {
+      toast({
+        title: "Erro",
+        description: "Nome da companhia é obrigatório",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .insert({
+          name: formData.name,
+          commander_id: formData.commander_id || null,
+          description: formData.description || null,
+          color: formData.color,
+          status: 'Planejamento'
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Companhia criada com sucesso!"
+      });
+
+      setIsCreateDialogOpen(false);
+      resetForm();
+      fetchCompanies();
+    } catch (error) {
+      console.error('Error creating company:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao criar companhia",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDeleteCompany = async (companyId: string) => {
+    if (!confirm('Tem certeza que deseja remover esta companhia?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', companyId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Sucesso",
+        description: "Companhia removida com sucesso!"
+      });
+
+      if (selectedCompany === companyId) {
+        setSelectedCompany(null);
+      }
+      fetchCompanies();
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover companhia",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      commander_id: '',
+      description: '',
+      color: '#FFD700'
+    });
+  };
 
   const fetchCompanies = async () => {
     try {
@@ -166,7 +272,7 @@ const CompanyManagement = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-military-gold">Companhias</CardTitle>
-                  <Dialog>
+                  <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
                     <DialogTrigger asChild>
                       <Button className="bg-military-gold hover:bg-military-gold-dark text-black">
                         <Plus className="h-4 w-4 mr-2" />
@@ -183,30 +289,60 @@ const CompanyManagement = () => {
                       <div className="space-y-4">
                         <div className="space-y-2">
                           <Label className="text-white">Nome da Companhia</Label>
-                          <Input className="bg-military-black border-military-gold/30 text-white" placeholder="Ex: Foxtrot" />
+                          <Input 
+                            className="bg-military-black border-military-gold/30 text-white" 
+                            placeholder="Ex: Foxtrot"
+                            value={formData.name}
+                            onChange={(e) => setFormData({...formData, name: e.target.value})}
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-white">Comandante</Label>
-                          <Select>
+                          <Select value={formData.commander_id} onValueChange={(value) => setFormData({...formData, commander_id: value})}>
                             <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
                               <SelectValue placeholder="Selecione o comandante" />
                             </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">Selecione um comandante</SelectItem>
-                    </SelectContent>
+                            <SelectContent>
+                              <SelectItem value="">Sem comandante</SelectItem>
+                              {commanders.map((commander) => (
+                                <SelectItem key={commander.user_id} value={commander.user_id}>
+                                  {commander.name} ({commander.rank})
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
                           <Label className="text-white">Descrição</Label>
-                          <Textarea className="bg-military-black border-military-gold/30 text-white" placeholder="Descreva o propósito da companhia..." />
+                          <Textarea 
+                            className="bg-military-black border-military-gold/30 text-white" 
+                            placeholder="Descreva o propósito da companhia..."
+                            value={formData.description}
+                            onChange={(e) => setFormData({...formData, description: e.target.value})}
+                          />
                         </div>
                         <div className="space-y-2">
                           <Label className="text-white">Cor Identificadora</Label>
-                          <Input type="color" className="bg-military-black border-military-gold/30 h-10" defaultValue="#FFD700" />
+                          <Input 
+                            type="color" 
+                            className="bg-military-black border-military-gold/30 h-10"
+                            value={formData.color}
+                            onChange={(e) => setFormData({...formData, color: e.target.value})}
+                          />
                         </div>
                       </div>
                       <DialogFooter>
-                        <Button className="bg-military-gold hover:bg-military-gold-dark text-black">
+                        <Button 
+                          variant="outline" 
+                          onClick={() => setIsCreateDialogOpen(false)}
+                          className="border-military-gold/30 text-white hover:bg-military-gold/20"
+                        >
+                          Cancelar
+                        </Button>
+                        <Button 
+                          className="bg-military-gold hover:bg-military-gold-dark text-black"
+                          onClick={handleCreateCompany}
+                        >
                           Criar Companhia
                         </Button>
                       </DialogFooter>
@@ -258,7 +394,15 @@ const CompanyManagement = () => {
                             <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button size="sm" variant="ghost" className="text-red-400 hover:bg-red-600/20">
+                            <Button 
+                              size="sm" 
+                              variant="ghost" 
+                              className="text-red-400 hover:bg-red-600/20"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteCompany(company.id);
+                              }}
+                            >
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -325,7 +469,12 @@ const CompanyManagement = () => {
                           <Edit className="h-4 w-4 mr-2" />
                           Editar Companhia
                         </Button>
-                        <Button size="sm" variant="outline" className="w-full border-red-600/30 text-red-400 hover:bg-red-600/20">
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full border-red-600/30 text-red-400 hover:bg-red-600/20"
+                          onClick={() => selectedCompany && handleDeleteCompany(selectedCompany)}
+                        >
                           <Trash2 className="h-4 w-4 mr-2" />
                           Remover Companhia
                         </Button>
