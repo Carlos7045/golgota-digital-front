@@ -12,37 +12,15 @@ interface CompanyPanelChannelProps {
 const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Mock data - em produção viria do backend
   const companyStats = {
-    totalMembers: 45,
-    activeMembers: 38,
-    pendingApprovals: 7,
-    thisMonthJoined: 12
+    totalMembers: 0,
+    activeMembers: 0,
+    pendingApprovals: 0,
+    thisMonthJoined: 0
   };
 
-  const recentMembers = [
-    { id: '1', name: 'João Silva', rank: 'soldado', joinedAt: '2024-01-15', status: 'ativo' },
-    { id: '2', name: 'Maria Santos', rank: 'cabo', joinedAt: '2024-01-14', status: 'ativo' },
-    { id: '3', name: 'Pedro Costa', rank: 'aluno', joinedAt: '2024-01-13', status: 'pendente' },
-    { id: '4', name: 'Ana Oliveira', rank: 'soldado', joinedAt: '2024-01-12', status: 'ativo' }
-  ];
-
-  const announcements = [
-    {
-      id: '1',
-      title: 'Treinamento de Campo - Próximo Sábado',
-      content: 'Lembrete sobre o treinamento de campo programado para este sábado às 06h00.',
-      priority: 'alta',
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '2', 
-      title: 'Reunião de Planejamento',
-      content: 'Reunião para planejar as atividades do próximo mês.',
-      priority: 'média',
-      createdAt: '2024-01-14'
-    }
-  ];
+  const recentMembers: any[] = [];
+  const announcements: any[] = [];
 
   const isLeader = ['capitao', 'major', 'coronel', 'comandante', 'admin'].includes(user.rank);
 

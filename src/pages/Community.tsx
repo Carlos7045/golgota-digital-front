@@ -1,6 +1,8 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import CommunityHeader from '@/components/community/CommunityHeader';
 import CommunitySidebar from '@/components/community/CommunitySidebar';
 import ChannelContent from '@/components/community/ChannelContent';
@@ -18,22 +20,59 @@ export interface User {
 export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia';
 
 const Community = () => {
+  const { user: authUser, loading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [activeChannel, setActiveChannel] = useState<ChannelType>('geral');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      navigate('/login');
+    if (!authUser && !loading) {
+      navigate('/auth');
       return;
     }
-    setUser(JSON.parse(userData));
-  }, [navigate]);
 
-  if (!user) {
-    return <div>Carregando...</div>;
+    if (authUser) {
+      fetchUserProfile();
+    }
+  }, [authUser, loading, navigate]);
+
+  const fetchUserProfile = async () => {
+    if (!authUser) return;
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .single();
+
+      if (error) throw error;
+
+      setUser({
+        id: authUser.id,
+        name: profile.name || authUser.email || 'Usuário',
+        email: authUser.email || '',
+        rank: (profile.rank as UserRank) || 'aluno',
+        company: 'Alpha' // Por enquanto padrão, depois implementaremos companies
+      });
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      // Fallback com dados básicos
+      setUser({
+        id: authUser.id,
+        name: authUser.email || 'Usuário',
+        email: authUser.email || '',
+        rank: 'aluno',
+        company: 'Alpha'
+      });
+    }
+  };
+
+  if (loading || !user) {
+    return <div className="min-h-screen bg-military-black flex items-center justify-center text-white">
+      Carregando...
+    </div>;
   }
 
   return (

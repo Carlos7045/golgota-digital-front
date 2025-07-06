@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,68 +26,35 @@ import {
 const CompanyManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [companyMembers, setCompanyMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
-  // Mock data para demonstração
-  const companies = [
-    {
-      id: '1',
-      name: 'Alpha',
-      commander: 'Ten. Carlos Silva',
-      members: 62,
-      status: 'Ativa',
-      description: 'Companhia de elite focada em operações especiais e treinamento avançado.',
-      founded: '2020-03-15',
-      color: '#FFD700'
-    },
-    {
-      id: '2',
-      name: 'Bravo',
-      commander: 'Cap. Maria Santos',
-      members: 58,
-      status: 'Ativa',
-      description: 'Companhia especializada em logística e suporte operacional.',
-      founded: '2019-08-22',
-      color: '#32CD32'
-    },
-    {
-      id: '3',
-      name: 'Charlie',
-      commander: 'Ten. Pedro Costa',
-      members: 45,
-      status: 'Ativa',
-      description: 'Companhia de reconhecimento e inteligência.',
-      founded: '2021-01-10',
-      color: '#FF6347'
-    },
-    {
-      id: '4',
-      name: 'Delta',
-      commander: 'Sgt. Ana Oliveira',
-      members: 38,
-      status: 'Reorganização',
-      description: 'Companhia de comunicações e tecnologia.',
-      founded: '2021-11-05',
-      color: '#4169E1'
-    },
-    {
-      id: '5',
-      name: 'Echo',
-      commander: 'A designar',
-      members: 0,
-      status: 'Planejamento',
-      description: 'Nova companhia em formação para operações médicas.',
-      founded: null,
-      color: '#9370DB'
+  useEffect(() => {
+    fetchCompanies();
+  }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('companies')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setCompanies(data || []);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+      toast({
+        title: "Erro ao carregar companhias",
+        description: "Não foi possível carregar as companhias.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  const companyMembers = [
-    { id: '1', name: 'João Silva', rank: 'Soldado', role: 'Membro', company: 'Alpha', joinDate: '2023-05-15' },
-    { id: '2', name: 'Maria Santos', rank: 'Cabo', role: 'Sub-comandante', company: 'Alpha', joinDate: '2022-08-10' },
-    { id: '3', name: 'Pedro Costa', rank: 'Sargento', role: 'Instrutor', company: 'Alpha', joinDate: '2021-12-03' },
-    { id: '4', name: 'Ana Oliveira', rank: 'Soldado', role: 'Membro', company: 'Alpha', joinDate: '2024-01-20' },
-    { id: '5', name: 'Carlos Lima', rank: 'Cabo', role: 'Membro', company: 'Alpha', joinDate: '2023-09-12' },
-  ];
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -144,7 +113,7 @@ const CompanyManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {companies.reduce((sum, company) => sum + company.members, 0)}
+                {companies.reduce((sum, company) => sum + (company.members || 0), 0)}
               </div>
               <p className="text-xs text-green-400">
                 Distribuídos em {companies.filter(c => c.status === 'Ativa').length} companhias
@@ -160,9 +129,11 @@ const CompanyManagement = () => {
               <Star className="h-4 w-4 text-military-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">Alpha</div>
+              <div className="text-2xl font-bold text-white">
+                {companies.length > 0 ? companies.reduce((a, b) => a.name.length > b.name.length ? a : b).name : 'N/A'}
+              </div>
               <p className="text-xs text-gray-400">
-                62 membros ativos
+                {companies.length > 0 ? '0 membros ativos' : 'Nenhuma companhia'}
               </p>
             </CardContent>
           </Card>
@@ -176,7 +147,9 @@ const CompanyManagement = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-white">
-                {Math.round(companies.reduce((sum, company) => sum + company.members, 0) / companies.filter(c => c.status === 'Ativa').length)}
+                {companies.length > 0 && companies.filter(c => c.status === 'Ativa').length > 0 
+                  ? Math.round(companies.reduce((sum, company) => sum + (company.members || 0), 0) / companies.filter(c => c.status === 'Ativa').length)
+                  : 0}
               </div>
               <p className="text-xs text-gray-400">
                 membros por companhia
@@ -218,11 +191,9 @@ const CompanyManagement = () => {
                             <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
                               <SelectValue placeholder="Selecione o comandante" />
                             </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="user1">Ten. João Silva</SelectItem>
-                              <SelectItem value="user2">Cap. Maria Santos</SelectItem>
-                              <SelectItem value="user3">Sgt. Pedro Costa</SelectItem>
-                            </SelectContent>
+                    <SelectContent>
+                      <SelectItem value="">Selecione um comandante</SelectItem>
+                    </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
@@ -244,6 +215,17 @@ const CompanyManagement = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {loading ? (
+                  <div className="text-center text-gray-400 py-8">
+                    Carregando companhias...
+                  </div>
+                ) : companies.length === 0 ? (
+                  <div className="text-center text-gray-400 py-8">
+                    <Building className="mx-auto mb-4" size={48} />
+                    <p>Nenhuma companhia cadastrada.</p>
+                    <p className="text-sm">Crie a primeira companhia!</p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
                   {companies.map((company) => (
                     <div
@@ -263,12 +245,12 @@ const CompanyManagement = () => {
                           />
                           <div>
                             <h3 className="font-bold text-white text-lg">CIA {company.name}</h3>
-                            <p className="text-sm text-gray-400">{company.commander}</p>
+                            <p className="text-sm text-gray-400">Sem comandante</p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="text-center">
-                            <p className="text-white font-bold">{company.members}</p>
+                            <p className="text-white font-bold">0</p>
                             <p className="text-xs text-gray-400">membros</p>
                           </div>
                           {getStatusBadge(company.status)}
@@ -282,13 +264,14 @@ const CompanyManagement = () => {
                           </div>
                         </div>
                       </div>
-                      <p className="mt-2 text-sm text-gray-300">{company.description}</p>
-                      {company.founded && (
-                        <p className="mt-1 text-xs text-gray-400">Fundada em: {company.founded}</p>
+                      <p className="mt-2 text-sm text-gray-300">{company.description || 'Sem descrição'}</p>
+                      {company.founded_date && (
+                        <p className="mt-1 text-xs text-gray-400">Fundada em: {new Date(company.founded_date).toLocaleDateString('pt-BR')}</p>
                       )}
                     </div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -307,20 +290,27 @@ const CompanyManagement = () => {
                     <div className="space-y-2">
                       <h4 className="text-white font-medium">Membros da Companhia</h4>
                       <div className="space-y-2 max-h-64 overflow-y-auto">
-                        {companyMembers.map((member) => (
-                          <div key={member.id} className="flex items-center justify-between p-2 bg-military-black rounded">
-                            <div className="flex items-center space-x-2">
-                              {getRankIcon(member.rank)}
-                              <div>
-                                <p className="text-white text-sm font-medium">{member.name}</p>
-                                <p className="text-gray-400 text-xs">{member.rank} - {member.role}</p>
-                              </div>
-                            </div>
-                            <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
-                              <Edit className="h-3 w-3" />
-                            </Button>
+                        {companyMembers.length === 0 ? (
+                          <div className="text-center text-gray-400 py-4">
+                            <Users className="mx-auto mb-2" size={32} />
+                            <p>Nenhum membro cadastrado</p>
                           </div>
-                        ))}
+                        ) : (
+                          companyMembers.map((member) => (
+                            <div key={member.id} className="flex items-center justify-between p-2 bg-military-black rounded">
+                              <div className="flex items-center space-x-2">
+                                {getRankIcon(member.rank)}
+                                <div>
+                                  <p className="text-white text-sm font-medium">{member.name}</p>
+                                  <p className="text-gray-400 text-xs">{member.rank} - {member.role}</p>
+                                </div>
+                              </div>
+                              <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
+                                <Edit className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </div>
                     </div>
 
@@ -346,20 +336,12 @@ const CompanyManagement = () => {
                       <h4 className="text-white font-medium">Estatísticas</h4>
                       <div className="space-y-1 text-sm">
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Soldados:</span>
-                          <span className="text-white">35</span>
+                          <span className="text-gray-400">Total de Membros:</span>
+                          <span className="text-white">0</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Cabos:</span>
-                          <span className="text-white">15</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Sargentos:</span>
-                          <span className="text-white">8</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span className="text-gray-400">Oficiais:</span>
-                          <span className="text-white">4</span>
+                          <span className="text-gray-400">Status:</span>
+                          <span className="text-white">{companies.find(c => c.id === selectedCompany)?.status || 'N/A'}</span>
                         </div>
                       </div>
                     </div>
