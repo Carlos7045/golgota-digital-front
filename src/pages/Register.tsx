@@ -114,7 +114,7 @@ const Register = () => {
           </Button>
           
           <img src="/lovable-uploads/c4ac806c-d627-45fe-bb9f-9a6d338605a0.png" alt="Comando Gólgota" className="h-16 w-16 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-military-gold">COMANDO GÓLGOTA</h1>
+          <h1 className="text-2xl font-bold text-secondary">COMANDO GÓLGOTA</h1>
           <p className="text-foreground/70">Cadastro de Novo Membro</p>
         </div>
 
@@ -226,7 +226,7 @@ const Register = () => {
                 </div>
               </div>
 
-              <Button type="submit" disabled={isLoading} className="w-full text-secondary-foreground font-bold bg-military-gold">
+              <Button type="submit" disabled={isLoading} className="w-full bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold">
                 {isLoading ? 'Enviando cadastro...' : 'Finalizar Cadastro'}
               </Button>
             </form>
