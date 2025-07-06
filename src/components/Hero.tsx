@@ -1,12 +1,8 @@
-
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-
 const Hero = () => {
   const navigate = useNavigate();
-
-  return (
-    <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient hero-pattern">
+  return <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient hero-pattern">
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/50"></div>
       
@@ -34,18 +30,10 @@ const Hero = () => {
 
           {/* CTA Buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              size="lg" 
-              className="bg-secondary hover:bg-secondary/90 text-secondary-foreground font-bold px-8 py-3 text-lg"
-              onClick={() => navigate('/cadastro')}
-            >
+            <Button size="lg" onClick={() => navigate('/cadastro')} className="text-secondary-foreground font-bold px-8 py-3 text-lg bg-[a#d4af37] bg-military-gold">
               INSCREVA-SE AGORA
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold px-8 py-3 text-lg"
-            >
+            <Button size="lg" variant="outline" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold px-8 py-3 text-lg">
               SAIBA MAIS
             </Button>
           </div>
@@ -74,8 +62,6 @@ const Hero = () => {
           <div className="w-1 h-3 bg-military-gold rounded-full mt-2 animate-pulse"></div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 };
-
 export default Hero;
