@@ -1139,6 +1139,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get financial transactions from database
       const financialTransactions = await storage.getFinancialTransactions();
       
+      // Get all categories to match with transactions
+      const categories = await storage.getFinancialCategories();
+      const categoryMap = new Map(categories.map(cat => [cat.id, cat.name]));
+      
       // Format transactions for display
       const transactions = financialTransactions.map(transaction => ({
         id: transaction.id,
@@ -1148,7 +1152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         transaction_date: transaction.transaction_date,
         payment_method: transaction.payment_method || 'not_specified',
         notes: transaction.notes || '',
-        category_name: transaction.category_id ? 'Categorizado' : 'Sem categoria'
+        category_name: transaction.category_id ? categoryMap.get(transaction.category_id) || 'Categoria não encontrada' : 'Sem categoria'
       }));
       
       // Also get recent paid subscriptions as backup

@@ -735,6 +735,10 @@ export class DatabaseStorage implements IStorage {
       ));
     return !!registration;
   }
+
+  async getFinancialCategories(): Promise<FinancialCategory[]> {
+    return await db.select().from(financialCategories).orderBy(financialCategories.name);
+  }
 }
 
 export const storage = new DatabaseStorage();
