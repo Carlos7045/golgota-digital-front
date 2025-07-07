@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiGet } from '@/lib/api';
+import { apiGet, apiPost } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,6 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Textarea } from '@/components/ui/textarea';
+import { useForm } from 'react-hook-form';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { 
   DollarSign, 
   TrendingUp, 
@@ -20,14 +26,47 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const expenseSchema = z.object({
+  description: z.string().min(3, 'Descrição deve ter pelo menos 3 caracteres'),
+  amount: z.string().min(1, 'Valor é obrigatório'),
+  category: z.string().min(1, 'Categoria é obrigatória'),
+  date: z.string().min(1, 'Data é obrigatória'),
+  notes: z.string().optional()
+});
+
 const FinancialManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<any>(null);
+  const [financialSummary, setFinancialSummary] = useState({
+    totalIncome: 0,
+    totalExpenses: 0,
+    netBalance: 0,
+    paymentRate: 0
+  });
+  const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const { toast } = useToast();
+  
+  // Estados para transações
+  const [monthlyPayments, setMonthlyPayments] = useState<any[]>([]);
+  const [otherTransactions, setOtherTransactions] = useState<any[]>([]);
+  
+  // Form para adicionar despesas
+  const expenseForm = useForm<z.infer<typeof expenseSchema>>({
+    resolver: zodResolver(expenseSchema),
+    defaultValues: {
+      description: '',
+      amount: '',
+      category: '',
+      date: new Date().toISOString().split('T')[0],
+      notes: ''
+    }
+  });
 
   useEffect(() => {
     fetchFinancialData();
+    fetchExpenseCategories();
   }, []);
 
   const fetchFinancialData = async () => {
@@ -43,6 +82,32 @@ const FinancialManagement = () => {
         payments: paymentsData.payments || [],
         transactions: transactionsData.transactions || []
       });
+
+      // Configurar dados reais para o resumo financeiro
+      const transactions = transactionsData.transactions || [];
+      const totalIncome = transactions
+        .filter((t: any) => t.type === 'income')
+        .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
+      const totalExpenses = transactions
+        .filter((t: any) => t.type === 'expense')
+        .reduce((sum: number, t: any) => sum + parseFloat(t.amount), 0);
+      const netBalance = totalIncome - totalExpenses;
+      
+      // Calcular taxa de pagamento baseada nos pagamentos mensais
+      const payments = paymentsData.payments || [];
+      const totalPayments = payments.length;
+      const paidPayments = payments.filter((p: any) => p.status === 'paid').length;
+      const paymentRate = totalPayments > 0 ? (paidPayments / totalPayments) * 100 : 0;
+
+      setFinancialSummary({
+        totalIncome,
+        totalExpenses,
+        netBalance,
+        paymentRate
+      });
+
+      setMonthlyPayments(payments);
+      setOtherTransactions(transactions);
     } catch (error) {
       console.error('Error fetching financial data:', error);
       toast({
@@ -90,19 +155,46 @@ const FinancialManagement = () => {
     }
   };
 
-  // Real data from API
-  const financialSummary = {
-    totalRevenue: stats?.totalRevenue || 0,
-    monthlyFees: stats?.monthlyFees || 0,
-    otherIncome: stats?.otherIncome || 0,
-    pendingPayments: stats?.pendingPayments || 0,
-    totalMembers: stats?.totalMembers || 0,
-    payingMembers: stats?.payingMembers || 0,
-    pendingMembersCount: stats?.pendingMembersCount || 0
+  const fetchExpenseCategories = async () => {
+    try {
+      const data = await apiGet('/api/financial/categories');
+      setExpenseCategories(data.categories || []);
+    } catch (error) {
+      console.error('Error fetching expense categories:', error);
+    }
   };
 
-  const monthlyPayments = stats?.payments || [];
-  const otherTransactions = stats?.transactions || [];
+  const createExpense = async (data: z.infer<typeof expenseSchema>) => {
+    try {
+      await apiPost('/api/financial/transactions', {
+        description: data.description,
+        amount: data.amount,
+        type: 'expense',
+        category_id: data.category,
+        transaction_date: data.date,
+        payment_method: 'transfer',
+        notes: data.notes
+      });
+      
+      toast({
+        title: "Despesa registrada",
+        description: "A despesa foi registrada com sucesso."
+      });
+      
+      setIsExpenseModalOpen(false);
+      expenseForm.reset();
+      await fetchFinancialData();
+    } catch (error) {
+      console.error('Error creating expense:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível registrar a despesa.",
+        variant: "destructive"
+      });
+    }
+  };
+
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -136,10 +228,10 @@ const FinancialManagement = () => {
               <DollarSign className="h-4 w-4 text-military-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">R$ {financialSummary.totalRevenue}</div>
+              <div className="text-2xl font-bold text-white">R$ {financialSummary.totalIncome.toFixed(2)}</div>
               <p className="text-xs text-green-400 flex items-center">
                 <TrendingUp className="h-3 w-3 mr-1" />
-                +12% vs mês anterior
+                Dados atualizados
               </p>
             </CardContent>
           </Card>
@@ -147,14 +239,14 @@ const FinancialManagement = () => {
           <Card className="bg-military-black-light border-military-gold/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-400">
-                Mensalidades
+                Despesas
               </CardTitle>
-              <Users className="h-4 w-4 text-military-gold" />
+              <TrendingDown className="h-4 w-4 text-military-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">R$ {financialSummary.monthlyFees}</div>
+              <div className="text-2xl font-bold text-white">R$ {financialSummary.totalExpenses.toFixed(2)}</div>
               <p className="text-xs text-gray-400">
-                {financialSummary.payingMembers}/{financialSummary.totalMembers} pagantes
+                Total de gastos
               </p>
             </CardContent>
           </Card>
@@ -162,14 +254,14 @@ const FinancialManagement = () => {
           <Card className="bg-military-black-light border-military-gold/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-400">
-                Outras Receitas
+                Saldo Líquido
               </CardTitle>
               <TrendingUp className="h-4 w-4 text-military-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">R$ {financialSummary.otherIncome}</div>
-              <p className="text-xs text-green-400">
-                Eventos, doações, vendas
+              <div className="text-2xl font-bold text-white">R$ {financialSummary.netBalance.toFixed(2)}</div>
+              <p className="text-xs text-gray-400">
+                Receitas - Despesas
               </p>
             </CardContent>
           </Card>
@@ -177,14 +269,14 @@ const FinancialManagement = () => {
           <Card className="bg-military-black-light border-military-gold/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium text-gray-400">
-                Pagamentos Pendentes
+                Taxa de Pagamento
               </CardTitle>
-              <TrendingDown className="h-4 w-4 text-red-400" />
+              <Users className="h-4 w-4 text-military-gold" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-white">R$ {financialSummary.pendingPayments}</div>
-              <p className="text-xs text-red-400">
-                {financialSummary.pendingMembersCount} membros em atraso
+              <div className="text-2xl font-bold text-white">{financialSummary.paymentRate.toFixed(1)}%</div>
+              <p className="text-xs text-gray-400">
+                Membros em dia
               </p>
             </CardContent>
           </Card>
@@ -300,10 +392,107 @@ const FinancialManagement = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-military-gold">Outras Transações</CardTitle>
-                  <Button className="bg-military-gold hover:bg-military-gold-dark text-black">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nova Transação
-                  </Button>
+                  <Dialog open={isExpenseModalOpen} onOpenChange={setIsExpenseModalOpen}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-military-gold hover:bg-military-gold-dark text-black">
+                        <Plus className="h-4 w-4 mr-2" />
+                        Registrar Despesa
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-military-black-light border-military-gold/20">
+                      <DialogHeader>
+                        <DialogTitle className="text-military-gold">Registrar Nova Despesa</DialogTitle>
+                      </DialogHeader>
+                      <Form {...expenseForm}>
+                        <form onSubmit={expenseForm.handleSubmit(createExpense)} className="space-y-4">
+                          <FormField
+                            control={expenseForm.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Descrição</FormLabel>
+                                <FormControl>
+                                  <Input placeholder="Ex: Aluguel do local" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={expenseForm.control}
+                            name="amount"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Valor</FormLabel>
+                                <FormControl>
+                                  <Input type="number" step="0.01" placeholder="0.00" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={expenseForm.control}
+                            name="category"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Categoria</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                      <SelectValue placeholder="Selecione uma categoria" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    {expenseCategories.map((category) => (
+                                      <SelectItem key={category.id} value={category.id}>
+                                        {category.name}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={expenseForm.control}
+                            name="date"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Data</FormLabel>
+                                <FormControl>
+                                  <Input type="date" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={expenseForm.control}
+                            name="notes"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Observações</FormLabel>
+                                <FormControl>
+                                  <Textarea placeholder="Informações adicionais..." {...field} className="bg-military-black border-military-gold/30 text-white" />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <div className="flex justify-end space-x-2">
+                            <Button type="button" variant="outline" onClick={() => setIsExpenseModalOpen(false)} className="border-gray-600 text-gray-400">
+                              Cancelar
+                            </Button>
+                            <Button type="submit" className="bg-military-gold hover:bg-military-gold-dark text-black">
+                              Registrar Despesa
+                            </Button>
+                          </div>
+                        </form>
+                      </Form>
+                    </DialogContent>
+                  </Dialog>
                 </div>
               </CardHeader>
               <CardContent>
@@ -338,7 +527,13 @@ const FinancialManagement = () => {
                           <TableCell className={`font-medium ${transaction.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
                             R$ {Number(transaction.amount).toFixed(2)}
                           </TableCell>
-                          <TableCell>{getTransactionBadge(transaction.type)}</TableCell>
+                          <TableCell>
+                            {transaction.type === 'income' ? (
+                              <Badge className="bg-green-600/20 text-green-400">Receita</Badge>
+                            ) : (
+                              <Badge className="bg-red-600/20 text-red-400">Despesa</Badge>
+                            )}
+                          </TableCell>
                           <TableCell className="text-gray-300">{new Date(transaction.transaction_date).toLocaleDateString('pt-BR')}</TableCell>
                           <TableCell className="text-gray-300">{transaction.category_name || 'Sem categoria'}</TableCell>
                           <TableCell>
@@ -402,26 +597,26 @@ const FinancialManagement = () => {
                 <CardContent>
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Receita Janeiro 2025</span>
-                      <span className="text-green-400 font-bold">R$ 2.470</span>
+                      <span className="text-gray-400">Receita (Total)</span>
+                      <span className="text-green-400 font-bold">R$ {financialSummary.totalIncome.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between items-center">
-                      <span className="text-gray-400">Despesas Janeiro 2025</span>
-                      <span className="text-red-400 font-bold">R$ 80</span>
+                      <span className="text-gray-400">Despesas (Total)</span>
+                      <span className="text-red-400 font-bold">R$ {financialSummary.totalExpenses.toFixed(2)}</span>
                     </div>
                     <div className="border-t border-military-gold/20 pt-4">
                       <div className="flex justify-between items-center">
                         <span className="text-white font-medium">Saldo Líquido</span>
-                        <span className="text-military-gold font-bold text-lg">R$ 2.390</span>
+                        <span className="text-military-gold font-bold text-lg">R$ {financialSummary.netBalance.toFixed(2)}</span>
                       </div>
                     </div>
                     
                     <div className="mt-6 space-y-2">
                       <p className="text-gray-400 text-sm">Taxa de Pagamento</p>
                       <div className="w-full bg-military-black rounded-full h-2">
-                        <div className="bg-military-gold h-2 rounded-full" style={{ width: '94%' }}></div>
+                        <div className="bg-military-gold h-2 rounded-full" style={{ width: `${financialSummary.paymentRate}%` }}></div>
                       </div>
-                      <p className="text-xs text-gray-400">94% dos membros em dia</p>
+                      <p className="text-xs text-gray-400">{financialSummary.paymentRate.toFixed(1)}% dos membros em dia</p>
                     </div>
                   </div>
                 </CardContent>

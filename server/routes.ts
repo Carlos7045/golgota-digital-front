@@ -1342,38 +1342,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Financial categories endpoint
   app.get('/api/financial/categories', requireAuth, async (req: Request, res: Response) => {
     try {
-      const categories = [
-        {
-          id: 'mensalidade',
-          name: 'Mensalidade',
-          description: 'Taxa mensal de membro ativo',
-          value: 10.00,
-          eligibleRanks: ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
-        },
-        {
-          id: 'doacao',
-          name: 'Doação',
-          description: 'Contribuição voluntária para a obra',
-          value: 0,
-          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
-        },
-        {
-          id: 'evento',
-          name: 'Eventos',
-          description: 'Inscrições para acampamentos e eventos',
-          value: 0,
-          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
-        },
-        {
-          id: 'oferta',
-          name: 'Ofertas Especiais',
-          description: 'Contribuições para projetos especiais',
-          value: 0,
-          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
-        }
-      ];
-      
-      res.json(categories);
+      const categories = await storage.getFinancialCategories();
+      res.json({ categories });
     } catch (error) {
       console.error('Error fetching financial categories:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -1383,7 +1353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Add expense/transaction endpoint
   app.post('/api/financial/transactions', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { description, amount, type, category_id, payment_method, notes } = req.body;
+      const { description, amount, type, category_id, transaction_date, payment_method, notes } = req.body;
       
       const transaction = await storage.createFinancialTransaction({
         description,
@@ -1391,8 +1361,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         type,
         category_id,
         user_id: req.user.id,
-        transaction_date: new Date().toISOString().split('T')[0],
-        payment_method,
+        transaction_date: transaction_date || new Date().toISOString().split('T')[0],
+        payment_method: payment_method || 'transfer',
         notes
       });
       
