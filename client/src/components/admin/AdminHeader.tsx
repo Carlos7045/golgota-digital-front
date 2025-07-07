@@ -24,8 +24,16 @@ const viewNames: Record<AdminView, string> = {
 const AdminHeader = ({ user, activeView, onMenuToggle }: AdminHeaderProps) => {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include'
+      });
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+    localStorage.clear();
     navigate('/');
   };
 

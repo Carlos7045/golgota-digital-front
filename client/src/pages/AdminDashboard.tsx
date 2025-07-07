@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { User } from '@/pages/Community';
+import { apiGet } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 import AdminHeader from '@/components/admin/AdminHeader';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import DashboardOverview from '@/components/admin/DashboardOverview';
@@ -13,30 +15,80 @@ import CompanyManagement from '@/components/admin/CompanyManagement';
 
 export type AdminView = 'overview' | 'users' | 'stats' | 'content' | 'events' | 'financial' | 'companies';
 
+interface AdminUser {
+  id: string;
+  name: string;
+  email: string;
+  rank: string;
+  company: string;
+  roles: string[];
+}
+
 const AdminDashboard = () => {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AdminUser | null>(null);
+  const [loading, setLoading] = useState(true);
   const [activeView, setActiveView] = useState<AdminView>('overview');
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      navigate('/login');
-      return;
-    }
-    
-    const parsedUser = JSON.parse(userData);
-    if (parsedUser.rank !== 'admin') {
-      navigate('/comunidade');
-      return;
-    }
-    
-    setUser(parsedUser);
+    fetchUserProfile();
   }, [navigate]);
 
+  const fetchUserProfile = async () => {
+    try {
+      const response = await apiGet('/api/profile');
+      
+      if (!response.profile) {
+        navigate('/login');
+        return;
+      }
+
+      // Check if user has admin role
+      const roles = response.roles || [];
+      if (!roles.includes('admin')) {
+        toast({
+          title: "Acesso negado",
+          description: "Você não tem permissão para acessar o painel administrativo.",
+          variant: "destructive"
+        });
+        navigate('/comunidade');
+        return;
+      }
+
+      const adminUser: AdminUser = {
+        id: response.profile.user_id,
+        name: response.profile.name,
+        email: response.profile.email || '',
+        rank: response.profile.rank || 'admin',
+        company: response.profile.company || '',
+        roles: roles
+      };
+
+      setUser(adminUser);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      navigate('/login');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-military-black flex items-center justify-center">
+        <div className="text-white">Carregando painel administrativo...</div>
+      </div>
+    );
+  }
+
   if (!user) {
-    return <div>Carregando...</div>;
+    return (
+      <div className="min-h-screen bg-military-black flex items-center justify-center">
+        <div className="text-white">Acesso negado</div>
+      </div>
+    );
   }
 
   const renderContent = () => {
