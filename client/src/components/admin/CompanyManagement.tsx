@@ -68,6 +68,15 @@ const CompanyManagement = () => {
     fetchAllUsers();
   }, []);
 
+  // Fetch company members when a company is selected
+  useEffect(() => {
+    if (selectedCompany) {
+      fetchCompanyMembers(selectedCompany);
+    } else {
+      setCompanyMembers([]);
+    }
+  }, [selectedCompany]);
+
   const fetchCommanders = async () => {
     try {
       const response = await apiGet('/api/commanders');
@@ -153,11 +162,12 @@ const CompanyManagement = () => {
       setEditingCompany(null);
       resetForm();
       fetchCompanies();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating company:', error);
+      const errorMessage = error.response?.data?.message || error.message || "Erro ao atualizar companhia";
       toast({
         title: "Erro",
-        description: "Erro ao atualizar companhia",
+        description: errorMessage,
         variant: "destructive"
       });
     }

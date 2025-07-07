@@ -141,9 +141,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateCompany(companyId: string, data: any): Promise<Company> {
+    // Convert "none" to null for UUID fields
+    const updateData = {
+      ...data,
+      commander_id: data.commander_id === 'none' ? null : data.commander_id,
+      sub_commander_id: data.sub_commander_id === 'none' ? null : data.sub_commander_id,
+      updated_at: new Date()
+    };
+
     const [company] = await db
       .update(companies)
-      .set({ ...data, updated_at: new Date() })
+      .set(updateData)
       .where(eq(companies.id, companyId))
       .returning();
     return company;

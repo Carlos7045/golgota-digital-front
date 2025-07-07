@@ -439,6 +439,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/companies/:id/members', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const members = await storage.getCompanyMembers(req.params.id);
+      // Map the data to match frontend expectations
+      const formattedMembers = members.map(member => ({
+        id: member.id,
+        user_id: member.user_id,
+        name: member.name,
+        rank: member.rank,
+        role: member.company_role || 'Membro',
+        email: member.email,
+        phone: member.phone,
+        city: member.city
+      }));
+      res.json({ members: formattedMembers });
+    } catch (error) {
+      console.error('Error fetching company members:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.delete('/api/companies/:id/members/:userId', requireAuth, async (req: Request, res: Response) => {
     try {
       await storage.removeCompanyMember(req.params.id, req.params.userId);
