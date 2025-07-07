@@ -30,9 +30,10 @@ interface AuthContextType {
   roles: string[];
   session: any; // For backward compatibility
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signIn: (emailOrCpf: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -86,14 +87,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signIn = async (email: string, password: string) => {
+  const signIn = async (emailOrCpf: string, password: string) => {
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ emailOrCpf, password }),
       });
 
       if (response.ok) {
@@ -102,6 +103,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(data.profile);
         setRoles(data.roles);
         localStorage.setItem('authToken', data.token);
+        
+        // Check if password change is required
+        if (data.force_password_change) {
+          window.location.href = '/change-password';
+          return { error: null };
+        }
         
         toast({
           title: "Login realizado com sucesso!",

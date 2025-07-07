@@ -78,22 +78,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/login', async (req: Request, res: Response) => {
+  // Admin create user route
+  app.post('/api/auth/create-user', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
+      const { email, name, cpf, phone, city, address, birth_date, rank, company } = req.body;
       
-      if (!email || !password) {
-        return res.status(400).json({ message: 'Email and password required' });
+      // Check if user already exists by email or CPF
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Usuário já existe com este email' });
       }
       
-      const user = await storage.getUserByEmail(email);
+      // Create basic user account with default password
+      const hashedPassword = await bcrypt.hash('Golgota123', 10);
+      const userData = {
+        email,
+        password: hashedPassword,
+        force_password_change: true
+      };
+      const user = await storage.createUser(userData);
+      
+      // Create profile with all data
+      const profileData = {
+        name,
+        cpf: cpf.replace(/\D/g, ''), // Remove formatting
+        phone,
+        city,
+        address,
+        birth_date,
+        rank,
+        company
+      };
+      
+      await storage.updateProfile(user.id, profileData);
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+      res.status(201).json({ 
+        user: userResponse,
+        message: 'Usuário criado com sucesso. Senha padrão: Golgota123'
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Dados inválidos', errors: error.errors });
+      }
+      console.error('User creation error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/auth/login', async (req: Request, res: Response) => {
+    try {
+      const { emailOrCpf, password } = req.body;
+      
+      if (!emailOrCpf || !password) {
+        return res.status(400).json({ message: 'CPF/Email e senha são obrigatórios' });
+      }
+      
+      // Try to find user by email first, then by CPF
+      let user = await storage.getUserByEmail(emailOrCpf);
+      
       if (!user) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        // Try to find by CPF in profile
+        const users = await storage.getUsersByRank();
+        const profileWithCpf = users.find(u => u.cpf === emailOrCpf.replace(/\D/g, ''));
+        if (profileWithCpf) {
+          user = await storage.getUser(profileWithCpf.user_id);
+        }
+      }
+      
+      if (!user) {
+        return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
       }
       
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(401).json({ message: 'Invalid credentials' });
+        return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
       }
       
       // Create session
@@ -110,11 +170,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: userResponse,
         profile,
         roles,
+        force_password_change: user.force_password_change || false,
         token: user.id // Simple token system for now
       });
     } catch (error) {
       console.error('Login error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
 

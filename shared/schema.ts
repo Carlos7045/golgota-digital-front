@@ -18,6 +18,7 @@ export const users = pgTable("users", {
   id: uuid("id").primaryKey().defaultRandom(),
   email: text("email").notNull().unique(),
   password: text("password").notNull(),
+  force_password_change: boolean("force_password_change").default(false),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
@@ -184,6 +185,7 @@ export const achievements = pgTable("achievements", {
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
+  force_password_change: true,
 });
 
 export const insertProfileSchema = createInsertSchema(profiles).omit({

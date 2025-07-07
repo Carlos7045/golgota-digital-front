@@ -9,7 +9,7 @@ import { Shield, Mail, Lock, ArrowLeft } from 'lucide-react';
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
-  const [loginData, setLoginData] = useState({ email: '', password: '' });
+  const [loginData, setLoginData] = useState({ emailOrCpf: '', password: '' });
   
   const { signIn } = useAuth();
   const navigate = useNavigate();
@@ -21,7 +21,7 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(loginData.email, loginData.password);
+    const { error } = await signIn(loginData.emailOrCpf, loginData.password);
     
     if (!error) {
       navigate(from, { replace: true });
@@ -55,16 +55,15 @@ const Auth = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-300">
+                <Label htmlFor="emailOrCpf" className="text-gray-300">
                   <Mail className="inline h-4 w-4 mr-2" />
-                  Email
+                  CPF ou Email
                 </Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="seu@email.com"
-                  value={loginData.email}
-                  onChange={(e) => setLoginData(prev => ({ ...prev, email: e.target.value }))}
+                  id="emailOrCpf"
+                  placeholder="000.000.000-00 ou seu@email.com"
+                  value={loginData.emailOrCpf}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, emailOrCpf: e.target.value }))}
                   className="bg-military-black border-military-gold/30 text-white"
                   required
                 />

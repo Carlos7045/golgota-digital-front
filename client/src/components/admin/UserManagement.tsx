@@ -4,11 +4,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Search, UserPlus, MoreHorizontal, Shield, UserCheck } from 'lucide-react';
+import { Search, UserPlus, MoreHorizontal, Shield, UserCheck, Eye, EyeOff } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -34,6 +35,11 @@ interface CommunityUser {
 const addUserSchema = z.object({
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
+  cpf: z.string().min(11, 'CPF deve ter 11 dígitos').max(14, 'CPF inválido'),
+  phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos'),
+  city: z.string().min(2, 'Cidade é obrigatória'),
+  address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres'),
+  birthDate: z.string().min(1, 'Data de nascimento é obrigatória'),
   rank: z.string().min(1, 'Patente é obrigatória'),
   company: z.string().min(1, 'Companhia é obrigatória'),
 });
@@ -42,6 +48,7 @@ type AddUserForm = z.infer<typeof addUserSchema>;
 
 const UserManagement = () => {
   const [users, setUsers] = useState<CommunityUser[]>([]);
+  const [companies, setCompanies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [rankFilter, setRankFilter] = useState<string>('all');
@@ -50,11 +57,18 @@ const UserManagement = () => {
   
   const { toast } = useToast();
   
+  const ranks: UserRank[] = ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante', 'admin'];
+  
   const form = useForm<AddUserForm>({
     resolver: zodResolver(addUserSchema),
     defaultValues: {
       name: '',
       email: '',
+      cpf: '',
+      phone: '',
+      city: '',
+      address: '',
+      birthDate: '',
       rank: '',
       company: '',
     },
@@ -62,7 +76,17 @@ const UserManagement = () => {
 
   useEffect(() => {
     fetchUsers();
+    fetchCompanies();
   }, []);
+
+  const fetchCompanies = async () => {
+    try {
+      const data = await apiGet('/api/companies');
+      setCompanies(data.companies || []);
+    } catch (error) {
+      console.error('Error fetching companies:', error);
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -94,7 +118,43 @@ const UserManagement = () => {
     }
   };
 
-  const handleAddUser = (data: AddUserForm) => {
+  const handleAddUser = async (data: AddUserForm) => {
+    try {
+      const userData = {
+        email: data.email,
+        password: 'Golgota123', // Senha padrão
+        force_password_change: true,
+        name: data.name,
+        cpf: data.cpf.replace(/\D/g, ''), // Remove formatação
+        phone: data.phone,
+        city: data.city,
+        address: data.address,
+        birth_date: data.birthDate,
+        rank: data.rank,
+        company: data.company
+      };
+
+      await apiPost('/api/auth/create-user', userData);
+
+      toast({
+        title: "Usuário criado com sucesso!",
+        description: `${data.name} foi adicionado com senha padrão Golgota123. Será solicitado para alterar a senha no primeiro login.`,
+      });
+
+      setIsAddUserOpen(false);
+      form.reset();
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error creating user:', error);
+      toast({
+        title: "Erro ao criar usuário",
+        description: error.response?.data?.message || "Ocorreu um erro inesperado.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleOldAddUser = (data: AddUserForm) => {
     const newUser: CommunityUser = {
       id: Date.now().toString(),
       name: data.name,
@@ -199,9 +259,12 @@ const UserManagement = () => {
                 Adicionar Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-military-black-light border-military-gold/20">
+            <DialogContent className="max-w-2xl bg-military-black-light border-military-gold/20">
               <DialogHeader>
                 <DialogTitle className="text-military-gold">Adicionar Novo Usuário</DialogTitle>
+                <DialogDescription className="text-gray-400">
+                  Preencha todos os dados do novo membro da comunidade
+                </DialogDescription>
               </DialogHeader>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleAddUser)} className="space-y-4">
@@ -218,74 +281,170 @@ const UserManagement = () => {
                       </FormItem>
                     )}
                   />
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Email *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Ex: joao@exemplo.com" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="cpf"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">CPF *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="000.000.000-00" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Telefone *</FormLabel>
+                          <FormControl>
+                            <Input placeholder="(11) 99999-9999" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="birthDate"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Data de Nascimento *</FormLabel>
+                          <FormControl>
+                            <Input type="date" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
                   <FormField
                     control={form.control}
-                    name="email"
+                    name="city"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Email</FormLabel>
+                        <FormLabel className="text-white">Cidade *</FormLabel>
                         <FormControl>
-                          <Input placeholder="Ex: joao@exemplo.com" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                          <Input placeholder="Ex: São Paulo" {...field} className="bg-military-black border-military-gold/30 text-white" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
                   <FormField
                     control={form.control}
-                    name="rank"
+                    name="address"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white">Patente</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
-                              <SelectValue placeholder="Selecione a patente" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-military-black-light border-military-gold/20">
-                            <SelectItem value="aluno">Aluno</SelectItem>
-                            <SelectItem value="soldado">Soldado</SelectItem>
-                            <SelectItem value="cabo">Cabo</SelectItem>
-                            <SelectItem value="sargento">Sargento</SelectItem>
-                            <SelectItem value="tenente">Tenente</SelectItem>
-                            <SelectItem value="capitao">Capitão</SelectItem>
-                            <SelectItem value="major">Major</SelectItem>
-                            <SelectItem value="coronel">Coronel</SelectItem>
-                            <SelectItem value="comandante">Comandante</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                          </SelectContent>
-                        </Select>
+                        <FormLabel className="text-white">Endereço *</FormLabel>
+                        <FormControl>
+                          <Textarea placeholder="Endereço completo..." {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                  <FormField
-                    control={form.control}
-                    name="company"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-white">Companhia</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
-                              <SelectValue placeholder="Selecione a companhia" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="bg-military-black-light border-military-gold/20">
-                            <SelectItem value="Cia Gólgota">Cia Gólgota</SelectItem>
-                            <SelectItem value="1ª Companhia">1ª Companhia</SelectItem>
-                            <SelectItem value="2ª Companhia">2ª Companhia</SelectItem>
-                            <SelectItem value="3ª Companhia">3ª Companhia</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <Button type="submit" className="w-full bg-military-gold text-military-black hover:bg-military-gold/80">
-                    Adicionar Usuário
-                  </Button>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="rank"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Patente *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                <SelectValue placeholder="Selecione a patente" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-military-black-light border-military-gold/20">
+                              {ranks.map(rank => (
+                                <SelectItem key={rank} value={rank} className="text-white hover:bg-military-gold/20">
+                                  {rank.charAt(0).toUpperCase() + rank.slice(1)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="company"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-white">Companhia *</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                <SelectValue placeholder="Selecione a companhia" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="bg-military-black-light border-military-gold/20">
+                              {companies.length > 0 ? (
+                                companies.map(company => (
+                                  <SelectItem key={company.id} value={company.name} className="text-white hover:bg-military-gold/20">
+                                    {company.name}
+                                  </SelectItem>
+                                ))
+                              ) : (
+                                <SelectItem value="Sem Companhia" className="text-white hover:bg-military-gold/20">
+                                  Sem Companhia
+                                </SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <div className="bg-military-gold/10 p-4 rounded-lg">
+                    <p className="text-military-gold text-sm">
+                      <strong>Informações de Login:</strong><br/>
+                      • Senha padrão: <code className="bg-military-black px-2 py-1 rounded">Golgota123</code><br/>
+                      • O usuário poderá fazer login com CPF ou Email<br/>
+                      • Será obrigatório alterar a senha no primeiro login
+                    </p>
+                  </div>
+                  <DialogFooter>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setIsAddUserOpen(false)}
+                      className="border-military-gold/30 text-white hover:bg-military-gold/20"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button type="submit" className="bg-military-gold text-military-black hover:bg-military-gold/80">
+                      Criar Usuário
+                    </Button>
+                  </DialogFooter>
                 </form>
               </Form>
             </DialogContent>
