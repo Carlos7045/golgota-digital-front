@@ -1580,6 +1580,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Online users endpoint
+  app.get('/api/users/online', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const onlineUsers = await db.select({
+        id: profiles.id,
+        name: profiles.name,
+        rank: profiles.rank,
+        company: profiles.company,
+        avatar_url: profiles.avatar_url
+      })
+      .from(profiles)
+      .limit(50)
+      .orderBy(profiles.name);
+      
+      // Simulate 1-5 users online
+      const simulatedCount = Math.max(1, Math.floor(Math.random() * 5) + 1);
+      
+      res.json({ 
+        users: onlineUsers.slice(0, simulatedCount), 
+        count: simulatedCount 
+      });
+    } catch (error) {
+      console.error('Error fetching online users:', error);
+      res.json({ users: [], count: 1 });
+    }
+  });
+
   return httpServer;
 }
 
@@ -1685,35 +1712,3 @@ async function processAsaasWebhook(webhookData: any) {
     console.error('Error processing Asaas webhook:', error);
   }
 }
-
-  // Online users endpoint
-  app.get('/api/users/online', requireAuth, async (req: Request, res: Response) => {
-    try {
-      const onlineUsers = await db.select({
-        id: profiles.id,
-        name: profiles.name,
-        rank: profiles.rank,
-        company: profiles.company,
-        avatar_url: profiles.avatar_url
-      })
-      .from(profiles)
-      .limit(50)
-      .orderBy(profiles.name);
-      
-      // Simulate 1-5 users online
-      const simulatedCount = Math.max(1, Math.floor(Math.random() * 5) + 1);
-      
-      res.json({ 
-        users: onlineUsers.slice(0, simulatedCount), 
-        count: simulatedCount 
-      });
-    } catch (error) {
-      console.error('Error fetching online users:', error);
-      res.json({ users: [], count: 1 });
-    }
-  });
-
-  return server;
-}
-
-
