@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 interface User {
@@ -46,21 +46,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for existing token on mount
-    const token = localStorage.getItem('authToken');
-    if (token) {
-      fetchProfile(token);
-    } else {
-      setLoading(false);
-    }
+    fetchProfile();
   }, []);
 
-  const fetchProfile = async (token: string) => {
+  const fetchProfile = async () => {
     try {
       const response = await fetch('/api/profile', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include', // Include cookies for session
       });
       
       if (response.ok) {
@@ -75,13 +67,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             created_at: data.profile.created_at,
           });
         }
-      } else {
-        // Token is invalid, clear it
-        localStorage.removeItem('authToken');
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
-      localStorage.removeItem('authToken');
     } finally {
       setLoading(false);
     }
@@ -94,6 +82,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Include cookies for session
         body: JSON.stringify({ emailOrCpf, password }),
       });
 
@@ -102,7 +91,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(data.user);
         setProfile(data.profile);
         setRoles(data.roles);
-        localStorage.setItem('authToken', data.token);
         
         // Check if password change is required
         if (data.force_password_change) {
@@ -142,12 +130,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, password }),
+        credentials: 'include',
+        body: JSON.stringify({ email, password, fullName }),
       });
 
       if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        setProfile(data.profile);
+        setRoles(data.roles || []);
+        
         toast({
-          title: "Cadastro realizado!",
+          title: "Cadastro realizado com sucesso!",
           description: "Conta criada com sucesso!"
         });
         return { error: null };
@@ -171,29 +165,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signOut = async () => {
-    setUser(null);
-    setProfile(null);
-    setRoles([]);
-    localStorage.removeItem('authToken');
-    
-    toast({
-      title: "Logout realizado",
-      description: "Até logo!"
-    });
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Include cookies for session
+      });
+      
+      toast({
+        title: "Logout realizado",
+        description: "Até logo!"
+      });
+    } catch (error) {
+      console.error('Error signing out:', error);
+    } finally {
+      setUser(null);
+      setProfile(null);
+      setRoles([]);
+    }
   };
 
-  const value = {
-    user,
-    profile,
-    roles,
-    session: user ? { user } : null, // For backward compatibility
-    loading,
-    signIn,
-    signUp,
-    signOut,
+  const updatePassword = async (newPassword: string) => {
+    try {
+      const response = await fetch('/api/auth/update-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ newPassword }),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Senha atualizada!",
+          description: "Sua senha foi alterada com sucesso."
+        });
+        return { error: null };
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Erro ao atualizar senha",
+          description: errorData.message,
+          variant: "destructive"
+        });
+        return { error: { message: errorData.message } };
+      }
+    } catch (error) {
+      toast({
+        title: "Erro ao atualizar senha",
+        description: "Erro de conexão",
+        variant: "destructive"
+      });
+      return { error: { message: 'Network error' } };
+    }
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={{
+      user,
+      profile,
+      roles,
+      session: user, // For backward compatibility
+      loading,
+      signIn,
+      signUp,
+      signOut,
+      updatePassword
+    }}>
+      {children}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

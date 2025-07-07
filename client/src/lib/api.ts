@@ -1,12 +1,10 @@
 // API utility functions for authenticated requests
 export const apiRequest = async (endpoint: string, options: RequestInit = {}) => {
-  const token = localStorage.getItem('authToken');
-  
   const defaultOptions: RequestInit = {
     headers: {
       'Content-Type': 'application/json',
-      ...(token && { 'Authorization': `Bearer ${token}` }),
     },
+    credentials: 'include', // Include cookies for session authentication
   };
 
   const response = await fetch(endpoint, {

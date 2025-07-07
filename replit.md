@@ -120,8 +120,10 @@ A comprehensive web application built for the Comando Gólgota community - a mil
 
 ## Changelog
 - July 07, 2025. Initial setup
-- July 07, 2025. Unified registration system with comprehensive form collecting all member data
+- July 07, 2025. Unified registration system with comprehensive form collecting all member data  
 - July 07, 2025. Made Carlos Henrique Pereira Salgado (chpsalgado@hotmail.com) an administrator with admin rank and role
+- July 07, 2025. Fixed authentication system: migrated from Bearer tokens to session-based authentication for better security and reliability
+- July 07, 2025. Implemented secure user deletion with admin password confirmation and cascading data removal
 
 ## User Preferences
 

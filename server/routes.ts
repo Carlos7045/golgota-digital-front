@@ -18,21 +18,19 @@ declare global {
 
 // Auth middleware
 async function requireAuth(req: Request, res: Response, next: any) {
-  const authHeader = req.headers.authorization;
-  if (!authHeader?.startsWith('Bearer ')) {
+  if (!req.session?.userId) {
     return res.status(401).json({ message: 'Unauthorized' });
   }
   
-  const userId = authHeader.replace('Bearer ', '');
   try {
-    const user = await storage.getUser(userId);
+    const user = await storage.getUser(req.session.userId);
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
     req.user = user;
     next();
   } catch (error) {
-    return res.status(401).json({ message: 'Invalid token' });
+    return res.status(401).json({ message: 'Invalid session' });
   }
 }
 
@@ -170,8 +168,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user: userResponse,
         profile,
         roles,
-        force_password_change: user.force_password_change || false,
-        token: user.id // Simple token system for now
+        force_password_change: user.force_password_change || false
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -225,6 +222,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/auth/logout', async (req: Request, res: Response) => {
+    try {
+      req.session.destroy((err) => {
+        if (err) {
+          console.error('Session destruction error:', err);
+          return res.status(500).json({ message: 'Erro ao fazer logout' });
+        }
+        res.clearCookie('connect.sid'); // Clear the session cookie
+        res.json({ message: 'Logout realizado com sucesso' });
+      });
+    } catch (error) {
+      console.error('Logout error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/auth/logout-old', async (req: Request, res: Response) => {
     try {
       req.session.destroy((err) => {
         if (err) {
