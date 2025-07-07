@@ -345,13 +345,16 @@ export class DatabaseStorage implements IStorage {
 
   async deleteUser(userId: string): Promise<void> {
     try {
-      // First delete related records
-      await this.db.delete(companyMembers).where(eq(companyMembers.user_id, userId));
-      await this.db.delete(userRoles).where(eq(userRoles.user_id, userId));
-      await this.db.delete(profiles).where(eq(profiles.user_id, userId));
+      // First delete all related records to avoid foreign key violations
+      await db.delete(content).where(eq(content.author_id, userId));
+      await db.delete(enrollments).where(eq(enrollments.user_id, userId));
+      await db.delete(userActivities).where(eq(userActivities.user_id, userId));
+      await db.delete(companyMembers).where(eq(companyMembers.user_id, userId));
+      await db.delete(userRoles).where(eq(userRoles.user_id, userId));
+      await db.delete(profiles).where(eq(profiles.user_id, userId));
       
       // Finally delete the user
-      await this.db.delete(users).where(eq(users.id, userId));
+      await db.delete(users).where(eq(users.id, userId));
     } catch (error) {
       console.error('Error deleting user:', error);
       throw error;
