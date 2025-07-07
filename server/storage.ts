@@ -610,6 +610,25 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
+  async getFinancialTransactions(startDate?: string, endDate?: string): Promise<FinancialTransaction[]> {
+    let query = db.select().from(financialTransactions);
+    
+    if (startDate && endDate) {
+      query = query.where(
+        and(
+          gte(financialTransactions.transaction_date, startDate),
+          lte(financialTransactions.transaction_date, endDate)
+        )
+      );
+    } else if (startDate) {
+      query = query.where(gte(financialTransactions.transaction_date, startDate));
+    } else if (endDate) {
+      query = query.where(lte(financialTransactions.transaction_date, endDate));
+    }
+    
+    return await query.orderBy(desc(financialTransactions.transaction_date));
+  }
+
   // Event registration methods
   async registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration> {
     const registrationData = {
