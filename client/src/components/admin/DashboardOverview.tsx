@@ -50,18 +50,26 @@ const DashboardOverview = () => {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'bg-green-600/20 text-green-400';
       case 'planning': return 'bg-yellow-600/20 text-yellow-400';
+      case 'published': return 'bg-blue-600/20 text-blue-400';
+      case 'registration_open': return 'bg-green-600/20 text-green-400';
+      case 'final_days': return 'bg-orange-600/20 text-orange-400';
+      case 'active': return 'bg-purple-600/20 text-purple-400';
       case 'completed': return 'bg-blue-600/20 text-blue-400';
+      case 'cancelled': return 'bg-red-600/20 text-red-400';
       default: return 'bg-gray-600/20 text-gray-400';
     }
   };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
-      case 'active': return 'Ativo';
-      case 'planning': return 'Planejando';
-      case 'completed': return 'Concluído';
+      case 'planning': return 'Planejamento';
+      case 'published': return 'Publicado';
+      case 'registration_open': return 'Inscrições Abertas';
+      case 'final_days': return 'Últimos Dias';
+      case 'active': return 'Em Andamento';
+      case 'completed': return 'Finalizado';
+      case 'cancelled': return 'Cancelado';
       default: return 'Preparação';
     }
   };

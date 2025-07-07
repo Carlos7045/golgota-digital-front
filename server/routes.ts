@@ -581,7 +581,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/events', requireAuth, async (req: Request, res: Response) => {
     try {
       const events = await storage.getEvents();
-      res.json({ events });
+      
+      // Atualizar status automaticamente baseado na data
+      const updatedEvents = await Promise.all(events.map(async (event: any) => {
+        const now = new Date();
+        const startDate = new Date(event.start_date);
+        const endDate = new Date(event.end_date);
+        const daysUntilStart = Math.ceil((startDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        let newStatus = event.status;
+        
+        // Se o evento já terminou, marcar como finalizado
+        if (now > endDate && event.status !== 'completed' && event.status !== 'cancelled') {
+          newStatus = 'completed';
+        }
+        // Se o evento está acontecendo agora, marcar como ativo
+        else if (now >= startDate && now <= endDate && event.status !== 'active' && event.status !== 'cancelled') {
+          newStatus = 'active';
+        }
+        // Se faltam 7 dias ou menos e está com inscrições abertas, mudar para últimos dias
+        else if (daysUntilStart <= 7 && daysUntilStart > 0 && event.status === 'registration_open') {
+          newStatus = 'final_days';
+        }
+        
+        // Atualizar no banco se necessário
+        if (newStatus !== event.status) {
+          await storage.updateEvent(event.id, { status: newStatus });
+          return { ...event, status: newStatus };
+        }
+        
+        return event;
+      }));
+      
+      res.json({ events: updatedEvents });
     } catch (error) {
       console.error('Events fetch error:', error);
       res.status(500).json({ message: 'Internal server error' });
@@ -665,6 +697,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ event });
     } catch (error) {
       console.error('Event update error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/events/:id/status', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { status } = req.body;
+      const event = await storage.updateEvent(req.params.id, { status });
+      res.json({ event });
+    } catch (error) {
+      console.error('Event status update error:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

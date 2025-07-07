@@ -73,14 +73,18 @@ const TrainingsChannel = ({ user }: TrainingsChannelProps) => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
-        return <Badge className="bg-green-600/20 text-green-400">Ativo</Badge>;
       case 'planning':
         return <Badge className="bg-yellow-600/20 text-yellow-400">Planejamento</Badge>;
       case 'published':
         return <Badge className="bg-blue-600/20 text-blue-400">Publicado</Badge>;
+      case 'registration_open':
+        return <Badge className="bg-green-600/20 text-green-400">Inscrições Abertas</Badge>;
+      case 'final_days':
+        return <Badge className="bg-orange-600/20 text-orange-400">Últimos Dias</Badge>;
+      case 'active':
+        return <Badge className="bg-purple-600/20 text-purple-400">Em Andamento</Badge>;
       case 'completed':
-        return <Badge className="bg-blue-600/20 text-blue-400">Concluído</Badge>;
+        return <Badge className="bg-blue-600/20 text-blue-400">Finalizado</Badge>;
       case 'cancelled':
         return <Badge className="bg-red-600/20 text-red-400">Cancelado</Badge>;
       default:

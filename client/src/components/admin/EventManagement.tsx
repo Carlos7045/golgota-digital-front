@@ -21,7 +21,7 @@ interface Event {
   duration: string;
   max_participants: number;
   registered_participants: number;
-  status: 'planning' | 'active' | 'completed' | 'cancelled' | 'published';
+  status: 'planning' | 'published' | 'registration_open' | 'final_days' | 'active' | 'completed' | 'cancelled';
   description: string;
   price: string;
   requirements: string;
@@ -170,6 +170,59 @@ const EventManagement = () => {
     }
   };
 
+  const handleStatusChange = async (eventId: string, newStatus: Event['status']) => {
+    try {
+      await apiPut(`/api/events/${eventId}/status`, { status: newStatus });
+      
+      toast({
+        title: "Sucesso",
+        description: "Status do evento atualizado com sucesso!"
+      });
+      fetchEvents();
+    } catch (error) {
+      console.error('Error updating event status:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar status do evento",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getNextStatus = (currentStatus: string): Event['status'] | null => {
+    switch (currentStatus) {
+      case 'planning':
+        return 'published';
+      case 'published':
+        return 'registration_open';
+      case 'registration_open':
+        return 'final_days';
+      case 'final_days':
+        return 'active';
+      case 'active':
+        return 'completed';
+      default:
+        return null;
+    }
+  };
+
+  const getStatusAction = (status: string) => {
+    switch (status) {
+      case 'planning':
+        return 'Publicar';
+      case 'published':
+        return 'Abrir Inscrições';
+      case 'registration_open':
+        return 'Últimos Dias';
+      case 'final_days':
+        return 'Iniciar Evento';
+      case 'active':
+        return 'Finalizar';
+      default:
+        return null;
+    }
+  };
+
   const getTypeBadge = (type: string) => {
     switch (type) {
       case 'rally':
@@ -204,12 +257,18 @@ const EventManagement = () => {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'active':
-        return <Badge className="bg-green-600/20 text-green-400">Ativo</Badge>;
       case 'planning':
         return <Badge className="bg-yellow-600/20 text-yellow-400">Planejamento</Badge>;
+      case 'published':
+        return <Badge className="bg-blue-600/20 text-blue-400">Publicado</Badge>;
+      case 'registration_open':
+        return <Badge className="bg-green-600/20 text-green-400">Inscrições Abertas</Badge>;
+      case 'final_days':
+        return <Badge className="bg-orange-600/20 text-orange-400">Últimos Dias</Badge>;
+      case 'active':
+        return <Badge className="bg-purple-600/20 text-purple-400">Em Andamento</Badge>;
       case 'completed':
-        return <Badge className="bg-blue-600/20 text-blue-400">Concluído</Badge>;
+        return <Badge className="bg-blue-600/20 text-blue-400">Finalizado</Badge>;
       case 'cancelled':
         return <Badge className="bg-red-600/20 text-red-400">Cancelado</Badge>;
       default:
@@ -428,10 +487,20 @@ const EventManagement = () => {
                     <p className="text-gray-400 text-sm">{event.description}</p>
                   )}
                   <div className="flex gap-2 pt-4">
+                    {getNextStatus(event.status) && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleStatusChange(event.id, getNextStatus(event.status)!)}
+                        className="flex-1 border-military-gold/30 text-military-gold hover:bg-military-gold/10"
+                      >
+                        {getStatusAction(event.status)}
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 border-military-gold/30 text-white hover:bg-military-gold/10"
+                      className="border-blue-500/30 text-blue-400 hover:bg-blue-500/10"
                     >
                       Editar
                     </Button>
