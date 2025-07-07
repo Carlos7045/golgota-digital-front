@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement } from "@shared/schema";
-import { eq, and, desc, inArray, isNotNull } from "drizzle-orm";
+import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction } from "@shared/schema";
+import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -48,6 +48,16 @@ export interface IStorage {
   // Messages (community)
   getChannelMessages(channel: string): Promise<any[]>;
   createMessage(userId: string, channel: string, content: string): Promise<any>;
+
+  // Financial management
+  getFinancialCategories(): Promise<FinancialCategory[]>;
+  createFinancialCategory(category: any): Promise<FinancialCategory>;
+  getMonthlyPayments(month?: number, year?: number): Promise<any[]>;
+  createMonthlyPayment(payment: any): Promise<MonthlyPayment>;
+  updateMonthlyPayment(paymentId: string, data: any): Promise<MonthlyPayment>;
+  getFinancialTransactions(startDate?: string, endDate?: string): Promise<any[]>;
+  createFinancialTransaction(transaction: any): Promise<FinancialTransaction>;
+  getFinancialSummary(month?: number, year?: number): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {

@@ -12,6 +12,9 @@ export const contentStatusEnum = pgEnum("content_status", ["published", "draft",
 export const courseLevelEnum = pgEnum("course_level", ["Básico", "Intermediário", "Avançado"]);
 export const courseStatusEnum = pgEnum("course_status", ["available", "coming-soon", "discontinued"]);
 export const enrollmentStatusEnum = pgEnum("enrollment_status", ["pending", "approved", "completed", "cancelled"]);
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "overdue", "cancelled"]);
+export const transactionTypeEnum = pgEnum("transaction_type", ["income", "expense"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["cash", "bank_transfer", "pix", "card", "other"]);
 
 // Users table (for auth)
 export const users = pgTable("users", {
@@ -181,6 +184,44 @@ export const achievements = pgTable("achievements", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Financial categories table
+export const financialCategories = pgTable("financial_categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  type: transactionTypeEnum("type").notNull(), // income or expense
+  description: text("description"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
+// Monthly payments table (mensalidades)
+export const monthlyPayments = pgTable("monthly_payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  due_date: date("due_date").notNull(),
+  payment_date: date("payment_date"),
+  status: paymentStatusEnum("status").default("pending"),
+  payment_method: paymentMethodEnum("payment_method"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+// Financial transactions table
+export const financialTransactions = pgTable("financial_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  description: text("description").notNull(),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  type: transactionTypeEnum("type").notNull(),
+  category_id: uuid("category_id").references(() => financialCategories.id),
+  user_id: uuid("user_id").references(() => users.id), // who made the transaction (optional)
+  transaction_date: date("transaction_date").notNull(),
+  payment_method: paymentMethodEnum("payment_method"),
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -225,6 +266,23 @@ export const insertCourseSchema = createInsertSchema(courses).omit({
 });
 
 // Type exports
+export const insertFinancialCategorySchema = createInsertSchema(financialCategories).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertMonthlyPaymentSchema = createInsertSchema(monthlyPayments).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertFinancialTransactionSchema = createInsertSchema(financialTransactions).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
@@ -236,3 +294,6 @@ export type Course = typeof courses.$inferSelect;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type UserActivity = typeof userActivities.$inferSelect;
 export type Achievement = typeof achievements.$inferSelect;
+export type FinancialCategory = typeof financialCategories.$inferSelect;
+export type MonthlyPayment = typeof monthlyPayments.$inferSelect;
+export type FinancialTransaction = typeof financialTransactions.$inferSelect;

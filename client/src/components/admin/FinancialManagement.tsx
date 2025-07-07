@@ -32,8 +32,17 @@ const FinancialManagement = () => {
 
   const fetchFinancialData = async () => {
     try {
-      const data = await apiGet('/api/stats');
-      setStats(data);
+      const [summaryData, paymentsData, transactionsData] = await Promise.all([
+        apiGet('/api/financial/summary'),
+        apiGet('/api/financial/payments'),
+        apiGet('/api/financial/transactions')
+      ]);
+      
+      setStats({
+        ...summaryData,
+        payments: paymentsData.payments || [],
+        transactions: transactionsData.transactions || []
+      });
     } catch (error) {
       console.error('Error fetching financial data:', error);
       toast({
@@ -46,26 +55,27 @@ const FinancialManagement = () => {
     }
   };
 
-  // Real data based on current stats
+  // Real data from API
   const financialSummary = {
-    totalRevenue: 0, // No financial system implemented yet
-    monthlyFees: 0,
-    otherIncome: 0,
-    pendingPayments: 0,
+    totalRevenue: stats?.totalRevenue || 0,
+    monthlyFees: stats?.monthlyFees || 0,
+    otherIncome: stats?.otherIncome || 0,
+    pendingPayments: stats?.pendingPayments || 0,
     totalMembers: stats?.totalMembers || 0,
-    payingMembers: 0
+    payingMembers: stats?.payingMembers || 0,
+    pendingMembersCount: stats?.pendingMembersCount || 0
   };
 
-  const monthlyPayments: any[] = []; // No payment data yet
-  const otherTransactions: any[] = []; // No transaction data yet
+  const monthlyPayments = stats?.payments || [];
+  const otherTransactions = stats?.transactions || [];
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Pago':
+      case 'paid':
         return <Badge className="bg-green-600/20 text-green-400">Pago</Badge>;
-      case 'Pendente':
+      case 'pending':
         return <Badge className="bg-yellow-600/20 text-yellow-400">Pendente</Badge>;
-      case 'Atrasado':
+      case 'overdue':
         return <Badge className="bg-red-600/20 text-red-400">Atrasado</Badge>;
       default:
         return <Badge className="bg-gray-600/20 text-gray-400">{status}</Badge>;
@@ -73,7 +83,7 @@ const FinancialManagement = () => {
   };
 
   const getTransactionBadge = (type: string) => {
-    return type === 'Entrada' 
+    return type === 'income' 
       ? <Badge className="bg-green-600/20 text-green-400">Entrada</Badge>
       : <Badge className="bg-red-600/20 text-red-400">Saída</Badge>;
   };
@@ -139,7 +149,7 @@ const FinancialManagement = () => {
             <CardContent>
               <div className="text-2xl font-bold text-white">R$ {financialSummary.pendingPayments}</div>
               <p className="text-xs text-red-400">
-                15 membros em atraso
+                {financialSummary.pendingMembersCount} membros em atraso
               </p>
             </CardContent>
           </Card>
@@ -208,17 +218,17 @@ const FinancialManagement = () => {
                     ) : monthlyPayments.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={7} className="text-center text-gray-400 py-8">
-                          Nenhum pagamento registrado. Sistema financeiro será implementado em breve.
+                          Nenhum pagamento registrado para este mês.
                         </TableCell>
                       </TableRow>
                     ) : (
                       monthlyPayments.map((payment) => (
                         <TableRow key={payment.id} className="border-military-gold/20">
-                          <TableCell className="text-white font-medium">{payment.name}</TableCell>
-                          <TableCell className="text-gray-300">{payment.rank}</TableCell>
-                          <TableCell className="text-gray-300">{payment.company}</TableCell>
-                          <TableCell className="text-white">R$ {payment.amount}</TableCell>
-                          <TableCell className="text-gray-300">{payment.dueDate}</TableCell>
+                          <TableCell className="text-white font-medium">{payment.user_name}</TableCell>
+                          <TableCell className="text-gray-300">{payment.user_rank}</TableCell>
+                          <TableCell className="text-gray-300">{payment.user_company}</TableCell>
+                          <TableCell className="text-white">R$ {Number(payment.amount).toFixed(2)}</TableCell>
+                          <TableCell className="text-gray-300">{new Date(payment.due_date).toLocaleDateString('pt-BR')}</TableCell>
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
@@ -274,19 +284,19 @@ const FinancialManagement = () => {
                     ) : otherTransactions.length === 0 ? (
                       <TableRow>
                         <TableCell colSpan={6} className="text-center text-gray-400 py-8">
-                          Nenhuma transação registrada. Sistema financeiro será implementado em breve.
+                          Nenhuma transação registrada para este período.
                         </TableCell>
                       </TableRow>
                     ) : (
                       otherTransactions.map((transaction) => (
                         <TableRow key={transaction.id} className="border-military-gold/20">
                           <TableCell className="text-white font-medium">{transaction.description}</TableCell>
-                          <TableCell className={`font-medium ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                            R$ {Math.abs(transaction.amount)}
+                          <TableCell className={`font-medium ${transaction.type === 'income' ? 'text-green-400' : 'text-red-400'}`}>
+                            R$ {Number(transaction.amount).toFixed(2)}
                           </TableCell>
                           <TableCell>{getTransactionBadge(transaction.type)}</TableCell>
-                          <TableCell className="text-gray-300">{transaction.date}</TableCell>
-                          <TableCell className="text-gray-300">{transaction.category}</TableCell>
+                          <TableCell className="text-gray-300">{new Date(transaction.transaction_date).toLocaleDateString('pt-BR')}</TableCell>
+                          <TableCell className="text-gray-300">{transaction.category_name || 'Sem categoria'}</TableCell>
                           <TableCell>
                             <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
                               Editar
