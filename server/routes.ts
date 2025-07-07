@@ -771,12 +771,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const profile = await storage.getProfile(userId);
             
             const customerData = {
-              name: profile?.full_name || user?.email || 'Usuário',
+              name: profile?.name || user?.email || 'Usuário',
               email: user?.email || '',
               cpfCnpj: profile?.cpf?.replace(/\D/g, '') || '',
               phone: profile?.phone || '',
               city: profile?.city || '',
-              state: profile?.state || ''
+              address: profile?.address || ''
             };
 
             const newCustomer = await asaasService.createCustomer(customerData);

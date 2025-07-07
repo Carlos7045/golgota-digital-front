@@ -25,11 +25,6 @@ const Header = () => {
     navItems.push({ name: 'Pagamentos', href: '/pagamentos', isRoute: true });
   }
 
-  // Add payment link for eligible users
-  if (user && profile?.rank && ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante'].includes(profile.rank.toLowerCase())) {
-    navItems.push({ name: 'Pagamentos', href: '/pagamentos', isRoute: true });
-  }
-
   const handleAuthClick = () => {
     if (user) {
       navigate('/comunidade');
