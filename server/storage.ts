@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction } from "@shared/schema";
+import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
 import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -58,6 +58,21 @@ export interface IStorage {
   getFinancialTransactions(startDate?: string, endDate?: string): Promise<any[]>;
   createFinancialTransaction(transaction: any): Promise<FinancialTransaction>;
   getFinancialSummary(month?: number, year?: number): Promise<any>;
+
+  // Asaas payment integration
+  getAsaasCustomer(userId: string): Promise<AsaasCustomer | undefined>;
+  createAsaasCustomer(userId: string, asaasCustomerId: string): Promise<AsaasCustomer>;
+  getAsaasSubscription(userId: string): Promise<AsaasSubscription | undefined>;
+  createAsaasSubscription(data: any): Promise<AsaasSubscription>;
+  updateAsaasSubscription(subscriptionId: string, data: any): Promise<AsaasSubscription>;
+  getAsaasPayments(userId: string): Promise<AsaasPayment[]>;
+  createAsaasPayment(data: any): Promise<AsaasPayment>;
+  updateAsaasPayment(paymentId: string, data: any): Promise<AsaasPayment>;
+  getPaymentEligibleUsers(): Promise<Profile[]>;
+  getUsersWithActiveSubscriptions(): Promise<Profile[]>;
+  createAsaasWebhook(data: any): Promise<AsaasWebhook>;
+  getUnprocessedWebhooks(): Promise<AsaasWebhook[]>;
+  markWebhookProcessed(webhookId: string): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -416,6 +431,116 @@ export class DatabaseStorage implements IStorage {
       console.error('Error deleting user:', error);
       throw error;
     }
+  }
+  // Asaas payment integration methods
+  async getAsaasCustomer(userId: string): Promise<AsaasCustomer | undefined> {
+    const [customer] = await db.select().from(asaasCustomers).where(eq(asaasCustomers.user_id, userId));
+    return customer;
+  }
+
+  async createAsaasCustomer(userId: string, asaasCustomerId: string): Promise<AsaasCustomer> {
+    const [customer] = await db.insert(asaasCustomers).values({
+      user_id: userId,
+      asaas_customer_id: asaasCustomerId,
+    }).returning();
+    return customer;
+  }
+
+  async getAsaasSubscription(userId: string): Promise<AsaasSubscription | undefined> {
+    const [subscription] = await db.select().from(asaasSubscriptions).where(eq(asaasSubscriptions.user_id, userId));
+    return subscription;
+  }
+
+  async createAsaasSubscription(data: any): Promise<AsaasSubscription> {
+    const [subscription] = await db.insert(asaasSubscriptions).values(data).returning();
+    return subscription;
+  }
+
+  async updateAsaasSubscription(subscriptionId: string, data: any): Promise<AsaasSubscription> {
+    const [subscription] = await db.update(asaasSubscriptions)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(asaasSubscriptions.id, subscriptionId))
+      .returning();
+    return subscription;
+  }
+
+  async getAsaasPayments(userId: string): Promise<AsaasPayment[]> {
+    return await db.select().from(asaasPayments)
+      .where(eq(asaasPayments.user_id, userId))
+      .orderBy(desc(asaasPayments.due_date));
+  }
+
+  async createAsaasPayment(data: any): Promise<AsaasPayment> {
+    const [payment] = await db.insert(asaasPayments).values(data).returning();
+    return payment;
+  }
+
+  async updateAsaasPayment(paymentId: string, data: any): Promise<AsaasPayment> {
+    const [payment] = await db.update(asaasPayments)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(asaasPayments.asaas_payment_id, paymentId))
+      .returning();
+    return payment;
+  }
+
+  async getPaymentEligibleUsers(): Promise<Profile[]> {
+    const eligibleRanks = ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante'];
+    
+    return await db.select()
+      .from(profiles)
+      .where(
+        and(
+          isNotNull(profiles.rank),
+          inArray(profiles.rank, eligibleRanks)
+        )
+      );
+  }
+
+  async getUsersWithActiveSubscriptions(): Promise<Profile[]> {
+    const result = await db.select({
+      id: profiles.id,
+      user_id: profiles.user_id,
+      name: profiles.name,
+      rank: profiles.rank,
+      email: profiles.email,
+      phone: profiles.phone,
+      birth_date: profiles.birth_date,
+      address: profiles.address,
+      avatar_url: profiles.avatar_url,
+      bio: profiles.bio,
+      specialties: profiles.specialties,
+      joined_at: profiles.joined_at,
+      created_at: profiles.created_at,
+      updated_at: profiles.updated_at,
+      company: profiles.company,
+      cpf: profiles.cpf,
+      city: profiles.city,
+    })
+    .from(profiles)
+    .innerJoin(asaasSubscriptions, eq(profiles.user_id, asaasSubscriptions.user_id))
+    .where(eq(asaasSubscriptions.status, 'ACTIVE'));
+    
+    return result;
+  }
+
+  async createAsaasWebhook(data: any): Promise<AsaasWebhook> {
+    const [webhook] = await db.insert(asaasWebhooks).values(data).returning();
+    return webhook;
+  }
+
+  async getUnprocessedWebhooks(): Promise<AsaasWebhook[]> {
+    return await db.select().from(asaasWebhooks)
+      .where(eq(asaasWebhooks.processed, false))
+      .orderBy(asaasWebhooks.created_at);
+  }
+
+  async markWebhookProcessed(webhookId: string): Promise<void> {
+    await db.update(asaasWebhooks)
+      .set({ 
+        processed: true, 
+        processed_at: new Date() 
+      })
+      .where(eq(asaasWebhooks.id, webhookId));
   }
 }
 

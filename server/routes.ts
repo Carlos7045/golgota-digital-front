@@ -868,5 +868,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Payment management routes
+  app.get('/api/payments/subscription', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const subscription = await storage.getAsaasSubscription(req.user.id);
+      res.json(subscription);
+    } catch (error) {
+      console.error('Get subscription error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  app.get('/api/payments/history', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const payments = await storage.getAsaasPayments(req.user.id);
+      res.json(payments);
+    } catch (error) {
+      console.error('Get payments error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/payments/create-subscription', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { billingType } = req.body;
+      
+      if (!billingType || !['BOLETO', 'PIX'].includes(billingType)) {
+        return res.status(400).json({ message: 'Tipo de cobrança inválido' });
+      }
+
+      // Get user profile
+      const profile = await storage.getProfile(req.user.id);
+      if (!profile) {
+        return res.status(404).json({ message: 'Perfil não encontrado' });
+      }
+
+      // Check if user is eligible for payment
+      const { AsaasService } = await import('./asaas');
+      const isEligible = AsaasService.isEligibleForPayment(profile.rank || '');
+      if (!isEligible) {
+        return res.status(403).json({ message: 'Usuário não elegível para pagamentos' });
+      }
+
+      // Check if already has subscription
+      const existingSubscription = await storage.getAsaasSubscription(req.user.id);
+      if (existingSubscription) {
+        return res.status(400).json({ message: 'Usuário já possui assinatura ativa' });
+      }
+
+      // Get or create Asaas customer
+      let asaasCustomer = await storage.getAsaasCustomer(req.user.id);
+      if (!asaasCustomer) {
+        // Create customer in Asaas
+        const { asaasService } = await import('./asaas');
+        const customerData = {
+          name: profile.name,
+          email: profile.email || req.user.email,
+          cpfCnpj: AsaasService.formatCPF(profile.cpf || ''),
+          phone: profile.phone || '',
+          city: profile.city || '',
+        };
+
+        const asaasCustomerResponse = await asaasService.createCustomer(customerData);
+        asaasCustomer = await storage.createAsaasCustomer(req.user.id, asaasCustomerResponse.id);
+      }
+
+      // Create subscription in Asaas
+      const { asaasService } = await import('./asaas');
+      const subscriptionData = {
+        customer: asaasCustomer.asaas_customer_id,
+        billingType,
+        nextDueDate: AsaasService.getNextDueDate(30),
+        value: 10.00,
+        cycle: 'MONTHLY' as const,
+        description: 'Mensalidade Comando Gólgota - R$ 10,00',
+        externalReference: `user_${req.user.id}`,
+      };
+
+      const asaasSubscriptionResponse = await asaasService.createSubscription(subscriptionData);
+      
+      // Save subscription in database
+      await storage.createAsaasSubscription({
+        user_id: req.user.id,
+        asaas_subscription_id: asaasSubscriptionResponse.id,
+        asaas_customer_id: asaasCustomer.asaas_customer_id,
+        status: 'ACTIVE',
+        value: 10.00,
+        cycle: 'MONTHLY',
+        next_due_date: new Date(subscriptionData.nextDueDate),
+      });
+
+      res.json({ 
+        message: 'Assinatura criada com sucesso',
+        subscription: asaasSubscriptionResponse
+      });
+    } catch (error: any) {
+      console.error('Create subscription error:', error);
+      res.status(500).json({ message: error.message || 'Erro interno do servidor' });
+    }
+  });
+
+  app.post('/api/payments/cancel-subscription', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const subscription = await storage.getAsaasSubscription(req.user.id);
+      if (!subscription) {
+        return res.status(404).json({ message: 'Assinatura não encontrada' });
+      }
+
+      // Cancel subscription in Asaas
+      const { asaasService } = await import('./asaas');
+      await asaasService.cancelSubscription(subscription.asaas_subscription_id);
+      
+      // Update subscription status
+      await storage.updateAsaasSubscription(subscription.id, { status: 'CANCELLED' });
+
+      res.json({ message: 'Assinatura cancelada com sucesso' });
+    } catch (error: any) {
+      console.error('Cancel subscription error:', error);
+      res.status(500).json({ message: error.message || 'Erro interno do servidor' });
+    }
+  });
+
+  // Webhook handler for Asaas
+  app.post('/api/webhooks/asaas', async (req: Request, res: Response) => {
+    try {
+      const webhookData = req.body;
+      
+      // Save webhook for processing
+      await storage.createAsaasWebhook({
+        event_id: webhookData.id,
+        event_type: webhookData.event,
+        payment_id: webhookData.payment?.id,
+        subscription_id: webhookData.payment?.subscription,
+        customer_id: webhookData.payment?.customer,
+        raw_data: JSON.stringify(webhookData),
+      });
+
+      // Process webhook immediately
+      await processAsaasWebhook(webhookData);
+
+      res.status(200).json({ message: 'Webhook processado' });
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      res.status(500).json({ message: 'Erro ao processar webhook' });
+    }
+  });
+
   return httpServer;
+}
+
+async function processAsaasWebhook(webhookData: any) {
+  try {
+    const { event, payment } = webhookData;
+    
+    if (!payment) return;
+
+    // Find user by Asaas customer ID
+    const customer = await db.select().from(asaasCustomers)
+      .where(eq(asaasCustomers.asaas_customer_id, payment.customer))
+      .limit(1);
+    
+    if (customer.length === 0) {
+      console.log('Customer not found for webhook:', payment.customer);
+      return;
+    }
+
+    const userId = customer[0].user_id;
+
+    switch (event) {
+      case 'PAYMENT_CREATED':
+        // Create or update payment record
+        await storage.createAsaasPayment({
+          user_id: userId,
+          asaas_payment_id: payment.id,
+          asaas_customer_id: payment.customer,
+          asaas_subscription_id: payment.subscription,
+          value: payment.value,
+          status: 'PENDING',
+          billing_type: payment.billingType,
+          due_date: new Date(payment.dueDate),
+          description: payment.description,
+          invoice_url: payment.invoiceUrl,
+          bank_slip_url: payment.bankSlipUrl,
+          pix_code: payment.pixCode,
+        });
+        break;
+
+      case 'PAYMENT_RECEIVED':
+        // Update payment as received
+        await storage.updateAsaasPayment(payment.id, {
+          status: 'RECEIVED',
+          payment_date: new Date(payment.paymentDate || new Date()),
+          net_value: payment.netValue,
+        });
+        break;
+
+      case 'PAYMENT_OVERDUE':
+        // Update payment as overdue
+        await storage.updateAsaasPayment(payment.id, {
+          status: 'OVERDUE',
+        });
+        break;
+
+      case 'PAYMENT_CANCELLED':
+        // Update payment as cancelled
+        await storage.updateAsaasPayment(payment.id, {
+          status: 'CANCELLED',
+        });
+        break;
+    }
+  } catch (error) {
+    console.error('Error processing Asaas webhook:', error);
+  }
 }

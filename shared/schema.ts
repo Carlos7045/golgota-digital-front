@@ -222,6 +222,62 @@ export const financialTransactions = pgTable("financial_transactions", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// Asaas payment integration tables
+export const asaasCustomers = pgTable("asaas_customers", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  asaas_customer_id: text("asaas_customer_id").notNull().unique(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const asaasSubscriptions = pgTable("asaas_subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  asaas_subscription_id: text("asaas_subscription_id").notNull().unique(),
+  asaas_customer_id: text("asaas_customer_id").notNull(),
+  status: text("status").notNull().default("ACTIVE"), // ACTIVE, CANCELLED, EXPIRED
+  value: decimal("value", { precision: 10, scale: 2 }).notNull(),
+  cycle: text("cycle").notNull().default("MONTHLY"),
+  next_due_date: timestamp("next_due_date"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const asaasPayments = pgTable("asaas_payments", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  subscription_id: uuid("subscription_id").references(() => asaasSubscriptions.id, { onDelete: "cascade" }),
+  asaas_payment_id: text("asaas_payment_id").notNull().unique(),
+  asaas_customer_id: text("asaas_customer_id").notNull(),
+  asaas_subscription_id: text("asaas_subscription_id"),
+  value: decimal("value", { precision: 10, scale: 2 }).notNull(),
+  net_value: decimal("net_value", { precision: 10, scale: 2 }),
+  status: text("status").notNull(), // PENDING, RECEIVED, OVERDUE, CANCELLED
+  billing_type: text("billing_type").notNull(), // BOLETO, PIX, CREDIT_CARD
+  due_date: timestamp("due_date").notNull(),
+  payment_date: timestamp("payment_date"),
+  description: text("description"),
+  invoice_url: text("invoice_url"),
+  bank_slip_url: text("bank_slip_url"),
+  pix_code: text("pix_code"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const asaasWebhooks = pgTable("asaas_webhooks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  event_id: text("event_id").notNull().unique(),
+  event_type: text("event_type").notNull(),
+  payment_id: text("payment_id"),
+  subscription_id: text("subscription_id"),
+  customer_id: text("customer_id"),
+  processed: boolean("processed").default(false),
+  processed_at: timestamp("processed_at"),
+  raw_data: text("raw_data").notNull(),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -283,6 +339,29 @@ export const insertFinancialTransactionSchema = createInsertSchema(financialTran
   updated_at: true,
 });
 
+export const insertAsaasCustomerSchema = createInsertSchema(asaasCustomers).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertAsaasSubscriptionSchema = createInsertSchema(asaasSubscriptions).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertAsaasPaymentSchema = createInsertSchema(asaasPayments).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
+export const insertAsaasWebhookSchema = createInsertSchema(asaasWebhooks).omit({
+  id: true,
+  created_at: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
@@ -297,3 +376,7 @@ export type Achievement = typeof achievements.$inferSelect;
 export type FinancialCategory = typeof financialCategories.$inferSelect;
 export type MonthlyPayment = typeof monthlyPayments.$inferSelect;
 export type FinancialTransaction = typeof financialTransactions.$inferSelect;
+export type AsaasCustomer = typeof asaasCustomers.$inferSelect;
+export type AsaasSubscription = typeof asaasSubscriptions.$inferSelect;
+export type AsaasPayment = typeof asaasPayments.$inferSelect;
+export type AsaasWebhook = typeof asaasWebhooks.$inferSelect;

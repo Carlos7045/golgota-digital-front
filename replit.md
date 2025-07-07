@@ -49,6 +49,13 @@ A comprehensive web application built for the Comando Gólgota community - a mil
 - Company management and assignment
 - Community statistics and analytics
 
+### Payment Management System
+- Monthly subscription fees of R$10 for members with rank "Soldado" and above
+- Asaas payment integration with PIX and Boleto support
+- Automatic payment tracking and webhook processing
+- User-friendly payment management interface
+- Real-time payment status updates
+
 ### Training Management
 - Course catalog with different skill levels
 - Training event scheduling and management
@@ -130,6 +137,7 @@ A comprehensive web application built for the Comando Gólgota community - a mil
 - July 07, 2025. Fixed login issue for Melry Pacheco Salgado (melrysalgado704@gmail.com) by updating password hash
 - July 07, 2025. Corrected hardcoded company names: removed "CIA Alpha" references and now displaying actual user companies from database
 - July 07, 2025. Enhanced profile data display: added CPF and city fields to profile view and editing form, all personal data now properly displayed
+- July 07, 2025. Integrated complete Asaas payment system for monthly membership fees: R$10/month for members with rank "Soldado" and above, supports PIX and Boleto payments, includes webhook processing
 
 ## User Preferences
 

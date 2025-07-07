@@ -8,9 +8,9 @@ import { useAuth } from '@/contexts/AuthContext';
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
-  const navItems = [
+  const baseNavItems = [
     { name: 'Sobre', href: '#sobre' },
     { name: 'Treinamentos', href: '#treinamentos' },
     { name: 'Acampamentos', href: '#acampamentos' },
@@ -18,6 +18,17 @@ const Header = () => {
     { name: 'Agenda', href: '#agenda' },
     { name: 'Inscreva-se', href: '#inscricao' },
   ];
+
+  // Add payment link for eligible users
+  const navItems = [...baseNavItems];
+  if (user && profile?.rank && ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante'].includes(profile.rank.toLowerCase())) {
+    navItems.push({ name: 'Pagamentos', href: '/pagamentos', isRoute: true });
+  }
+
+  // Add payment link for eligible users
+  if (user && profile?.rank && ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante'].includes(profile.rank.toLowerCase())) {
+    navItems.push({ name: 'Pagamentos', href: '/pagamentos', isRoute: true });
+  }
 
   const handleAuthClick = () => {
     if (user) {
