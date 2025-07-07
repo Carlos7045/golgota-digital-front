@@ -71,17 +71,15 @@ const TrainingsChannel = ({ user }: TrainingsChannelProps) => {
         const response = await apiPost(`/api/events/${eventId}/register`, {});
         
         if (response.payment) {
-          // Event requires payment - open payment page
-          if (response.payment.paymentLinkUrl) {
-            // Open custom payment link with multiple payment options
-            window.open(response.payment.paymentLinkUrl, '_blank');
-          } else if (response.payment.invoiceUrl) {
-            // Fallback to invoice URL
-            window.open(response.payment.invoiceUrl, '_blank');
-          }
+          // Event requires payment - show payment options
+          const payment = response.payment;
           
-          // Show success message with payment info
-          alert(`✅ Inscrição iniciada!\n\n💰 Valor: R$ ${response.payment.value}\n📅 Vencimento: ${new Date(response.payment.dueDate).toLocaleDateString()}\n\n🔄 Você pode pagar via PIX, Cartão ou Boleto${response.payment.maxInstallments > 1 ? `\n💳 Até ${response.payment.maxInstallments}x no cartão` : ''}\n\nA página de pagamento foi aberta em uma nova aba.`);
+          let paymentMessage = `✅ Inscrição iniciada!\n\n💰 Valor: R$ ${payment.value}\n📅 Vencimento: ${new Date(payment.dueDate).toLocaleDateString()}\n\n🔄 Métodos disponíveis: ${payment.availableMethods?.join(', ')}\n💳 Parcelamento: Até ${payment.maxInstallments}x no cartão\n\nA página de pagamento será aberta para você escolher o método.`;
+          
+          if (confirm(paymentMessage)) {
+            // Open the payment page
+            window.open(payment.invoiceUrl, '_blank');
+          }
         } else {
           // Free event - registration complete
           setEnrolledEvents(prev => [...prev, eventId]);

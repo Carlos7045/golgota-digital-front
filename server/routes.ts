@@ -781,29 +781,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             asaasCustomer = await storage.createAsaasCustomer(userId, newCustomer.id);
           }
 
-          // Create payment link with multiple payment methods
-          const paymentLinkData = {
-            name: `Inscrição - ${event.name}`,
-            description: `Pagamento da inscrição para ${event.name}`,
-            billingType: 'UNDEFINED', // Let customer choose payment method
-            chargeType: 'DETACHED',
-            value: eventPrice,
-            dueDateLimitDays: 7,
-            subscriptionCycle: null,
-            maxInstallmentCount: eventPrice >= 100 ? 3 : 1, // Max 3 installments for values >= R$100
-            notificationEnabled: true,
-            callback: {
-              successUrl: `${process.env.CLIENT_URL || 'http://localhost:5000'}/comunidade?payment=success`,
-              autoRedirect: true
-            }
-          };
-
-          const paymentLink = await asaasService.createPaymentLink(paymentLinkData);
-
-          // Create individual payment for tracking
+          // Create a single payment allowing customer to choose payment method
           const paymentData = {
             customer: asaasCustomer.asaas_customer_id,
-            billingType: 'UNDEFINED',
+            billingType: 'UNDEFINED', // Let customer choose payment method
             value: eventPrice,
             dueDate: AsaasService.getNextDueDate(7),
             description: `Inscrição - ${event.name}`,
@@ -827,11 +808,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             payment: {
               id: payment.id,
               invoiceUrl: payment.invoiceUrl,
-              paymentLinkUrl: paymentLink.url,
-              paymentLinkId: paymentLink.id,
+              bankSlipUrl: payment.bankSlipUrl,
               value: eventPrice,
               dueDate: payment.dueDate,
-              maxInstallments: paymentLinkData.maxInstallmentCount
+              maxInstallments: eventPrice >= 100 ? 3 : 1,
+              availableMethods: ['PIX', 'Boleto', 'Cartão de Crédito']
             }
           });
 
