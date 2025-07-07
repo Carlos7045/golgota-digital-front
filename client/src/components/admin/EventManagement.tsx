@@ -72,7 +72,15 @@ const EventManagement = () => {
   };
 
   const handleCreateEvent = async () => {
+    console.log('handleCreateEvent chamado', newEvent);
+    
     if (!newEvent.name.trim() || !newEvent.start_date || !newEvent.end_date || !newEvent.location.trim()) {
+      console.log('Validação falhou:', {
+        name: newEvent.name,
+        start_date: newEvent.start_date,
+        end_date: newEvent.end_date,
+        location: newEvent.location
+      });
       toast({
         title: "Erro",
         description: "Nome, datas de início/fim e local são obrigatórios",
@@ -81,8 +89,9 @@ const EventManagement = () => {
       return;
     }
 
+    console.log('Enviando para API:', newEvent);
     try {
-      await apiPost('/api/events', {
+      const response = await apiPost('/api/events', {
         name: newEvent.name,
         type: newEvent.type,
         category: newEvent.category,
@@ -100,6 +109,8 @@ const EventManagement = () => {
         instructor: newEvent.instructor
       });
 
+      console.log('Resposta da API:', response);
+      
       toast({
         title: "Sucesso",
         description: "Evento criado com sucesso!"
@@ -126,7 +137,7 @@ const EventManagement = () => {
       console.error('Error creating event:', error);
       toast({
         title: "Erro",
-        description: "Erro ao criar evento",
+        description: error instanceof Error ? error.message : "Erro ao criar evento",
         variant: "destructive"
       });
     }
