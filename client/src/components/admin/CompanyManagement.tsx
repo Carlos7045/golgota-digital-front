@@ -49,8 +49,7 @@ const CompanyManagement = () => {
   });
 
   const [newMemberData, setNewMemberData] = useState({
-    user_id: '',
-    role: 'Membro'
+    user_id: ''
   });
   
   const { toast } = useToast();
@@ -61,7 +60,7 @@ const CompanyManagement = () => {
     'SP', 'SE', 'TO'
   ];
 
-  const memberRoles = ['Membro', 'Soldado', 'Cabo', 'Sargento', 'Tenente', 'Capitão'];
+
 
   useEffect(() => {
     fetchCompanies();
@@ -175,7 +174,13 @@ const CompanyManagement = () => {
     }
 
     try {
-      await apiPost(`/api/companies/${selectedCompany}/members`, newMemberData);
+      const selectedUser = allUsers.find(u => u.user_id === newMemberData.user_id);
+      const memberData = {
+        user_id: newMemberData.user_id,
+        role: selectedUser?.rank || 'Membro' // Usa a patente como função
+      };
+
+      await apiPost(`/api/companies/${selectedCompany}/members`, memberData);
 
       toast({
         title: "Sucesso",
@@ -183,7 +188,7 @@ const CompanyManagement = () => {
       });
 
       setIsAddMemberDialogOpen(false);
-      setNewMemberData({ user_id: '', role: 'Membro' });
+      setNewMemberData({ user_id: '' });
       fetchCompanyMembers(selectedCompany);
     } catch (error) {
       console.error('Error adding member:', error);
@@ -312,7 +317,7 @@ const CompanyManagement = () => {
     const newMember = {
       user_id: newMemberData.user_id,
       name: user.name,
-      role: newMemberData.role
+      role: user.rank // Usa a patente como função
     };
 
     setFormData(prev => ({
@@ -320,7 +325,7 @@ const CompanyManagement = () => {
       members: [...prev.members, newMember]
     }));
 
-    setNewMemberData({ user_id: '', role: 'Membro' });
+    setNewMemberData({ user_id: '' });
   };
 
   const removeMemberFromForm = (userId: string) => {
@@ -590,18 +595,6 @@ const CompanyManagement = () => {
                                     ))}
                                 </SelectContent>
                               </Select>
-                              <Select value={newMemberData.role} onValueChange={(value) => setNewMemberData({...newMemberData, role: value})}>
-                                <SelectTrigger className="bg-military-black border-military-gold/30 text-white w-32">
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent className="bg-military-black-light border-military-gold/20">
-                                  {memberRoles.map(role => (
-                                    <SelectItem key={role} value={role} className="text-white hover:bg-military-gold/20">
-                                      {role}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
                               <Button 
                                 type="button"
                                 onClick={addMemberToForm}
@@ -610,6 +603,9 @@ const CompanyManagement = () => {
                                 <Plus className="h-4 w-4" />
                               </Button>
                             </div>
+                            <p className="text-gray-400 text-sm mt-1">
+                              * A função do membro será automaticamente sua patente militar
+                            </p>
                           </div>
 
                           {/* Members List */}
@@ -801,21 +797,9 @@ const CompanyManagement = () => {
                                       ))}
                                   </SelectContent>
                                 </Select>
-                              </div>
-                              <div className="space-y-2">
-                                <Label className="text-white">Função na Companhia</Label>
-                                <Select value={newMemberData.role} onValueChange={(value) => setNewMemberData({...newMemberData, role: value})}>
-                                  <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
-                                    <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent className="bg-military-black-light border-military-gold/20">
-                                    {memberRoles.map(role => (
-                                      <SelectItem key={role} value={role} className="text-white hover:bg-military-gold/20">
-                                        {role}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
+                                <p className="text-gray-400 text-sm">
+                                  * A função do membro será automaticamente sua patente militar
+                                </p>
                               </div>
                             </div>
                             <DialogFooter>
