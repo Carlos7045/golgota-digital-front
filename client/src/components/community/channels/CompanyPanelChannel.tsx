@@ -1,28 +1,155 @@
-import { Shield, Users, FileText, TrendingUp, Bell, UserPlus, AlertCircle, Calendar } from 'lucide-react';
+import { Shield, Users, FileText, TrendingUp, Bell, UserPlus, AlertCircle, Calendar, Plus, Send } from 'lucide-react';
 import { User } from '@/pages/Community';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useState } from 'react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { useState, useEffect } from 'react';
+import { useToast } from '@/hooks/use-toast';
 
 interface CompanyPanelChannelProps {
   user: User;
 }
 
+interface CompanyStats {
+  totalMembers: number;
+  activeMembers: number;
+  pendingApprovals: number;
+  thisMonthJoined: number;
+}
+
+interface CompanyMember {
+  id: string;
+  name: string;
+  rank: string;
+  email: string;
+  phone: string;
+  avatar_url: string;
+  created_at: string;
+}
+
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  author_name: string;
+}
+
 const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
   const [activeTab, setActiveTab] = useState('overview');
-
-  const companyStats = {
+  const [stats, setStats] = useState<CompanyStats>({
     totalMembers: 0,
     activeMembers: 0,
     pendingApprovals: 0,
     thisMonthJoined: 0
-  };
-
-  const recentMembers: any[] = [];
-  const announcements: any[] = [];
+  });
+  const [members, setMembers] = useState<CompanyMember[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAnnouncementDialog, setShowAnnouncementDialog] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    title: '',
+    content: '',
+    priority: 'normal'
+  });
+  const { toast } = useToast();
 
   const isLeader = ['capitao', 'major', 'coronel', 'comandante', 'admin'].includes(user.rank);
+
+  const fetchCompanyStats = async () => {
+    try {
+      const response = await fetch('/api/company/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching company stats:', error);
+    }
+  };
+
+  const fetchCompanyMembers = async () => {
+    try {
+      const response = await fetch('/api/company/members');
+      if (response.ok) {
+        const data = await response.json();
+        setMembers(data.members || []);
+      }
+    } catch (error) {
+      console.error('Error fetching company members:', error);
+    }
+  };
+
+  const fetchAnnouncements = async () => {
+    try {
+      const response = await fetch('/api/company/announcements');
+      if (response.ok) {
+        const data = await response.json();
+        setAnnouncements(data.announcements || []);
+      }
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+    }
+  };
+
+  const handleCreateAnnouncement = async () => {
+    if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Título e conteúdo são obrigatórios.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/company/announcements', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newAnnouncement),
+      });
+
+      if (response.ok) {
+        toast({
+          title: "Comunicado criado",
+          description: "O comunicado foi publicado com sucesso.",
+        });
+        setNewAnnouncement({ title: '', content: '', priority: 'normal' });
+        setShowAnnouncementDialog(false);
+        fetchAnnouncements();
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Erro ao criar comunicado",
+          description: error.error || "Erro inesperado.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Error creating announcement:', error);
+      toast({
+        title: "Erro ao criar comunicado",
+        description: "Erro de conexão.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (isLeader) {
+      fetchCompanyStats();
+      fetchCompanyMembers();
+      fetchAnnouncements();
+    }
+    setLoading(false);
+  }, [isLeader]);
 
   if (!isLeader) {
     return (
@@ -52,6 +179,18 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
               </p>
             </CardContent>
           </Card>
+        </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex-1 overflow-y-auto p-6 bg-military-black">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center justify-center h-64">
+            <div className="text-white">Carregando dados da companhia...</div>
+          </div>
         </div>
       </div>
     );
@@ -108,7 +247,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white">{companyStats.totalMembers}</div>
+                  <div className="text-2xl font-bold text-white">{stats.totalMembers}</div>
                 </CardContent>
               </Card>
 
@@ -120,7 +259,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white">{companyStats.activeMembers}</div>
+                  <div className="text-2xl font-bold text-white">{stats.activeMembers}</div>
                 </CardContent>
               </Card>
 
@@ -132,7 +271,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white">{companyStats.pendingApprovals}</div>
+                  <div className="text-2xl font-bold text-white">{stats.pendingApprovals}</div>
                 </CardContent>
               </Card>
 
@@ -144,7 +283,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                   </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold text-white">{companyStats.thisMonthJoined}</div>
+                  <div className="text-2xl font-bold text-white">{stats.thisMonthJoined}</div>
                 </CardContent>
               </Card>
             </div>
@@ -156,7 +295,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentMembers.slice(0, 3).map((member) => (
+                  {members.slice(0, 3).map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-3 rounded-lg border border-military-gold/20">
                       <div className="flex items-center space-x-3">
                         <div className="w-8 h-8 bg-military-gold/20 rounded-full flex items-center justify-center">
@@ -164,11 +303,11 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                         </div>
                         <div>
                           <p className="font-medium text-white">{member.name}</p>
-                          <p className="text-sm text-gray-400">Ingressou em {member.joinedAt}</p>
+                          <p className="text-sm text-gray-400">Ingressou em {new Date(member.created_at).toLocaleDateString('pt-BR')}</p>
                         </div>
                       </div>
-                      <Badge className={member.status === 'ativo' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
-                        {member.status}
+                      <Badge className="bg-green-600 text-white">
+                        Ativo
                       </Badge>
                     </div>
                   ))}
@@ -187,7 +326,7 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {recentMembers.map((member) => (
+                  {members.map((member) => (
                     <div key={member.id} className="flex items-center justify-between p-4 rounded-lg border border-military-gold/20">
                       <div className="flex items-center space-x-4">
                         <div className="w-10 h-10 bg-military-gold/20 rounded-full flex items-center justify-center">
@@ -196,12 +335,12 @@ const CompanyPanelChannel = ({ user }: CompanyPanelChannelProps) => {
                         <div>
                           <p className="font-medium text-white">{member.name}</p>
                           <p className="text-sm text-gray-400">Patente: {member.rank}</p>
-                          <p className="text-sm text-gray-400">Ingressou: {member.joinedAt}</p>
+                          <p className="text-sm text-gray-400">Ingressou: {new Date(member.created_at).toLocaleDateString('pt-BR')}</p>
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <Badge className={member.status === 'ativo' ? 'bg-green-600 text-white' : 'bg-yellow-600 text-white'}>
-                          {member.status}
+                        <Badge className="bg-green-600 text-white">
+                          Ativo
                         </Badge>
                         <Button variant="outline" size="sm" className="border-military-gold/50 text-military-gold hover:bg-military-gold/10">
                           Ver Perfil

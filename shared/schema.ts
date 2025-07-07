@@ -302,6 +302,16 @@ export const eventRegistrations = pgTable("event_registrations", {
   updated_at: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// General messages and announcements table
+export const generalMessages = pgTable("general_messages", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  title: text("title"),
+  body: text("body").notNull(),
+  author_id: uuid("author_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  channel: text("channel").notNull().default("general"), // general, announcement_CompanyName, etc.
+  created_at: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,

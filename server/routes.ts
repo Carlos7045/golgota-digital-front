@@ -2,7 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema, users } from "@shared/schema";
+import { insertUserSchema, users, profiles, companies, company_members, events, event_registrations, generalMessages as messages } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { sql, eq } from "drizzle-orm";
@@ -1604,6 +1604,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching online users:', error);
       res.json({ users: [], count: 1 });
+    }
+  });
+
+  // Company panel endpoints
+  app.get('/api/company/stats', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userProfile = await db.select().from(profiles).where(eq(profiles.user_id, req.user.id)).limit(1);
+      if (!userProfile.length) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+
+      const userCompany = userProfile[0].company;
+      
+      // Total members in company
+      const totalMembers = await db.select({ count: sql`COUNT(*)` })
+        .from(profiles)
+        .where(eq(profiles.company, userCompany));
+
+      // Active members (members with login activity in last 30 days)
+      const activeMembers = await db.select({ count: sql`COUNT(*)` })
+        .from(profiles)
+        .where(eq(profiles.company, userCompany));
+
+      // New members this month
+      const thisMonth = new Date();
+      thisMonth.setDate(1);
+      const newMembers = await db.select({ count: sql`COUNT(*)` })
+        .from(profiles)
+        .where(sql`${profiles.company} = ${userCompany} AND ${profiles.created_at} >= ${thisMonth.toISOString()}`);
+
+      res.json({
+        totalMembers: totalMembers[0]?.count || 0,
+        activeMembers: activeMembers[0]?.count || 0,
+        pendingApprovals: 0,
+        thisMonthJoined: newMembers[0]?.count || 0
+      });
+    } catch (error) {
+      console.error('Error fetching company stats:', error);
+      res.status(500).json({ error: 'Erro ao buscar estatísticas da companhia' });
+    }
+  });
+
+  app.get('/api/company/members', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userProfile = await db.select().from(profiles).where(eq(profiles.user_id, req.user.id)).limit(1);
+      if (!userProfile.length) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+
+      const userCompany = userProfile[0].company;
+      
+      const companyMembers = await db.select({
+        id: profiles.id,
+        name: profiles.name,
+        rank: profiles.rank,
+        email: profiles.email,
+        phone: profiles.phone,
+        avatar_url: profiles.avatar_url,
+        created_at: profiles.created_at
+      })
+      .from(profiles)
+      .where(eq(profiles.company, userCompany))
+      .orderBy(profiles.name);
+
+      res.json({ members: companyMembers });
+    } catch (error) {
+      console.error('Error fetching company members:', error);
+      res.status(500).json({ error: 'Erro ao buscar membros da companhia' });
+    }
+  });
+
+  app.post('/api/company/announcements', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { title, content, priority } = req.body;
+      
+      if (!title || !content) {
+        return res.status(400).json({ error: 'Título e conteúdo são obrigatórios' });
+      }
+
+      const userProfile = await db.select().from(profiles).where(eq(profiles.user_id, req.user.id)).limit(1);
+      if (!userProfile.length) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+
+      // Check if user is leader
+      const isLeader = ['capitao', 'major', 'coronel', 'comandante', 'admin'].includes(userProfile[0].rank);
+      if (!isLeader) {
+        return res.status(403).json({ error: 'Apenas líderes podem criar comunicados' });
+      }
+
+      // Create announcement as a message with special type
+      const announcement = await db.insert(messages).values({
+        id: crypto.randomUUID(),
+        title,
+        body: content,
+        author_id: req.user.id,
+        channel: `announcement_${userProfile[0].company}`,
+        created_at: new Date().toISOString()
+      }).returning();
+
+      res.json({ announcement: announcement[0] });
+    } catch (error) {
+      console.error('Error creating announcement:', error);
+      res.status(500).json({ error: 'Erro ao criar comunicado' });
+    }
+  });
+
+  app.get('/api/company/announcements', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userProfile = await db.select().from(profiles).where(eq(profiles.user_id, req.user.id)).limit(1);
+      if (!userProfile.length) {
+        return res.status(404).json({ error: 'Perfil não encontrado' });
+      }
+
+      const userCompany = userProfile[0].company;
+      
+      const announcements = await db.select({
+        id: messages.id,
+        title: messages.title,
+        content: messages.body,
+        created_at: messages.created_at,
+        author_name: profiles.name
+      })
+      .from(messages)
+      .leftJoin(profiles, eq(messages.author_id, profiles.user_id))
+      .where(eq(messages.channel, `announcement_${userCompany}`))
+      .orderBy(sql`${messages.created_at} DESC`)
+      .limit(10);
+
+      res.json({ announcements });
+    } catch (error) {
+      console.error('Error fetching announcements:', error);
+      res.status(500).json({ error: 'Erro ao buscar comunicados' });
     }
   });
 
