@@ -297,7 +297,9 @@ const Profile = () => {
                       src={profile.avatar_url} 
                       alt={profile.name}
                       className="w-full h-full object-cover"
+                      onLoad={() => console.log('Avatar loaded successfully:', profile.avatar_url)}
                       onError={(e) => {
+                        console.log('Avatar failed to load:', profile.avatar_url);
                         e.currentTarget.style.display = 'none';
                         e.currentTarget.nextElementSibling!.style.display = 'flex';
                       }}

@@ -73,6 +73,9 @@ app.use((req, res, next) => {
     }
   });
 
+  // Serve avatar files in both development and production
+  app.use('/avatars', express.static('public/avatars'));
+
   // importantly only setup vite in development and after
   // setting up all the other routes so the catch-all route
   // doesn't interfere with the other routes
@@ -80,9 +83,6 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
-    
-    // Serve avatar files
-    app.use('/avatars', express.static('public/avatars'));
   }
 
   // ALWAYS serve the app on port 5000
