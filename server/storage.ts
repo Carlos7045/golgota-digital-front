@@ -64,7 +64,7 @@ export class DatabaseStorage implements IStorage {
     // Create default profile
     await db.insert(profiles).values({
       user_id: user.id,
-      name: insertUser.email,
+      name: "", // Nome será preenchido pelo usuário no perfil
       email: insertUser.email,
       rank: "aluno",
     });

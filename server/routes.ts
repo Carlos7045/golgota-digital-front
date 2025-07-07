@@ -112,7 +112,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/profile', requireAuth, async (req: Request, res: Response) => {
     try {
-      const updatedProfile = await storage.updateProfile(req.user.id, req.body);
+      // Filter out empty fields to avoid database errors
+      const updateData = { ...req.body };
+      
+      // Remove empty date fields
+      if (updateData.birth_date === '') {
+        delete updateData.birth_date;
+      }
+      
+      // Remove other empty fields
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === '' && key !== 'name') {
+          delete updateData[key];
+        }
+      });
+      
+      const updatedProfile = await storage.updateProfile(req.user.id, updateData);
       res.json({ profile: updatedProfile });
     } catch (error) {
       console.error('Profile update error:', error);

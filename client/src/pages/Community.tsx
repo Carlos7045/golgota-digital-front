@@ -37,7 +37,7 @@ const Community = () => {
       
       setUser({
         id: authUser.id,
-        name: profile.name || 'Membro sem nome',
+        name: profile.name || 'Membro',
         email: authUser.email || '',
         rank: isAdmin ? 'admin' : ((profile.rank as UserRank) || 'aluno'),
         company: 'Alpha' // Default for now, will implement companies later
