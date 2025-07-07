@@ -583,31 +583,29 @@ export class DatabaseStorage implements IStorage {
 
   // Event registration methods
   async registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration> {
-    const [registration] = await db.insert(eventRegistrations)
-      .values({
-        event_id: eventId,
-        user_id: userId,
-        payment_status: paymentData?.status || 'pending',
-        asaas_payment_id: paymentData?.asaas_payment_id,
-        amount_paid: paymentData?.amount_paid,
-        payment_method: paymentData?.payment_method,
-        notes: paymentData?.notes
+    const registrationData = {
+      event_id: eventId,
+      user_id: userId,
+      payment_status: paymentData?.status || 'pending',
+      asaas_payment_id: paymentData?.asaas_payment_id || null,
+      amount_paid: paymentData?.amount_paid ? paymentData.amount_paid.toString() : null,
+      payment_method: paymentData?.payment_method || null,
+      notes: paymentData?.notes || null
+    };
+
+    const [registration] = await db.insert(eventRegistrations).values(registrationData).returning();
+    
+    // Update event participant count accurately
+    const registrationCount = await db.select({ count: count() })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.event_id, eventId));
+    
+    await db.update(events)
+      .set({ 
+        registered_participants: registrationCount[0]?.count || 0,
+        updated_at: new Date()
       })
-      .returning();
-
-    // Update event registered participants count
-    const currentEvent = await db.query.events.findFirst({
-      where: eq(events.id, eventId)
-    });
-
-    if (currentEvent) {
-      await db.update(events)
-        .set({ 
-          registered_participants: (currentEvent.registered_participants || 0) + 1,
-          updated_at: new Date()
-        })
-        .where(eq(events.id, eventId));
-    }
+      .where(eq(events.id, eventId));
 
     return registration;
   }
@@ -664,48 +662,7 @@ export class DatabaseStorage implements IStorage {
     return updated;
   }
 
-  // Event registration methods
-  async registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration> {
-    const registrationData = {
-      event_id: eventId,
-      user_id: userId,
-      payment_status: paymentData?.status || 'pending',
-      asaas_payment_id: paymentData?.asaas_payment_id,
-      amount_paid: paymentData?.amount_paid?.toString(),
-      payment_method: paymentData?.payment_method,
-      notes: paymentData?.notes
-    };
 
-    const [registration] = await db.insert(eventRegistrations).values(registrationData).returning();
-    
-    // Update event participant count
-    const registrationCount = await db.select({ count: count() })
-      .from(eventRegistrations)
-      .where(eq(eventRegistrations.event_id, eventId));
-    
-    await db.update(events)
-      .set({ registered_participants: registrationCount[0]?.count || 0 })
-      .where(eq(events.id, eventId));
-
-    return registration;
-  }
-
-  async unregisterFromEvent(eventId: string, userId: string): Promise<void> {
-    await db.delete(eventRegistrations)
-      .where(and(
-        eq(eventRegistrations.event_id, eventId),
-        eq(eventRegistrations.user_id, userId)
-      ));
-
-    // Update event participant count
-    const registrationCount = await db.select({ count: count() })
-      .from(eventRegistrations)
-      .where(eq(eventRegistrations.event_id, eventId));
-    
-    await db.update(events)
-      .set({ registered_participants: registrationCount[0]?.count || 0 })
-      .where(eq(events.id, eventId));
-  }
 
   async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
     return await db.select()

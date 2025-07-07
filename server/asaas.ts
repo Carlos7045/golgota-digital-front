@@ -266,5 +266,3 @@ export const asaasService = new AsaasService(
   process.env.ASAAS_API_KEY || '',
   process.env.NODE_ENV !== 'production'
 );
-
-export { AsaasService };

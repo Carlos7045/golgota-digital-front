@@ -6,6 +6,7 @@ import { insertUserSchema, users } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
 import { sql, eq } from "drizzle-orm";
+import { asaasService, AsaasService } from "./asaas";
 
 // Extend the Express Request type to include user
 declare global {
@@ -761,9 +762,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (eventPrice > 0) {
         // For paid events, create payment intent and return payment URL
         try {
-          // Import asaas service
-          const { asaasService, AsaasService } = await import('./asaas');
-          
           // Get or create Asaas customer
           let asaasCustomer = await storage.getAsaasCustomer(userId);
           if (!asaasCustomer) {
@@ -817,7 +815,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
         } catch (asaasError) {
           console.error('Error creating Asaas payment:', asaasError);
-          return res.status(500).json({ message: 'Erro ao processar pagamento' });
+          const errorMessage = asaasError instanceof Error ? asaasError.message : 'Erro ao processar pagamento';
+          return res.status(500).json({ 
+            message: errorMessage,
+            error: process.env.NODE_ENV === 'development' ? asaasError : undefined 
+          });
         }
       } else {
         // For free events, register directly
@@ -832,7 +834,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     } catch (error) {
       console.error('Event registration error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      const errorMessage = error instanceof Error ? error.message : 'Erro interno do servidor';
+      res.status(500).json({ 
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error : undefined 
+      });
     }
   });
 
