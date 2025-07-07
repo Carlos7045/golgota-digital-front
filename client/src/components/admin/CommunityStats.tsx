@@ -1,41 +1,71 @@
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { apiGet } from '@/lib/api';
 
 const CommunityStats = () => {
-  const membersByRank = [
-    { rank: 'Aluno', count: 45, color: '#6b7280' },
-    { rank: 'Soldado', count: 89, color: '#16a34a' },
-    { rank: 'Cabo', count: 34, color: '#15803d' },
-    { rank: 'Sargento', count: 28, color: '#2563eb' },
-    { rank: 'Tenente', count: 21, color: '#1d4ed8' },
-    { rank: 'Capitão', count: 15, color: '#9333ea' },
-    { rank: 'Major', count: 8, color: '#7c3aed' },
-    { rank: 'Coronel', count: 5, color: '#dc2626' },
-    { rank: 'Comandante', count: 2, color: '#b91c1c' },
-  ];
+  const [membersByRank, setMembersByRank] = useState<any[]>([]);
+  const [membersByCompany, setMembersByCompany] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const membersByCompany = [
-    { company: 'Cia A', members: 68 },
-    { company: 'Cia B', members: 72 },
-    { company: 'Cia C', members: 54 },
-    { company: 'Cia D', members: 53 },
-  ];
+  useEffect(() => {
+    fetchStats();
+  }, []);
 
+  const fetchStats = async () => {
+    try {
+      const data = await apiGet('/api/stats');
+      
+      // Transform rank data with colors
+      const rankColors = {
+        'aluno': '#6b7280',
+        'soldado': '#16a34a',
+        'cabo': '#15803d',
+        'sargento': '#2563eb',
+        'tenente': '#1d4ed8',
+        'capitao': '#9333ea',
+        'major': '#7c3aed',
+        'coronel': '#dc2626',
+        'comandante': '#b91c1c',
+        'admin': '#f59e0b'
+      };
+
+      const rankData = data.membersByRank?.map((item: any) => ({
+        rank: item.rank.charAt(0).toUpperCase() + item.rank.slice(1),
+        count: item.count,
+        color: rankColors[item.rank as keyof typeof rankColors] || '#6b7280'
+      })) || [];
+
+      const companyData = data.membersByCompany?.map((item: any) => ({
+        company: item.company,
+        members: item.count
+      })) || [];
+
+      setMembersByRank(rankData);
+      setMembersByCompany(companyData);
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Placeholder data for charts that require historical data
   const growthData = [
-    { month: 'Jan', members: 180 },
-    { month: 'Fev', members: 195 },
-    { month: 'Mar', members: 210 },
-    { month: 'Abr', members: 225 },
-    { month: 'Mai', members: 232 },
-    { month: 'Jun', members: 247 },
+    { month: 'Jan', members: 0 },
+    { month: 'Fev', members: 0 },
+    { month: 'Mar', members: 0 },
+    { month: 'Abr', members: 0 },
+    { month: 'Mai', members: 1 },
+    { month: 'Jun', members: 2 },
   ];
 
   const activityData = [
-    { channel: 'Geral', messages: 234 },
-    { channel: 'Treinamentos', messages: 189 },
-    { channel: 'Acampamentos', messages: 156 },
-    { channel: 'Eventos', messages: 98 },
-    { channel: 'Oportunidades', messages: 67 },
+    { channel: 'Geral', messages: 1 },
+    { channel: 'Treinamentos', messages: 0 },
+    { channel: 'Acampamentos', messages: 0 },
+    { channel: 'Eventos', messages: 0 },
+    { channel: 'Oportunidades', messages: 0 },
   ];
 
   return (
