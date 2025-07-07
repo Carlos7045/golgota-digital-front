@@ -244,8 +244,26 @@ export class DatabaseStorage implements IStorage {
     // Get profiles with ranks suitable for commanding
     const commanderRanks = ['sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante', 'admin'];
     
-    return await db
-      .select()
+    const commanders = await db
+      .select({
+        id: profiles.user_id, // Use user_id instead of profile id for commander_id field
+        user_id: profiles.user_id,
+        name: profiles.name,
+        rank: profiles.rank,
+        email: profiles.email,
+        phone: profiles.phone,
+        city: profiles.city,
+        birth_date: profiles.birth_date,
+        address: profiles.address,
+        avatar_url: profiles.avatar_url,
+        bio: profiles.bio,
+        specialties: profiles.specialties,
+        joined_at: profiles.joined_at,
+        created_at: profiles.created_at,
+        updated_at: profiles.updated_at,
+        cpf: profiles.cpf,
+        company: profiles.company
+      })
       .from(profiles)
       .where(
         and(
@@ -253,6 +271,8 @@ export class DatabaseStorage implements IStorage {
           isNotNull(profiles.name)
         )
       );
+    
+    return commanders;
   }
 
   async getUsersByRank(rank?: string): Promise<Profile[]> {

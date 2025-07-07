@@ -357,7 +357,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/companies', requireAuth, async (req: Request, res: Response) => {
     try {
       const companies = await storage.getCompanies();
-      res.json({ companies });
+      
+      // Add member count to each company
+      const companiesWithMemberCount = await Promise.all(
+        companies.map(async (company) => {
+          const members = await storage.getCompanyMembers(company.id);
+          return {
+            ...company,
+            members: members.length
+          };
+        })
+      );
+      
+      res.json({ companies: companiesWithMemberCount });
     } catch (error) {
       console.error('Companies fetch error:', error);
       res.status(500).json({ message: 'Internal server error' });
