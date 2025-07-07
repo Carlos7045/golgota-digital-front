@@ -6,51 +6,39 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 const Profile = () => {
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
-  const [profile, setProfile] = useState<any>(null);
   const [activities, setActivities] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (user) {
-      fetchProfile();
+    if (user && profile) {
       fetchActivities();
       fetchAchievements();
+    } else {
+      setLoading(false);
     }
-  }, [user]);
-
-  const fetchProfile = async () => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', user?.id)
-        .single();
-
-      if (error) throw error;
-      setProfile(data);
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
+  }, [user, profile]);
 
   const fetchActivities = async () => {
     try {
-      const { data, error } = await supabase
-        .from('user_activities')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false })
-        .limit(10);
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
 
-      if (error) throw error;
-      setActivities(data || []);
+      const response = await fetch('/api/activities', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setActivities(data.activities || []);
+      }
     } catch (error) {
       console.error('Error fetching activities:', error);
     }
@@ -58,14 +46,19 @@ const Profile = () => {
 
   const fetchAchievements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('achievements')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
+      const token = localStorage.getItem('authToken');
+      if (!token) return;
 
-      if (error) throw error;
-      setAchievements(data || []);
+      const response = await fetch('/api/achievements', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setAchievements(data.achievements || []);
+      }
     } catch (error) {
       console.error('Error fetching achievements:', error);
     } finally {

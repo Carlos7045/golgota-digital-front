@@ -2,7 +2,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import CommunityHeader from '@/components/community/CommunityHeader';
 import CommunitySidebar from '@/components/community/CommunitySidebar';
 import ChannelContent from '@/components/community/ChannelContent';
@@ -20,7 +19,7 @@ export interface User {
 export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia';
 
 const Community = () => {
-  const { user: authUser, loading } = useAuth();
+  const { user: authUser, profile, roles, loading } = useAuth();
   const [user, setUser] = useState<User | null>(null);
   const [activeChannel, setActiveChannel] = useState<ChannelType>('geral');
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -32,50 +31,19 @@ const Community = () => {
       return;
     }
 
-    if (authUser) {
-      fetchUserProfile();
-    }
-  }, [authUser, loading, navigate]);
-
-  const fetchUserProfile = async () => {
-    if (!authUser) return;
-
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('user_id', authUser.id)
-        .single();
-
-      if (error) throw error;
-
-      // Verificar se o usuário tem role de admin
-      const { data: roles } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', authUser.id);
-
-      const isAdmin = roles?.some(r => r.role === 'admin') || false;
-
+    if (authUser && profile) {
+      // Convert profile data to User type for backward compatibility
+      const isAdmin = roles?.includes('admin') || false;
+      
       setUser({
         id: authUser.id,
         name: profile.name || authUser.email || 'Usuário',
         email: authUser.email || '',
         rank: isAdmin ? 'admin' : ((profile.rank as UserRank) || 'aluno'),
-        company: 'Alpha' // Por enquanto padrão, depois implementaremos companies
-      });
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-      // Fallback com dados básicos
-      setUser({
-        id: authUser.id,
-        name: authUser.email || 'Usuário',
-        email: authUser.email || '',
-        rank: 'aluno',
-        company: 'Alpha'
+        company: 'Alpha' // Default for now, will implement companies later
       });
     }
-  };
+  }, [authUser, profile, roles, loading, navigate]);
 
   if (loading || !user) {
     return <div className="min-h-screen bg-military-black flex items-center justify-center text-white">

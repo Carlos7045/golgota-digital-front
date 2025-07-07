@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState([

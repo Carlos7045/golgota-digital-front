@@ -6,7 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Send, Heart, MessageSquare, Pin } from 'lucide-react';
 import { User } from '@/pages/Community';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 interface GeneralChannelProps {

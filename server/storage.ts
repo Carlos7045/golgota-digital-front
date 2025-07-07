@@ -1,0 +1,140 @@
+import { db } from "./db";
+import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course } from "@shared/schema";
+import { eq, and } from "drizzle-orm";
+import bcrypt from "bcryptjs";
+
+export interface IStorage {
+  // User management
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Profile management
+  getProfile(userId: string): Promise<Profile | undefined>;
+  updateProfile(userId: string, data: Partial<Profile>): Promise<Profile | undefined>;
+  
+  // Company management
+  getCompanies(): Promise<Company[]>;
+  getCompanyMembers(companyId: string): Promise<Profile[]>;
+  
+  // Training management
+  getTrainings(): Promise<Training[]>;
+  
+  // Course management
+  getCourses(): Promise<Course[]>;
+  
+  // Event management
+  getEvents(): Promise<Event[]>;
+  
+  // User roles
+  getUserRoles(userId: string): Promise<string[]>;
+  assignRole(userId: string, role: string): Promise<void>;
+}
+
+export class DatabaseStorage implements IStorage {
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(insertUser: InsertUser): Promise<User> {
+    // Hash password before storing
+    const hashedPassword = await bcrypt.hash(insertUser.password, 10);
+    
+    const [user] = await db.insert(users).values({
+      ...insertUser,
+      password: hashedPassword,
+    }).returning();
+    
+    // Create default profile
+    await db.insert(profiles).values({
+      user_id: user.id,
+      name: insertUser.email,
+      email: insertUser.email,
+      rank: "aluno",
+    });
+    
+    // Assign default user role
+    await db.insert(userRoles).values({
+      user_id: user.id,
+      role: "user",
+    });
+    
+    return user;
+  }
+
+  async getProfile(userId: string): Promise<Profile | undefined> {
+    const [profile] = await db.select().from(profiles).where(eq(profiles.user_id, userId));
+    return profile;
+  }
+
+  async updateProfile(userId: string, data: Partial<Profile>): Promise<Profile | undefined> {
+    const [profile] = await db.update(profiles)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(profiles.user_id, userId))
+      .returning();
+    return profile;
+  }
+
+  async getCompanies(): Promise<Company[]> {
+    return await db.select().from(companies);
+  }
+
+  async getCompanyMembers(companyId: string): Promise<Profile[]> {
+    const members = await db.select({
+      id: profiles.id,
+      user_id: profiles.user_id,
+      name: profiles.name,
+      rank: profiles.rank,
+      email: profiles.email,
+      phone: profiles.phone,
+      birth_date: profiles.birth_date,
+      address: profiles.address,
+      avatar_url: profiles.avatar_url,
+      bio: profiles.bio,
+      specialties: profiles.specialties,
+      joined_at: profiles.joined_at,
+      created_at: profiles.created_at,
+      updated_at: profiles.updated_at,
+    })
+    .from(companyMembers)
+    .innerJoin(profiles, eq(companyMembers.user_id, profiles.user_id))
+    .where(eq(companyMembers.company_id, companyId));
+    
+    return members;
+  }
+
+  async getTrainings(): Promise<Training[]> {
+    return await db.select().from(trainings);
+  }
+
+  async getCourses(): Promise<Course[]> {
+    return await db.select().from(courses);
+  }
+
+  async getEvents(): Promise<Event[]> {
+    return await db.select().from(events);
+  }
+
+  async getUserRoles(userId: string): Promise<string[]> {
+    const roles = await db.select({ role: userRoles.role })
+      .from(userRoles)
+      .where(eq(userRoles.user_id, userId));
+    
+    return roles.map(r => r.role).filter((role): role is string => role !== null);
+  }
+
+  async assignRole(userId: string, role: string): Promise<void> {
+    await db.insert(userRoles).values({
+      user_id: userId,
+      role: role as any,
+    }).onConflictDoNothing();
+  }
+}
+
+export const storage = new DatabaseStorage();
