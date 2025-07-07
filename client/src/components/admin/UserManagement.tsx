@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Search, UserPlus, MoreHorizontal, Shield, UserCheck, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
+import { Search, UserPlus, MoreHorizontal, Shield, UserCheck, Eye, EyeOff, Trash2, AlertTriangle, Edit } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -45,7 +45,20 @@ const addUserSchema = z.object({
   company: z.string().min(1, 'Companhia é obrigatória'),
 });
 
+const editUserSchema = z.object({
+  name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
+  email: z.string().email('Email inválido'),
+  cpf: z.string().min(11, 'CPF deve ter 11 dígitos').max(14, 'CPF inválido').optional(),
+  phone: z.string().min(10, 'Telefone deve ter pelo menos 10 dígitos').optional(),
+  city: z.string().min(2, 'Cidade é obrigatória').optional(),
+  address: z.string().min(5, 'Endereço deve ter pelo menos 5 caracteres').optional(),
+  birthDate: z.string().optional(),
+  rank: z.string().min(1, 'Patente é obrigatória'),
+  company: z.string().min(1, 'Companhia é obrigatória').optional(),
+});
+
 type AddUserForm = z.infer<typeof addUserSchema>;
+type EditUserForm = z.infer<typeof editUserSchema>;
 
 const UserManagement = () => {
   const [users, setUsers] = useState<CommunityUser[]>([]);
@@ -58,6 +71,8 @@ const UserManagement = () => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState<CommunityUser | null>(null);
   const [deletePassword, setDeletePassword] = useState('');
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [userToEdit, setUserToEdit] = useState<CommunityUser | null>(null);
   
   const { toast } = useToast();
   
@@ -65,6 +80,21 @@ const UserManagement = () => {
   
   const form = useForm<AddUserForm>({
     resolver: zodResolver(addUserSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      cpf: '',
+      phone: '',
+      city: '',
+      address: '',
+      birthDate: '',
+      rank: '',
+      company: '',
+    },
+  });
+
+  const editForm = useForm<EditUserForm>({
+    resolver: zodResolver(editUserSchema),
     defaultValues: {
       name: '',
       email: '',
@@ -271,6 +301,58 @@ const UserManagement = () => {
     setUserToDelete(user);
     setDeletePassword('');
     setIsDeleteDialogOpen(true);
+  };
+
+  const openEditDialog = (user: CommunityUser) => {
+    setUserToEdit(user);
+    // Populate edit form with user data
+    editForm.reset({
+      name: user.name,
+      email: user.email,
+      cpf: user.cpglRegister || '',
+      phone: user.phone || '',
+      city: user.city || '',
+      address: user.address || '',
+      birthDate: user.birthDate || '',
+      rank: user.rank,
+      company: user.company,
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const handleEditUser = async (data: EditUserForm) => {
+    if (!userToEdit) return;
+
+    try {
+      await apiPut(`/api/profiles/${userToEdit.id}`, {
+        name: data.name,
+        email: data.email,
+        cpf: data.cpf || undefined,
+        phone: data.phone || undefined,
+        city: data.city || undefined,
+        address: data.address || undefined,
+        birth_date: data.birthDate || undefined,
+        rank: data.rank,
+        company: data.company || undefined,
+      });
+
+      toast({
+        title: "Usuário atualizado",
+        description: `${data.name} foi atualizado com sucesso!`
+      });
+
+      setIsEditDialogOpen(false);
+      setUserToEdit(null);
+      editForm.reset();
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error updating user:', error);
+      toast({
+        title: "Erro ao atualizar usuário",
+        description: error.response?.data?.message || "Não foi possível atualizar o usuário.",
+        variant: "destructive"
+      });
+    }
   };
 
   const rankColors: Record<UserRank, string> = {
@@ -588,6 +670,13 @@ const UserManagement = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-military-black-light border-military-gold/20">
                             <DropdownMenuItem 
+                              onClick={() => openEditDialog(user)}
+                              className="text-white hover:bg-military-gold/20"
+                            >
+                              <Edit className="mr-2 h-4 w-4" />
+                              Editar
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
                               onClick={() => promoteUser(user.id, user.rank === 'admin' ? 'comandante' : 'admin')}
                               className="text-white hover:bg-military-gold/20"
                             >
@@ -677,6 +766,187 @@ const UserManagement = () => {
                 Confirmar Exclusão
               </Button>
             </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit User Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-2xl bg-military-black-light border-military-gold/20">
+            <DialogHeader>
+              <DialogTitle className="text-military-gold">Editar Usuário</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Edite os dados do usuário {userToEdit?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <Form {...editForm}>
+              <form onSubmit={editForm.handleSubmit(handleEditUser)} className="space-y-4">
+                <FormField
+                  control={editForm.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Nome Completo</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: João Silva" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: joao@exemplo.com" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="cpf"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">CPF</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: 12345678901" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Telefone</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: (11) 99999-9999" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="city"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Cidade</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: São Paulo" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <FormField
+                  control={editForm.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Endereço</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Ex: Rua das Flores, 123, Centro" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <div className="grid grid-cols-3 gap-4">
+                  <FormField
+                    control={editForm.control}
+                    name="birthDate"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Data de Nascimento</FormLabel>
+                        <FormControl>
+                          <Input type="date" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="rank"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Patente</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue placeholder="Selecione a patente" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-military-black-light border-military-gold/20">
+                            {ranks.map((rank) => (
+                              <SelectItem key={rank} value={rank} className="text-white hover:bg-military-gold/20">
+                                {rank.charAt(0).toUpperCase() + rank.slice(1)}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={editForm.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Companhia</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue placeholder="Selecione a companhia" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent className="bg-military-black-light border-military-gold/20">
+                            {companies.map((company) => (
+                              <SelectItem key={company.id} value={company.name} className="text-white hover:bg-military-gold/20">
+                                {company.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+                <DialogFooter>
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    onClick={() => {
+                      setIsEditDialogOpen(false);
+                      setUserToEdit(null);
+                      editForm.reset();
+                    }}
+                    className="border-military-gold/30 text-white hover:bg-military-gold/20"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button 
+                    type="submit" 
+                    className="bg-military-gold text-military-black hover:bg-military-gold/80"
+                  >
+                    Salvar Alterações
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
       </div>

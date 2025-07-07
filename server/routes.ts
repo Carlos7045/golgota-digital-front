@@ -291,6 +291,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update user profile by ID (admin only)
+  app.put('/api/profiles/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const profileId = req.params.id;
+      const adminUserId = req.user?.id;
+
+      // Check if user has admin role
+      const adminRoles = await storage.getUserRoles(adminUserId);
+      if (!adminRoles.includes('admin')) {
+        return res.status(403).json({ message: 'Acesso negado - apenas administradores podem editar usuários' });
+      }
+
+      // Filter out empty fields to avoid database errors
+      const updateData = { ...req.body };
+      
+      // Remove empty date fields
+      if (updateData.birth_date === '') {
+        delete updateData.birth_date;
+      }
+      
+      // Remove other empty fields
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === '' && key !== 'name') {
+          delete updateData[key];
+        }
+      });
+
+      // Update profile data
+      const updatedProfile = await storage.updateProfile(profileId, updateData);
+
+      if (!updatedProfile) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+
+      res.json({ 
+        message: 'Usuário atualizado com sucesso',
+        profile: updatedProfile 
+      });
+    } catch (error) {
+      console.error('Admin profile update error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
   // Company routes
   app.get('/api/companies', requireAuth, async (req: Request, res: Response) => {
     try {
