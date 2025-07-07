@@ -190,11 +190,12 @@ const CompanyManagement = () => {
       setIsAddMemberDialogOpen(false);
       setNewMemberData({ user_id: '' });
       fetchCompanyMembers(selectedCompany);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding member:', error);
+      const errorMessage = error.response?.data?.message || error.message || "Erro ao adicionar membro";
       toast({
         title: "Erro",
-        description: "Erro ao adicionar membro",
+        description: errorMessage,
         variant: "destructive"
       });
     }
@@ -859,6 +860,174 @@ const CompanyManagement = () => {
             </Card>
           </div>
         </div>
+
+        {/* Edit Company Dialog */}
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="max-w-4xl bg-military-black-light border-military-gold/20">
+            <DialogHeader>
+              <DialogTitle className="text-military-gold">Editar Companhia</DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Edite as informações da companhia {editingCompany?.name}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Left Column - Basic Info */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Nome da Companhia</Label>
+                  <Input
+                    value={formData.name}
+                    onChange={(e) => setFormData({...formData, name: e.target.value})}
+                    placeholder="Ex: Alfa, Bravo, Charlie..."
+                    className="bg-military-black border-military-gold/30 text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Comandante</Label>
+                    <Select value={formData.commander_id} onValueChange={(value) => setFormData({...formData, commander_id: value})}>
+                      <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                        <SelectValue placeholder="Selecionar comandante" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-military-black-light border-military-gold/20">
+                        <SelectItem value="none" className="text-white hover:bg-military-gold/20">Nenhum</SelectItem>
+                        {commanders.map((commander) => (
+                          <SelectItem key={commander.id} value={commander.id} className="text-white hover:bg-military-gold/20">
+                            {commander.name} - {commander.rank}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white">Sub-Comandante</Label>
+                    <Select value={formData.sub_commander_id} onValueChange={(value) => setFormData({...formData, sub_commander_id: value})}>
+                      <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                        <SelectValue placeholder="Selecionar sub-comandante" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-military-black-light border-military-gold/20">
+                        <SelectItem value="none" className="text-white hover:bg-military-gold/20">Nenhum</SelectItem>
+                        {commanders.filter(c => c.id !== formData.commander_id).map((commander) => (
+                          <SelectItem key={commander.id} value={commander.id} className="text-white hover:bg-military-gold/20">
+                            {commander.name} - {commander.rank}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Descrição</Label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData({...formData, description: e.target.value})}
+                    placeholder="Descrição da companhia..."
+                    className="w-full min-h-[80px] bg-military-black border border-military-gold/30 text-white p-2 rounded resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-white">Cidade</Label>
+                    <Input
+                      value={formData.city}
+                      onChange={(e) => setFormData({...formData, city: e.target.value})}
+                      placeholder="Ex: São Paulo"
+                      className="bg-military-black border-military-gold/30 text-white"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-white">Estado</Label>
+                    <Select value={formData.state} onValueChange={(value) => setFormData({...formData, state: value})}>
+                      <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                        <SelectValue placeholder="Selecionar estado" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-military-black-light border-military-gold/20">
+                        {brazilianStates.map((state) => (
+                          <SelectItem key={state} value={state} className="text-white hover:bg-military-gold/20">
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-white">Cor da Companhia</Label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={formData.color}
+                      onChange={(e) => setFormData({...formData, color: e.target.value})}
+                      className="w-12 h-10 bg-military-black border border-military-gold/30 rounded"
+                    />
+                    <Input
+                      value={formData.color}
+                      onChange={(e) => setFormData({...formData, color: e.target.value})}
+                      placeholder="#FFD700"
+                      className="bg-military-black border-military-gold/30 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Members */}
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label className="text-white">Membros Atuais</Label>
+                  <div className="border border-military-gold/20 rounded-lg p-3 max-h-80 overflow-y-auto">
+                    {companyMembers.length === 0 ? (
+                      <p className="text-gray-400 text-sm">Nenhum membro na companhia</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {companyMembers.map((member) => (
+                          <div key={member.id} className="flex items-center justify-between bg-military-black/50 p-2 rounded">
+                            <div>
+                              <span className="text-white text-sm">{member.name}</span>
+                              <span className="text-gray-400 text-xs ml-2">({member.role})</span>
+                            </div>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => handleRemoveMember(member.user_id)}
+                              className="text-red-400 hover:bg-red-600/20"
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDialogOpen(false);
+                  setEditingCompany(null);
+                  resetForm();
+                }}
+                className="border-military-gold/30 text-white hover:bg-military-gold/20"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                className="bg-military-gold hover:bg-military-gold-dark text-black"
+                onClick={handleEditCompany}
+              >
+                Salvar Alterações
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );
