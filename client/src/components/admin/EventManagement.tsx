@@ -72,15 +72,7 @@ const EventManagement = () => {
   };
 
   const handleCreateEvent = async () => {
-    console.log('handleCreateEvent chamado', newEvent);
-    
     if (!newEvent.name.trim() || !newEvent.start_date || !newEvent.end_date || !newEvent.location.trim()) {
-      console.log('Validação falhou:', {
-        name: newEvent.name,
-        start_date: newEvent.start_date,
-        end_date: newEvent.end_date,
-        location: newEvent.location
-      });
       toast({
         title: "Erro",
         description: "Nome, datas de início/fim e local são obrigatórios",
@@ -89,7 +81,6 @@ const EventManagement = () => {
       return;
     }
 
-    console.log('Enviando para API:', newEvent);
     try {
       const response = await apiPost('/api/events', {
         name: newEvent.name,
@@ -109,8 +100,6 @@ const EventManagement = () => {
         instructor: newEvent.instructor
       });
 
-      console.log('Resposta da API:', response);
-      
       toast({
         title: "Sucesso",
         description: "Evento criado com sucesso!"
@@ -254,6 +243,28 @@ const EventManagement = () => {
 
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="start_date" className="text-white">Data Início</Label>
+                    <Input
+                      id="start_date"
+                      type="date"
+                      value={newEvent.start_date}
+                      onChange={(e) => setNewEvent({...newEvent, start_date: e.target.value})}
+                      className="bg-military-black border-military-gold/30 text-white"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="end_date" className="text-white">Data Fim</Label>
+                    <Input
+                      id="end_date"
+                      type="date"
+                      value={newEvent.end_date}
+                      onChange={(e) => setNewEvent({...newEvent, end_date: e.target.value})}
+                      className="bg-military-black border-military-gold/30 text-white"
+                    />
+                  </div>
                 </div>
                 <div>
                   <Label htmlFor="location" className="text-white">Local</Label>
