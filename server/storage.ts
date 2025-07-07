@@ -186,6 +186,22 @@ export class DatabaseStorage implements IStorage {
   }
 
   async addCompanyMember(companyId: string, userId: string, role: string = 'Membro'): Promise<void> {
+    // Check if user is already a member of this company
+    const existingMember = await db
+      .select()
+      .from(companyMembers)
+      .where(
+        and(
+          eq(companyMembers.company_id, companyId),
+          eq(companyMembers.user_id, userId)
+        )
+      )
+      .limit(1);
+
+    if (existingMember.length > 0) {
+      throw new Error('Usuário já é membro desta companhia');
+    }
+
     await db.insert(companyMembers).values({
       company_id: companyId,
       user_id: userId,

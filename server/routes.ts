@@ -429,10 +429,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { user_id, role } = req.body;
       await storage.addCompanyMember(req.params.id, user_id, role || 'Membro');
-      res.json({ message: 'Member added successfully' });
-    } catch (error) {
+      res.json({ message: 'Membro adicionado com sucesso' });
+    } catch (error: any) {
       console.error('Error adding company member:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      if (error.message === 'Usuário já é membro desta companhia') {
+        return res.status(400).json({ message: error.message });
+      }
+      res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
 
