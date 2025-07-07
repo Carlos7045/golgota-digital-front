@@ -131,6 +131,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/companies', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { name, commander_id, description, color, status } = req.body;
+      const company = await storage.createCompany({
+        name,
+        commander_id,
+        description,
+        color,
+        status: status || 'Planejamento'
+      });
+      res.json({ company });
+    } catch (error) {
+      console.error('Company creation error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/companies/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteCompany(req.params.id);
+      res.json({ message: 'Company deleted successfully' });
+    } catch (error) {
+      console.error('Company deletion error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.get('/api/companies/:id/members', requireAuth, async (req: Request, res: Response) => {
     try {
       const members = await storage.getCompanyMembers(req.params.id);
@@ -170,6 +197,93 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ events });
     } catch (error) {
       console.error('Events fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Activities routes
+  app.get('/api/activities', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const activities = await storage.getUserActivities(req.user.id);
+      res.json({ activities });
+    } catch (error) {
+      console.error('Activities fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Achievements routes
+  app.get('/api/achievements', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const achievements = await storage.getUserAchievements(req.user.id);
+      res.json({ achievements });
+    } catch (error) {
+      console.error('Achievements fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Messages routes
+  app.get('/api/messages/:channel', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const messages = await storage.getChannelMessages(req.params.channel);
+      res.json({ messages });
+    } catch (error) {
+      console.error('Messages fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/messages/:channel', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { content } = req.body;
+      const message = await storage.createMessage(req.user.id, req.params.channel, content);
+      res.json({ message });
+    } catch (error) {
+      console.error('Message creation error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // User profiles routes
+  app.get('/api/profiles', requireAuth, async (req: Request, res: Response) => {
+    try {
+      // For now, return mock data - in real implementation, you'd get from database
+      const profiles = [
+        { user_id: '1', name: 'João Silva', email: 'joao@exemplo.com', rank: 'soldado', created_at: '2025-01-01', updated_at: '2025-01-01' },
+        { user_id: '2', name: 'Maria Santos', email: 'maria@exemplo.com', rank: 'cabo', created_at: '2025-01-01', updated_at: '2025-01-01' },
+        { user_id: '3', name: 'Pedro Costa', email: 'pedro@exemplo.com', rank: 'sargento', created_at: '2025-01-01', updated_at: '2025-01-01' }
+      ];
+      res.json({ profiles });
+    } catch (error) {
+      console.error('Profiles fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Dashboard stats routes
+  app.get('/api/stats', requireAuth, async (req: Request, res: Response) => {
+    try {
+      // For now, return mock stats - in real implementation, you'd calculate from database
+      const stats = {
+        totalMembers: 150,
+        todayMessages: 45,
+        activeEvents: 3,
+        activities: [
+          { user: 'João Silva', action: 'Completou treinamento de combate', time: '2 horas atrás' },
+          { user: 'Maria Santos', action: 'Participou do rally noturno', time: '4 horas atrás' },
+          { user: 'Pedro Costa', action: 'Atingiu nova patente', time: '6 horas atrás' },
+          { user: 'Ana Lima', action: 'Concluiu missão especial', time: '8 horas atrás' }
+        ],
+        upcomingEvents: [
+          { name: 'Treinamento de Resgate', date: '2025-01-10', time: '14:00' },
+          { name: 'Rally Mensal', date: '2025-01-15', time: '19:00' },
+          { name: 'Cerimônia de Promoção', date: '2025-01-20', time: '10:00' }
+        ]
+      };
+      res.json(stats);
+    } catch (error) {
+      console.error('Stats fetch error:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

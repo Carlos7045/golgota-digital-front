@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-// Removed Supabase import
 import { useToast } from '@/hooks/use-toast';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -49,13 +49,9 @@ const CompanyManagement = () => {
 
   const fetchCommanders = async () => {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('user_id, name, rank')
-        .in('rank', ['capitao', 'major', 'coronel', 'comandante', 'admin']);
-
-      if (error) throw error;
-      setCommanders(data || []);
+      // For now, we'll use mock data since we don't have a specific commanders endpoint
+      // In a real implementation, you'd create /api/commanders endpoint
+      setCommanders([]);
     } catch (error) {
       console.error('Error fetching commanders:', error);
     }
@@ -72,17 +68,13 @@ const CompanyManagement = () => {
     }
 
     try {
-      const { error } = await supabase
-        .from('companies')
-        .insert({
-          name: formData.name,
-          commander_id: formData.commander_id || null,
-          description: formData.description || null,
-          color: formData.color,
-          status: 'Planejamento'
-        });
-
-      if (error) throw error;
+      await apiPost('/api/companies', {
+        name: formData.name,
+        commander_id: formData.commander_id || null,
+        description: formData.description || null,
+        color: formData.color,
+        status: 'Planejamento'
+      });
 
       toast({
         title: "Sucesso",
@@ -106,12 +98,7 @@ const CompanyManagement = () => {
     if (!confirm('Tem certeza que deseja remover esta companhia?')) return;
 
     try {
-      const { error } = await supabase
-        .from('companies')
-        .delete()
-        .eq('id', companyId);
-
-      if (error) throw error;
+      await apiDelete(`/api/companies/${companyId}`);
 
       toast({
         title: "Sucesso",
@@ -143,16 +130,8 @@ const CompanyManagement = () => {
 
   const fetchCompanies = async () => {
     try {
-      const { data, error } = await supabase
-        .from('companies')
-        .select(`
-          *,
-          commander:commander_id(name, rank)
-        `)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setCompanies(data || []);
+      const data = await apiGet('/api/companies');
+      setCompanies(data.companies || []);
     } catch (error) {
       console.error('Error fetching companies:', error);
       toast({

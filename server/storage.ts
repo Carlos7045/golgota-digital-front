@@ -1,6 +1,6 @@
 import { db } from "./db";
-import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course } from "@shared/schema";
-import { eq, and } from "drizzle-orm";
+import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement } from "@shared/schema";
+import { eq, and, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -16,6 +16,8 @@ export interface IStorage {
   // Company management
   getCompanies(): Promise<Company[]>;
   getCompanyMembers(companyId: string): Promise<Profile[]>;
+  createCompany(company: any): Promise<Company>;
+  deleteCompany(companyId: string): Promise<void>;
   
   // Training management
   getTrainings(): Promise<Training[]>;
@@ -29,6 +31,14 @@ export interface IStorage {
   // User roles
   getUserRoles(userId: string): Promise<string[]>;
   assignRole(userId: string, role: string): Promise<void>;
+  
+  // Activities and achievements
+  getUserActivities(userId: string): Promise<UserActivity[]>;
+  getUserAchievements(userId: string): Promise<Achievement[]>;
+  
+  // Messages (community)
+  getChannelMessages(channel: string): Promise<any[]>;
+  createMessage(userId: string, channel: string, content: string): Promise<any>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -85,6 +95,18 @@ export class DatabaseStorage implements IStorage {
     return await db.select().from(companies);
   }
 
+  async createCompany(companyData: any): Promise<Company> {
+    const [company] = await db
+      .insert(companies)
+      .values(companyData)
+      .returning();
+    return company;
+  }
+
+  async deleteCompany(companyId: string): Promise<void> {
+    await db.delete(companies).where(eq(companies.id, companyId));
+  }
+
   async getCompanyMembers(companyId: string): Promise<Profile[]> {
     const members = await db.select({
       id: profiles.id,
@@ -126,7 +148,7 @@ export class DatabaseStorage implements IStorage {
       .from(userRoles)
       .where(eq(userRoles.user_id, userId));
     
-    return roles.map(r => r.role).filter((role): role is string => role !== null);
+    return roles.map(r => r.role).filter(role => role !== null) as string[];
   }
 
   async assignRole(userId: string, role: string): Promise<void> {
@@ -134,6 +156,43 @@ export class DatabaseStorage implements IStorage {
       user_id: userId,
       role: role as any,
     }).onConflictDoNothing();
+  }
+
+  async getUserActivities(userId: string): Promise<UserActivity[]> {
+    const activities = await db
+      .select()
+      .from(userActivities)
+      .where(eq(userActivities.user_id, userId))
+      .orderBy(desc(userActivities.created_at))
+      .limit(20);
+    
+    return activities;
+  }
+
+  async getUserAchievements(userId: string): Promise<Achievement[]> {
+    const achievementResults = await db
+      .select()
+      .from(achievements)
+      .where(eq(achievements.user_id, userId))
+      .orderBy(desc(achievements.created_at));
+    
+    return achievementResults;
+  }
+
+  async getChannelMessages(channel: string): Promise<any[]> {
+    // For now, return mock data - we would implement proper message storage later
+    return [];
+  }
+
+  async createMessage(userId: string, channel: string, content: string): Promise<any> {
+    // For now, return mock data - we would implement proper message storage later
+    return {
+      id: Date.now().toString(),
+      userId,
+      channel,
+      content,
+      createdAt: new Date().toISOString()
+    };
   }
 }
 

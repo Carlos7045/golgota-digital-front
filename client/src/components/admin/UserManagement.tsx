@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiGet, apiPost, apiPut, apiDelete } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,11 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Search, UserPlus, MoreHorizontal, Shield, UserCheck } from 'lucide-react';
-import { UserRank } from '@/pages/Community';
-import { useToast } from '@/hooks/use-toast';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import * as z from 'zod';
+import { z } from 'zod';
+import { useToast } from '@/hooks/use-toast';
+
+export type UserRank = 'aluno' | 'soldado' | 'cabo' | 'sargento' | 'tenente' | 'capitao' | 'major' | 'coronel' | 'comandante' | 'admin';
 
 interface CommunityUser {
   id: string;
@@ -30,32 +32,13 @@ interface CommunityUser {
 }
 
 const addUserSchema = z.object({
-  cpglRegister: z.string().min(1, 'Registro CPGL é obrigatório'),
   name: z.string().min(2, 'Nome deve ter pelo menos 2 caracteres'),
   email: z.string().email('Email inválido'),
-  city: z.string().min(1, 'Cidade é obrigatória'),
-  company: z.string().min(1, 'Companhia é obrigatória'),
   rank: z.string().min(1, 'Patente é obrigatória'),
-  cpglYear: z.string().min(1, 'Ano do CPGL é obrigatório'),
-  cpglMonth: z.string().min(1, 'Mês do CPGL é obrigatório'),
+  company: z.string().min(1, 'Companhia é obrigatória'),
 });
 
 type AddUserForm = z.infer<typeof addUserSchema>;
-
-// Dados fictícios removidos - agora conectado ao Supabase
-
-const rankColors: Record<UserRank, string> = {
-  'aluno': 'bg-gray-500',
-  'soldado': 'bg-green-600',
-  'cabo': 'bg-green-700',
-  'sargento': 'bg-blue-600',
-  'tenente': 'bg-blue-700',
-  'capitao': 'bg-purple-600',
-  'major': 'bg-purple-700',
-  'coronel': 'bg-red-600',
-  'comandante': 'bg-red-700',
-  'admin': 'bg-military-gold'
-};
 
 const UserManagement = () => {
   const [users, setUsers] = useState<CommunityUser[]>([]);
@@ -64,7 +47,18 @@ const UserManagement = () => {
   const [rankFilter, setRankFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  
   const { toast } = useToast();
+  
+  const form = useForm<AddUserForm>({
+    resolver: zodResolver(addUserSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      rank: '',
+      company: '',
+    },
+  });
 
   useEffect(() => {
     fetchUsers();
@@ -72,56 +66,29 @@ const UserManagement = () => {
 
   const fetchUsers = async () => {
     try {
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select(`
-          user_id,
-          name,
-          email,
-          rank,
-          created_at,
-          updated_at
-        `);
-
-      if (error) throw error;
-
-      const formattedUsers: CommunityUser[] = profiles.map(profile => ({
+      const data = await apiGet('/api/profiles');
+      const mappedUsers = (data.profiles || []).map((profile: any) => ({
         id: profile.user_id,
         name: profile.name,
         email: profile.email,
-        rank: (profile.rank as UserRank) || 'soldado',
-        company: 'Alpha', // Simplificado por enquanto
-        joinDate: profile.created_at.split('T')[0],
-        lastActive: profile.updated_at.split('T')[0],
-        status: 'active' as const
+        rank: profile.rank || 'soldado',
+        company: 'Cia Gólgota',
+        joinDate: new Date(profile.created_at).toLocaleDateString('pt-BR'),
+        lastActive: 'Hoje',
+        status: 'active'
       }));
-
-      setUsers(formattedUsers);
+      setUsers(mappedUsers);
     } catch (error) {
       console.error('Error fetching users:', error);
       toast({
         title: "Erro ao carregar usuários",
-        description: "Não foi possível carregar a lista de usuários.",
+        description: "Não foi possível carregar os usuários.",
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
-
-  const form = useForm<AddUserForm>({
-    resolver: zodResolver(addUserSchema),
-    defaultValues: {
-      cpglRegister: '',
-      name: '',
-      email: '',
-      city: '',
-      company: '',
-      rank: '',
-      cpglYear: '',
-      cpglMonth: '',
-    },
-  });
 
   const handleAddUser = (data: AddUserForm) => {
     const newUser: CommunityUser = {
@@ -130,13 +97,9 @@ const UserManagement = () => {
       email: data.email,
       rank: data.rank as UserRank,
       company: data.company,
-      joinDate: new Date().toISOString().split('T')[0],
-      lastActive: new Date().toISOString().split('T')[0],
-      status: 'active',
-      cpglRegister: data.cpglRegister,
-      city: data.city,
-      cpglYear: parseInt(data.cpglYear),
-      cpglMonth: parseInt(data.cpglMonth),
+      joinDate: new Date().toLocaleDateString('pt-BR'),
+      lastActive: 'Agora',
+      status: 'active'
     };
 
     setUsers([...users, newUser]);
@@ -144,8 +107,8 @@ const UserManagement = () => {
     form.reset();
     
     toast({
-      title: "Usuário adicionado",
-      description: `${data.name} foi adicionado com sucesso`,
+      title: "Sucesso",
+      description: "Usuário foi adicionado com sucesso!"
     });
   };
 
@@ -158,300 +121,170 @@ const UserManagement = () => {
     return matchesSearch && matchesRank && matchesCompany;
   });
 
-  const handlePromoteUser = (userId: string) => {
-    const rankHierarchy: UserRank[] = ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante'];
+  const promoteUser = (userId: string, newRank: UserRank) => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, rank: newRank } : user
+    ));
     
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        const currentIndex = rankHierarchy.findIndex(rank => rank === user.rank);
-        const newRank = currentIndex < rankHierarchy.length - 1 ? rankHierarchy[currentIndex + 1] : user.rank;
-        
-        if (newRank !== user.rank) {
-          toast({
-            title: "Usuário promovido",
-            description: `${user.name} foi promovido para ${newRank}`,
-          });
-        }
-        
-        return { ...user, rank: newRank };
-      }
-      return user;
-    }));
+    toast({
+      title: "Usuário promovido",
+      description: `Usuário foi promovido para ${newRank}!`
+    });
   };
 
-  const handleToggleStatus = (userId: string) => {
-    setUsers(users.map(user => {
-      if (user.id === userId) {
-        const newStatus = user.status === 'active' ? 'inactive' : 'active';
-        toast({
-          title: "Status alterado",
-          description: `${user.name} está agora ${newStatus === 'active' ? 'ativo' : 'inativo'}`,
-        });
-        return { ...user, status: newStatus };
-      }
-      return user;
-    }));
+  const toggleUserStatus = (userId: string, newStatus: 'active' | 'inactive') => {
+    setUsers(users.map(user => 
+      user.id === userId ? { ...user, status: newStatus } : user
+    ));
+    
+    toast({
+      title: "Status alterado",
+      description: `Usuário está agora ${newStatus === 'active' ? 'ativo' : 'inativo'}!`
+    });
   };
+
+  const rankColors: Record<UserRank, string> = {
+    aluno: 'bg-gray-600/20 text-gray-400',
+    soldado: 'bg-green-600/20 text-green-400',
+    cabo: 'bg-blue-600/20 text-blue-400',
+    sargento: 'bg-purple-600/20 text-purple-400',
+    tenente: 'bg-yellow-600/20 text-yellow-400',
+    capitao: 'bg-orange-600/20 text-orange-400',
+    major: 'bg-red-600/20 text-red-400',
+    coronel: 'bg-pink-600/20 text-pink-400',
+    comandante: 'bg-military-gold/20 text-military-gold',
+    admin: 'bg-indigo-600/20 text-indigo-400'
+  };
+
+  const getRankBadge = (rank: UserRank) => (
+    <Badge className={rankColors[rank]}>
+      {rank.charAt(0).toUpperCase() + rank.slice(1)}
+    </Badge>
+  );
 
   return (
     <div className="flex-1 overflow-y-auto p-6 bg-military-black">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-2xl font-bold text-white">Gestão de Usuários</h2>
-            <p className="text-gray-400">Gerencie membros da comunidade</p>
-          </div>
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-military-gold">Gerenciamento de Usuários</h1>
           <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-military-gold text-black hover:bg-military-gold/80">
+              <Button className="bg-military-gold text-military-black hover:bg-military-gold/80">
                 <UserPlus className="w-4 h-4 mr-2" />
                 Adicionar Usuário
               </Button>
             </DialogTrigger>
-            <DialogContent className="bg-military-black-light border-military-gold/20 text-white max-w-2xl">
+            <DialogContent className="bg-military-black-light border-military-gold/20">
               <DialogHeader>
-                <DialogTitle className="text-military-gold">Adicionar Novo Membro</DialogTitle>
+                <DialogTitle className="text-military-gold">Adicionar Novo Usuário</DialogTitle>
               </DialogHeader>
-              
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(handleAddUser)} className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="cpglRegister"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Registro CPGL</FormLabel>
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Nome Completo</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: João Silva" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Email</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Ex: joao@exemplo.com" {...field} className="bg-military-black border-military-gold/30 text-white" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="rank"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Patente</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-military-black border-gray-600 text-white"
-                              placeholder="Ex: CPGL-2024-001"
-                            />
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue placeholder="Selecione a patente" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Nome Completo</FormLabel>
+                          <SelectContent className="bg-military-black-light border-military-gold/20">
+                            <SelectItem value="aluno">Aluno</SelectItem>
+                            <SelectItem value="soldado">Soldado</SelectItem>
+                            <SelectItem value="cabo">Cabo</SelectItem>
+                            <SelectItem value="sargento">Sargento</SelectItem>
+                            <SelectItem value="tenente">Tenente</SelectItem>
+                            <SelectItem value="capitao">Capitão</SelectItem>
+                            <SelectItem value="major">Major</SelectItem>
+                            <SelectItem value="coronel">Coronel</SelectItem>
+                            <SelectItem value="comandante">Comandante</SelectItem>
+                            <SelectItem value="admin">Admin</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="company"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Companhia</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
                           <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-military-black border-gray-600 text-white"
-                              placeholder="Nome completo do membro"
-                            />
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue placeholder="Selecione a companhia" />
+                            </SelectTrigger>
                           </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              type="email"
-                              className="bg-military-black border-gray-600 text-white"
-                              placeholder="email@exemplo.com"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="city"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Cidade</FormLabel>
-                          <FormControl>
-                            <Input 
-                              {...field} 
-                              className="bg-military-black border-gray-600 text-white"
-                              placeholder="Cidade onde mora"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="company"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Companhia</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="A">Cia A</SelectItem>
-                              <SelectItem value="B">Cia B</SelectItem>
-                              <SelectItem value="C">Cia C</SelectItem>
-                              <SelectItem value="D">Cia D</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="rank"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Patente</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
-                                <SelectValue placeholder="Selecione" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="aluno">Aluno</SelectItem>
-                              <SelectItem value="soldado">Soldado</SelectItem>
-                              <SelectItem value="cabo">Cabo</SelectItem>
-                              <SelectItem value="sargento">Sargento</SelectItem>
-                              <SelectItem value="tenente">Tenente</SelectItem>
-                              <SelectItem value="capitao">Capitão</SelectItem>
-                              <SelectItem value="major">Major</SelectItem>
-                              <SelectItem value="coronel">Coronel</SelectItem>
-                              <SelectItem value="comandante">Comandante</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={form.control}
-                      name="cpglYear"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Ano do CPGL</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
-                                <SelectValue placeholder="Selecione o ano" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {Array.from({ length: 10 }, (_, i) => {
-                                const year = new Date().getFullYear() - i;
-                                return (
-                                  <SelectItem key={year} value={year.toString()}>
-                                    {year}
-                                  </SelectItem>
-                                );
-                              })}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={form.control}
-                      name="cpglMonth"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-gray-300">Mês do CPGL</FormLabel>
-                          <Select onValueChange={field.onChange} defaultValue={field.value}>
-                            <FormControl>
-                              <SelectTrigger className="bg-military-black border-gray-600 text-white">
-                                <SelectValue placeholder="Selecione o mês" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="1">Janeiro</SelectItem>
-                              <SelectItem value="2">Fevereiro</SelectItem>
-                              <SelectItem value="3">Março</SelectItem>
-                              <SelectItem value="4">Abril</SelectItem>
-                              <SelectItem value="5">Maio</SelectItem>
-                              <SelectItem value="6">Junho</SelectItem>
-                              <SelectItem value="7">Julho</SelectItem>
-                              <SelectItem value="8">Agosto</SelectItem>
-                              <SelectItem value="9">Setembro</SelectItem>
-                              <SelectItem value="10">Outubro</SelectItem>
-                              <SelectItem value="11">Novembro</SelectItem>
-                              <SelectItem value="12">Dezembro</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
-                  <div className="flex justify-end space-x-2 pt-4">
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={() => setIsAddUserOpen(false)}
-                      className="border-gray-600 text-gray-300 hover:bg-gray-700"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button 
-                      type="submit" 
-                      className="bg-military-gold text-black hover:bg-military-gold/80"
-                    >
-                      Adicionar Membro
-                    </Button>
-                  </div>
+                          <SelectContent className="bg-military-black-light border-military-gold/20">
+                            <SelectItem value="Cia Gólgota">Cia Gólgota</SelectItem>
+                            <SelectItem value="1ª Companhia">1ª Companhia</SelectItem>
+                            <SelectItem value="2ª Companhia">2ª Companhia</SelectItem>
+                            <SelectItem value="3ª Companhia">3ª Companhia</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full bg-military-gold text-military-black hover:bg-military-gold/80">
+                    Adicionar Usuário
+                  </Button>
                 </form>
               </Form>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Filters */}
+        {/* Filtros */}
         <Card className="bg-military-black-light border-military-gold/20">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                  <Input
-                    placeholder="Buscar por nome ou email..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-military-black border-gray-600 text-white"
-                  />
-                </div>
+          <CardContent className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Buscar usuários..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10 bg-military-black border-military-gold/30 text-white"
+                />
               </div>
               <Select value={rankFilter} onValueChange={setRankFilter}>
-                <SelectTrigger className="w-48 bg-military-black border-gray-600 text-white">
+                <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
                   <SelectValue placeholder="Filtrar por patente" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-military-black-light border-military-gold/20">
                   <SelectItem value="all">Todas as patentes</SelectItem>
                   <SelectItem value="aluno">Aluno</SelectItem>
                   <SelectItem value="soldado">Soldado</SelectItem>
@@ -462,92 +295,85 @@ const UserManagement = () => {
                   <SelectItem value="major">Major</SelectItem>
                   <SelectItem value="coronel">Coronel</SelectItem>
                   <SelectItem value="comandante">Comandante</SelectItem>
+                  <SelectItem value="admin">Admin</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={companyFilter} onValueChange={setCompanyFilter}>
-                <SelectTrigger className="w-32 bg-military-black border-gray-600 text-white">
-                  <SelectValue placeholder="Cia" />
+                <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                  <SelectValue placeholder="Filtrar por companhia" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todas</SelectItem>
-                  <SelectItem value="A">Cia A</SelectItem>
-                  <SelectItem value="B">Cia B</SelectItem>
-                  <SelectItem value="C">Cia C</SelectItem>
-                  <SelectItem value="D">Cia D</SelectItem>
+                <SelectContent className="bg-military-black-light border-military-gold/20">
+                  <SelectItem value="all">Todas as companhias</SelectItem>
+                  <SelectItem value="Cia Gólgota">Cia Gólgota</SelectItem>
+                  <SelectItem value="1ª Companhia">1ª Companhia</SelectItem>
+                  <SelectItem value="2ª Companhia">2ª Companhia</SelectItem>
+                  <SelectItem value="3ª Companhia">3ª Companhia</SelectItem>
                 </SelectContent>
               </Select>
+              <div className="text-sm text-gray-400 flex items-center">
+                Total: {filteredUsers.length} usuários
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Users Table */}
+        {/* Tabela de Usuários */}
         <Card className="bg-military-black-light border-military-gold/20">
-          <CardHeader>
-            <CardTitle className="text-military-gold">
-              Membros ({filteredUsers.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow className="border-gray-700">
-                  <TableHead className="text-gray-400">Nome</TableHead>
-                  <TableHead className="text-gray-400">Email</TableHead>
-                  <TableHead className="text-gray-400">Patente</TableHead>
-                  <TableHead className="text-gray-400">Cia</TableHead>
-                  <TableHead className="text-gray-400">Status</TableHead>
-                  <TableHead className="text-gray-400">Última Atividade</TableHead>
-                  <TableHead className="text-gray-400">Ações</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredUsers.map((user) => (
-                  <TableRow key={user.id} className="border-gray-700">
-                    <TableCell className="text-white font-medium">{user.name}</TableCell>
-                    <TableCell className="text-gray-300">{user.email}</TableCell>
-                    <TableCell>
-                      <Badge className={`${rankColors[user.rank]} text-white text-xs uppercase`}>
-                        {user.rank}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-gray-300">Cia {user.company}</TableCell>
-                    <TableCell>
-                      <Badge className={user.status === 'active' ? 'bg-green-600' : 'bg-gray-600'}>
-                        {user.status === 'active' ? 'Ativo' : 'Inativo'}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-gray-300">{user.lastActive}</TableCell>
-                    <TableCell>
-                      <div className="flex items-center space-x-2">
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handlePromoteUser(user.id)}
-                          className="text-military-gold hover:bg-military-gold/20"
-                        >
-                          <Shield className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => handleToggleStatus(user.id)}
-                          className="text-gray-400 hover:bg-gray-600/20"
-                        >
-                          <UserCheck className="w-4 h-4" />
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-gray-400 hover:bg-gray-600/20"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+          <CardContent className="p-0">
+            {loading ? (
+              <div className="text-center text-gray-400 py-8">
+                Carregando usuários...
+              </div>
+            ) : (
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-military-gold/20">
+                    <TableHead className="text-military-gold">Nome</TableHead>
+                    <TableHead className="text-military-gold">Email</TableHead>
+                    <TableHead className="text-military-gold">Patente</TableHead>
+                    <TableHead className="text-military-gold">Companhia</TableHead>
+                    <TableHead className="text-military-gold">Ingresso</TableHead>
+                    <TableHead className="text-military-gold">Status</TableHead>
+                    <TableHead className="text-military-gold">Ações</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.map((user) => (
+                    <TableRow key={user.id} className="border-military-gold/10 hover:bg-military-gold/5">
+                      <TableCell className="text-white font-medium">{user.name}</TableCell>
+                      <TableCell className="text-gray-300">{user.email}</TableCell>
+                      <TableCell>{getRankBadge(user.rank)}</TableCell>
+                      <TableCell className="text-gray-300">{user.company}</TableCell>
+                      <TableCell className="text-gray-300">{user.joinDate}</TableCell>
+                      <TableCell>
+                        <Badge className={user.status === 'active' ? 'bg-green-600/20 text-green-400' : 'bg-red-600/20 text-red-400'}>
+                          {user.status === 'active' ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-military-gold/30 text-white hover:bg-military-gold/10"
+                          >
+                            <Shield className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => toggleUserStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
+                            className="border-military-gold/30 text-white hover:bg-military-gold/10"
+                          >
+                            <UserCheck className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            )}
           </CardContent>
         </Card>
       </div>

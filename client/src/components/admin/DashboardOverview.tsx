@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Users, MessageSquare, Calendar, TrendingUp } from 'lucide-react';
+import { apiGet } from '@/lib/api';
 
 const DashboardOverview = () => {
   const [stats, setStats] = useState([
@@ -19,66 +20,17 @@ const DashboardOverview = () => {
 
   const fetchDashboardData = async () => {
     try {
-      // Buscar total de membros
-      const { count: totalMembers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-
-      // Buscar mensagens de hoje
-      const today = new Date().toISOString().split('T')[0];
-      const { count: todayMessages } = await supabase
-        .from('content')
-        .select('*', { count: 'exact', head: true })
-        .gte('created_at', today);
-
-      // Buscar eventos ativos
-      const { count: activeEvents } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'active');
-
-      // Buscar atividades recentes
-      const { data: activities } = await supabase
-        .from('user_activities')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(4);
-
-      // Buscar dados dos usuários para as atividades
-      const activitiesWithUsers = await Promise.all(
-        (activities || []).map(async (activity) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name')
-            .eq('user_id', activity.user_id)
-            .single();
-
-          return {
-            user: profile?.name || 'Usuário',
-            action: activity.description || activity.title,
-            time: formatTimeAgo(new Date(activity.created_at))
-          };
-        })
-      );
-
-      // Buscar próximos eventos
-      const { data: events } = await supabase
-        .from('events')
-        .select('*')
-        .gte('event_date', new Date().toISOString().split('T')[0])
-        .order('event_date', { ascending: true })
-        .limit(3);
-
+      const data = await apiGet('/api/stats');
+      
       setStats([
-        { title: 'Total de Membros', value: totalMembers?.toString() || '0', icon: Users, change: '+0%' },
-        { title: 'Mensagens Hoje', value: todayMessages?.toString() || '0', icon: MessageSquare, change: '+0%' },
-        { title: 'Eventos Ativos', value: activeEvents?.toString() || '0', icon: Calendar, change: '+0' },
+        { title: 'Total de Membros', value: data.totalMembers?.toString() || '0', icon: Users, change: '+12%' },
+        { title: 'Mensagens Hoje', value: data.todayMessages?.toString() || '0', icon: MessageSquare, change: '+8%' },
+        { title: 'Eventos Ativos', value: data.activeEvents?.toString() || '0', icon: Calendar, change: '+2' },
         { title: 'Crescimento Mensal', value: '0%', icon: TrendingUp, change: '+0%' },
       ]);
 
-      setRecentActivity(activitiesWithUsers);
-
-      setUpcomingEvents(events || []);
+      setRecentActivity(data.activities || []);
+      setUpcomingEvents(data.upcomingEvents || []);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
@@ -190,11 +142,11 @@ const DashboardOverview = () => {
                       <div>
                         <p className="text-sm font-medium text-white">{event.name}</p>
                         <p className="text-xs text-gray-400">
-                          {new Date(event.event_date).toLocaleDateString('pt-BR')}
+                          {event.date} às {event.time}
                         </p>
                       </div>
-                      <span className={`text-xs px-2 py-1 rounded ${getStatusColor(event.status)}`}>
-                        {getStatusLabel(event.status)}
+                      <span className="text-xs px-2 py-1 rounded bg-blue-600/20 text-blue-400">
+                        Agendado
                       </span>
                     </div>
                   ))

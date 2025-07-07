@@ -49,9 +49,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
 
   const fetchMessages = async () => {
     try {
-      const { data, error } = await supabase
-        .from('content')
-        .select(`
+      const data = await apiGet('/api/messages/geral');
+      setMessages(data.messages || []);
           id,
           title,
           body,
@@ -99,7 +98,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       try {
-        const { error } = await supabase
+        await apiPost('/api/messages/geral', { content: newMessage });
           .from('content')
           .insert({
             title: 'Mensagem no Canal Geral',
