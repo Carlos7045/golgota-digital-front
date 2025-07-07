@@ -98,4 +98,29 @@
     background: linear-gradient(to right, transparent, #d4af37, transparent);
     transform: translateX(-50%);
   }
+  
+  /* Military Theme Colors */
+  .bg-military-black {
+    background-color: #0a0a0a;
+  }
+  
+  .bg-military-black-light {
+    background-color: #1a1a1a;
+  }
+  
+  .bg-military-gold {
+    background-color: #d4af37;
+  }
+  
+  .bg-military-gold-dark {
+    background-color: #b8941f;
+  }
+  
+  .text-military-gold {
+    color: #d4af37;
+  }
+  
+  .border-military-gold {
+    border-color: #d4af37;
+  }
 }

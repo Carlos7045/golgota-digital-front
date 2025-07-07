@@ -3,12 +3,12 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-// Removed useAuth import temporarily to fix the AuthProvider error
+import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const user = null; // Temporarily removed for migration
+  const { user } = useAuth();
 
   const navItems = [
     { name: 'Sobre', href: '#sobre' },

@@ -1,12 +1,12 @@
-
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Send, Heart, MessageSquare, Pin } from 'lucide-react';
+import { Send, Heart, MessageSquare } from 'lucide-react';
 import { User } from '@/pages/Community';
 import { useToast } from '@/hooks/use-toast';
+import { apiGet, apiPost } from '@/lib/api';
 
 interface GeneralChannelProps {
   user: User;
@@ -51,38 +51,6 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     try {
       const data = await apiGet('/api/messages/geral');
       setMessages(data.messages || []);
-          id,
-          title,
-          body,
-          author_id,
-          created_at,
-          interactions,
-          views
-        `)
-        .eq('channel', 'geral')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      // Buscar dados dos autores
-      const messagesWithAuthors = await Promise.all(
-        (data || []).map(async (message) => {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('name, rank')
-            .eq('user_id', message.author_id)
-            .single();
-
-          return {
-            ...message,
-            author_name: profile?.name || 'Usuário',
-            author_rank: profile?.rank || 'soldado'
-          };
-        })
-      );
-
-      setMessages(messagesWithAuthors);
     } catch (error) {
       console.error('Error fetching messages:', error);
       toast({
@@ -99,20 +67,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     if (newMessage.trim()) {
       try {
         await apiPost('/api/messages/geral', { content: newMessage });
-          .from('content')
-          .insert({
-            title: 'Mensagem no Canal Geral',
-            body: newMessage,
-            author_id: user.id,
-            channel: 'geral',
-            type: 'announcement',
-            status: 'published'
-          });
-
-        if (error) throw error;
-
         setNewMessage('');
-        await fetchMessages(); // Recarregar mensagens
+        await fetchMessages();
         
         toast({
           title: "Mensagem enviada",
