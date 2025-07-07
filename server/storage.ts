@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
+import { users, profiles, userRoles, companies, companyMembers, events, eventRegistrations, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, type User, type InsertUser, type Profile, type Company, type Event, type EventRegistration, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
 import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -77,6 +77,14 @@ export interface IStorage {
   createAsaasWebhook(data: any): Promise<AsaasWebhook>;
   getUnprocessedWebhooks(): Promise<AsaasWebhook[]>;
   markWebhookProcessed(webhookId: string): Promise<void>;
+
+  // Event registrations
+  registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration>;
+  unregisterFromEvent(eventId: string, userId: string): Promise<void>;
+  getUserEventRegistrations(userId: string): Promise<EventRegistration[]>;
+  getEventRegistrations(eventId: string): Promise<EventRegistration[]>;
+  isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean>;
+  updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -571,6 +579,156 @@ export class DatabaseStorage implements IStorage {
         processed_at: new Date() 
       })
       .where(eq(asaasWebhooks.id, webhookId));
+  }
+
+  // Event registration methods
+  async registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration> {
+    const [registration] = await db.insert(eventRegistrations)
+      .values({
+        event_id: eventId,
+        user_id: userId,
+        payment_status: paymentData?.status || 'pending',
+        asaas_payment_id: paymentData?.asaas_payment_id,
+        amount_paid: paymentData?.amount_paid,
+        payment_method: paymentData?.payment_method,
+        notes: paymentData?.notes
+      })
+      .returning();
+
+    // Update event registered participants count
+    const currentEvent = await db.query.events.findFirst({
+      where: eq(events.id, eventId)
+    });
+
+    if (currentEvent) {
+      await db.update(events)
+        .set({ 
+          registered_participants: (currentEvent.registered_participants || 0) + 1,
+          updated_at: new Date()
+        })
+        .where(eq(events.id, eventId));
+    }
+
+    return registration;
+  }
+
+  async unregisterFromEvent(eventId: string, userId: string): Promise<void> {
+    await db.delete(eventRegistrations)
+      .where(and(
+        eq(eventRegistrations.event_id, eventId),
+        eq(eventRegistrations.user_id, userId)
+      ));
+
+    // Update event registered participants count
+    const currentEvent = await db.query.events.findFirst({
+      where: eq(events.id, eventId)
+    });
+
+    if (currentEvent && currentEvent.registered_participants > 0) {
+      await db.update(events)
+        .set({ 
+          registered_participants: currentEvent.registered_participants - 1,
+          updated_at: new Date()
+        })
+        .where(eq(events.id, eventId));
+    }
+  }
+
+  async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
+    return await db.query.eventRegistrations.findMany({
+      where: eq(eventRegistrations.user_id, userId)
+    });
+  }
+
+  async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
+    return await db.query.eventRegistrations.findMany({
+      where: eq(eventRegistrations.event_id, eventId)
+    });
+  }
+
+  async isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean> {
+    const registration = await db.query.eventRegistrations.findFirst({
+      where: and(
+        eq(eventRegistrations.event_id, eventId),
+        eq(eventRegistrations.user_id, userId)
+      )
+    });
+    return !!registration;
+  }
+
+  async updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration> {
+    const [updated] = await db.update(eventRegistrations)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(eventRegistrations.id, registrationId))
+      .returning();
+    return updated;
+  }
+
+  // Event registration methods
+  async registerForEvent(eventId: string, userId: string, paymentData?: any): Promise<EventRegistration> {
+    const registrationData = {
+      event_id: eventId,
+      user_id: userId,
+      payment_status: paymentData?.status || 'pending',
+      asaas_payment_id: paymentData?.asaas_payment_id,
+      amount_paid: paymentData?.amount_paid?.toString(),
+      payment_method: paymentData?.payment_method,
+      notes: paymentData?.notes
+    };
+
+    const [registration] = await db.insert(eventRegistrations).values(registrationData).returning();
+    
+    // Update event participant count
+    const registrationCount = await db.select({ count: count() })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.event_id, eventId));
+    
+    await db.update(events)
+      .set({ registered_participants: registrationCount[0]?.count || 0 })
+      .where(eq(events.id, eventId));
+
+    return registration;
+  }
+
+  async unregisterFromEvent(eventId: string, userId: string): Promise<void> {
+    await db.delete(eventRegistrations)
+      .where(and(
+        eq(eventRegistrations.event_id, eventId),
+        eq(eventRegistrations.user_id, userId)
+      ));
+
+    // Update event participant count
+    const registrationCount = await db.select({ count: count() })
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.event_id, eventId));
+    
+    await db.update(events)
+      .set({ registered_participants: registrationCount[0]?.count || 0 })
+      .where(eq(events.id, eventId));
+  }
+
+  async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
+    return await db.select()
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.user_id, userId))
+      .orderBy(desc(eventRegistrations.registration_date));
+  }
+
+  async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
+    return await db.select()
+      .from(eventRegistrations)
+      .where(eq(eventRegistrations.event_id, eventId))
+      .orderBy(desc(eventRegistrations.registration_date));
+  }
+
+  async isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean> {
+    const [registration] = await db.select()
+      .from(eventRegistrations)
+      .where(and(
+        eq(eventRegistrations.event_id, eventId),
+        eq(eventRegistrations.user_id, userId)
+      ));
+    return !!registration;
   }
 }
 

@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { GraduationCap, Users, Clock, MapPin, DollarSign, Calendar } from 'lucide-react';
 import { User } from '@/pages/Community';
-import { apiGet } from '@/lib/api';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 
 interface Event {
   id: string;
@@ -50,12 +50,31 @@ const TrainingsChannel = ({ user }: TrainingsChannelProps) => {
     }
   };
 
-  const handleEnroll = (eventId: string) => {
-    setEnrolledEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
+  const handleEnroll = async (eventId: string) => {
+    try {
+      if (enrolledEvents.includes(eventId)) {
+        await apiDelete(`/api/events/${eventId}/register`);
+        setEnrolledEvents(prev => prev.filter(id => id !== eventId));
+        console.log('Inscrição cancelada com sucesso');
+      } else {
+        const response = await apiPost(`/api/events/${eventId}/register`, {});
+        
+        if (response.payment) {
+          // Event requires payment - show payment info
+          alert(`Pagamento necessário: R$ ${response.payment.value}\nCódigo PIX: ${response.payment.pixCode}\nVencimento: ${new Date(response.payment.dueDate).toLocaleDateString()}`);
+          window.open(response.payment.invoiceUrl, '_blank');
+        } else {
+          // Free event - registration complete
+          setEnrolledEvents(prev => [...prev, eventId]);
+        }
+        
+        // Refresh events to update participant count
+        fetchTrainingEvents();
+      }
+    } catch (error: any) {
+      console.error('Error with enrollment:', error);
+      alert(error.message || 'Erro ao processar inscrição');
+    }
   };
 
   const getTypeBadge = (type: string) => {

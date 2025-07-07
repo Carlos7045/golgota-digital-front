@@ -727,6 +727,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Event registration routes
+  app.post('/api/events/:id/register', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const eventId = req.params.id;
+      const userId = req.user.id;
+
+      // Check if already registered
+      const isRegistered = await storage.isUserRegisteredForEvent(eventId, userId);
+      if (isRegistered) {
+        return res.status(400).json({ message: 'Usuário já inscrito neste evento' });
+      }
+
+      // Get event details
+      const events = await storage.getEvents();
+      const event = events.find(e => e.id === eventId);
+      if (!event) {
+        return res.status(404).json({ message: 'Evento não encontrado' });
+      }
+
+      // Check if event allows registration
+      if (!['published', 'registration_open', 'final_days'].includes(event.status)) {
+        return res.status(400).json({ message: 'Inscrições não estão abertas para este evento' });
+      }
+
+      // Check capacity
+      if (event.registered_participants >= event.max_participants) {
+        return res.status(400).json({ message: 'Evento já está lotado' });
+      }
+
+      const eventPrice = parseFloat(event.price || '0');
+      
+      if (eventPrice > 0) {
+        // For paid events, create payment intent and return payment URL
+        try {
+          // Get or create Asaas customer
+          let asaasCustomer = await storage.getAsaasCustomer(userId);
+          if (!asaasCustomer) {
+            const user = await storage.getUser(userId);
+            const profile = await storage.getProfile(userId);
+            
+            const customerData = {
+              name: profile?.full_name || user?.email || 'Usuário',
+              email: user?.email || '',
+              cpfCnpj: profile?.cpf?.replace(/\D/g, '') || '',
+              phone: profile?.phone || '',
+              city: profile?.city || '',
+              state: profile?.state || ''
+            };
+
+            const newCustomer = await asaasService.createCustomer(customerData);
+            asaasCustomer = await storage.createAsaasCustomer(userId, newCustomer.id);
+          }
+
+          // Create payment for event
+          const paymentData = {
+            customer: asaasCustomer.asaas_customer_id,
+            billingType: 'PIX',
+            value: eventPrice,
+            dueDate: asaasService.getNextDueDate(7), // 7 days to pay
+            description: `Inscrição - ${event.name}`,
+            externalReference: `event_${eventId}_${userId}`
+          };
+
+          const payment = await asaasService.createPayment(paymentData);
+
+          // Register user for event with pending payment
+          const registration = await storage.registerForEvent(eventId, userId, {
+            status: 'pending',
+            asaas_payment_id: payment.id,
+            amount_paid: eventPrice,
+            payment_method: 'PIX'
+          });
+
+          res.json({ 
+            registration,
+            payment: {
+              id: payment.id,
+              pixCode: payment.pixCode,
+              invoiceUrl: payment.invoiceUrl,
+              bankSlipUrl: payment.bankSlipUrl,
+              value: eventPrice,
+              dueDate: payment.dueDate
+            }
+          });
+
+        } catch (asaasError) {
+          console.error('Error creating Asaas payment:', asaasError);
+          return res.status(500).json({ message: 'Erro ao processar pagamento' });
+        }
+      } else {
+        // For free events, register directly
+        const registration = await storage.registerForEvent(eventId, userId, {
+          status: 'paid',
+          amount_paid: 0,
+          payment_method: 'FREE'
+        });
+
+        res.json({ registration });
+      }
+
+    } catch (error) {
+      console.error('Event registration error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/events/:id/register', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const eventId = req.params.id;
+      const userId = req.user.id;
+
+      await storage.unregisterFromEvent(eventId, userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Event unregistration error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/user/event-registrations', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const registrations = await storage.getUserEventRegistrations(req.user.id);
+      res.json({ registrations });
+    } catch (error) {
+      console.error('User registrations fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Activities routes
   app.get('/api/activities', requireAuth, async (req: Request, res: Response) => {
     try {

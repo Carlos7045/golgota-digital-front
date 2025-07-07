@@ -286,6 +286,21 @@ export const asaasWebhooks = pgTable("asaas_webhooks", {
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 
+// Event Registrations table
+export const eventRegistrations = pgTable("event_registrations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  event_id: uuid("event_id").notNull().references(() => events.id, { onDelete: "cascade" }),
+  user_id: uuid("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  registration_date: timestamp("registration_date").defaultNow().notNull(),
+  payment_status: text("payment_status").default("pending"), // pending, paid, cancelled
+  asaas_payment_id: text("asaas_payment_id"),
+  amount_paid: decimal("amount_paid", { precision: 10, scale: 2 }),
+  payment_method: text("payment_method"), // PIX, BOLETO, CREDIT_CARD
+  notes: text("notes"),
+  created_at: timestamp("created_at").defaultNow().notNull(),
+  updated_at: timestamp("updated_at").defaultNow().notNull(),
+});
+
 // Insert schemas
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
@@ -370,6 +385,12 @@ export const insertAsaasWebhookSchema = createInsertSchema(asaasWebhooks).omit({
   created_at: true,
 });
 
+export const insertEventRegistrationSchema = createInsertSchema(eventRegistrations).omit({
+  id: true,
+  created_at: true,
+  updated_at: true,
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Profile = typeof profiles.$inferSelect;
@@ -388,3 +409,4 @@ export type AsaasCustomer = typeof asaasCustomers.$inferSelect;
 export type AsaasSubscription = typeof asaasSubscriptions.$inferSelect;
 export type AsaasPayment = typeof asaasPayments.$inferSelect;
 export type AsaasWebhook = typeof asaasWebhooks.$inferSelect;
+export type EventRegistration = typeof eventRegistrations.$inferSelect;
