@@ -36,6 +36,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
 
   useEffect(() => {
     fetchCampEvents();
+    fetchUserRegistrations();
   }, []);
 
   const fetchCampEvents = async () => {
@@ -47,6 +48,16 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
       console.error('Error fetching camp events:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchUserRegistrations = async () => {
+    try {
+      const data = await apiGet('/api/user/event-registrations');
+      const enrolledEventIds = data.registrations.map((reg: any) => reg.event_id);
+      setEnrolledEvents(enrolledEventIds);
+    } catch (error) {
+      console.error('Error fetching user registrations:', error);
     }
   };
 
@@ -70,6 +81,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
         
         // Refresh events to update participant count
         fetchCampEvents();
+        fetchUserRegistrations();
       }
     } catch (error: any) {
       console.error('Error with enrollment:', error);
@@ -185,12 +197,25 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                     onClick={() => handleEnroll(event.id)}
                     className={`flex-1 ${
                       enrolledEvents.includes(event.id)
-                        ? 'bg-green-600 hover:bg-green-700 text-white'
+                        ? 'bg-red-600 hover:bg-red-700 text-white'
+                        : event.registered_participants >= event.max_participants
+                        ? 'bg-gray-600 cursor-not-allowed text-gray-300'
                         : 'bg-military-gold text-military-black hover:bg-military-gold/80'
                     }`}
-                    disabled={event.status === 'cancelled' || event.status === 'completed'}
+                    disabled={
+                      event.status === 'cancelled' || 
+                      event.status === 'completed' ||
+                      (event.registered_participants >= event.max_participants && !enrolledEvents.includes(event.id)) ||
+                      !['published', 'registration_open', 'final_days'].includes(event.status)
+                    }
                   >
-                    {enrolledEvents.includes(event.id) ? 'Inscrito' : 'Inscrever-se'}
+                    {enrolledEvents.includes(event.id) 
+                      ? 'Cancelar Inscrição' 
+                      : event.registered_participants >= event.max_participants
+                      ? 'Evento Lotado'
+                      : !['published', 'registration_open', 'final_days'].includes(event.status)
+                      ? 'Inscrições Fechadas'
+                      : 'Inscrever-se'}
                   </Button>
                 </div>
               </CardContent>

@@ -761,6 +761,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (eventPrice > 0) {
         // For paid events, create payment intent and return payment URL
         try {
+          // Import asaas service
+          const { asaasService, AsaasService } = await import('./asaas');
+          
           // Get or create Asaas customer
           let asaasCustomer = await storage.getAsaasCustomer(userId);
           if (!asaasCustomer) {
@@ -785,7 +788,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             customer: asaasCustomer.asaas_customer_id,
             billingType: 'PIX',
             value: eventPrice,
-            dueDate: asaasService.getNextDueDate(7), // 7 days to pay
+            dueDate: AsaasService.getNextDueDate(7), // 7 days to pay
             description: `Inscrição - ${event.name}`,
             externalReference: `event_${eventId}_${userId}`
           };
