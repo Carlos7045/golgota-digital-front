@@ -32,10 +32,11 @@ interface CampaignsChannelProps {
 const CampaignsChannel = ({ user }: CampaignsChannelProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [participatingEvents, setParticipatingEvents] = useState<string[]>([]);
+  const [enrolledEvents, setEnrolledEvents] = useState<string[]>([]);
 
   useEffect(() => {
     fetchCampaignEvents();
+    fetchUserRegistrations();
   }, []);
 
   const fetchCampaignEvents = async () => {
@@ -50,12 +51,50 @@ const CampaignsChannel = ({ user }: CampaignsChannelProps) => {
     }
   };
 
-  const handleParticipate = (eventId: string) => {
-    setParticipatingEvents(prev => 
-      prev.includes(eventId) 
-        ? prev.filter(id => id !== eventId)
-        : [...prev, eventId]
-    );
+  const fetchUserRegistrations = async () => {
+    try {
+      const data = await apiGet('/api/user/event-registrations');
+      const enrolledEventIds = data.registrations.map((reg: any) => reg.event_id);
+      setEnrolledEvents(enrolledEventIds);
+    } catch (error) {
+      console.error('Error fetching user registrations:', error);
+    }
+  };
+
+  const handleEventRegistration = async (eventId: string) => {
+    try {
+      const isEnrolled = enrolledEvents.includes(eventId);
+      
+      if (isEnrolled) {
+        // Cancel registration
+        await apiDelete(`/api/events/${eventId}/register`);
+        setEnrolledEvents(prev => prev.filter(id => id !== eventId));
+        console.log('Inscrição cancelada com sucesso');
+      } else {
+        const response = await apiPost(`/api/events/${eventId}/register`, {});
+        
+        if (response.payment) {
+          // Event requires payment - show payment options
+          const payment = response.payment;
+          
+          let paymentMessage = `✅ Inscrição iniciada!\n\n💰 Valor: R$ ${payment.value}\n📅 Vencimento: ${new Date(payment.dueDate).toLocaleDateString()}\n\n🔄 Métodos disponíveis: ${payment.availableMethods?.join(', ')}\n💳 Parcelamento: Até ${payment.maxInstallments}x no cartão\n\nA página de pagamento será aberta para você escolher o método.`;
+          
+          if (confirm(paymentMessage)) {
+            // Open the payment page
+            window.open(payment.invoiceUrl, '_blank');
+          }
+        } else {
+          // Free event
+          console.log('Inscrição realizada com sucesso!');
+        }
+        
+        setEnrolledEvents(prev => [...prev, eventId]);
+        await fetchUserRegistrations(); // Refresh to get latest data
+      }
+    } catch (error) {
+      console.error('Error handling event registration:', error);
+      alert('Erro ao processar inscrição. Tente novamente.');
+    }
   };
 
   const getTypeBadge = (type: string) => {
@@ -174,15 +213,15 @@ const CampaignsChannel = ({ user }: CampaignsChannelProps) => {
                 )}
                 <div className="flex gap-2 pt-4">
                   <Button
-                    onClick={() => handleParticipate(event.id)}
+                    onClick={() => handleEventRegistration(event.id)}
                     className={`flex-1 ${
-                      participatingEvents.includes(event.id)
+                      enrolledEvents.includes(event.id)
                         ? 'bg-green-600 hover:bg-green-700 text-white'
                         : 'bg-military-gold text-military-black hover:bg-military-gold/80'
                     }`}
                     disabled={event.status === 'cancelled' || event.status === 'completed'}
                   >
-                    {participatingEvents.includes(event.id) ? 'Participando' : 'Participar'}
+                    {enrolledEvents.includes(event.id) ? 'Inscrito ✓' : 'Inscrever-se'}
                   </Button>
                 </div>
               </CardContent>
