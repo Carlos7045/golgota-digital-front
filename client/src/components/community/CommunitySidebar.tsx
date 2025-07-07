@@ -1,4 +1,5 @@
 
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
@@ -12,8 +13,7 @@ import {
   Shield,
   X,
   Users,
-  DollarSign
-,
+  DollarSign,
   Heart
 } from 'lucide-react';
 import { User, ChannelType } from '@/pages/Community';
@@ -57,7 +57,30 @@ const CommunitySidebar = ({ user, activeChannel, onChannelChange, isOpen, onTogg
     return rankHierarchy[user.rank] >= rankHierarchy[minRank as keyof typeof rankHierarchy];
   };
 
-  const onlineCount = 23; // Simulado
+  const [onlineCount, setOnlineCount] = useState(0);
+
+  useEffect(() => {
+    // Fetch real online count
+    const fetchOnlineCount = async () => {
+      try {
+        const response = await fetch('/api/users/online', {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setOnlineCount(data.count || 1);
+        }
+      } catch (error) {
+        console.error('Error fetching online count:', error);
+        setOnlineCount(1); // Show at least current user
+      }
+    };
+
+    fetchOnlineCount();
+    // Update every 30 seconds
+    const interval = setInterval(fetchOnlineCount, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -151,6 +174,33 @@ const CommunitySidebar = ({ user, activeChannel, onChannelChange, isOpen, onTogg
                   </Button>
                 );
               })}
+            </div>
+
+            <Separator className="my-4 bg-military-gold/20" />
+
+            {/* Mensagens Diretas */}
+            <div className="space-y-2 mb-4">
+              <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                Mensagens Diretas
+              </h3>
+              <Button
+                variant={activeChannel === 'direct-messages' ? "secondary" : "ghost"}
+                className={cn(
+                  "w-full justify-start p-3 h-auto",
+                  activeChannel === 'direct-messages' 
+                    ? "bg-military-gold/20 text-military-gold border-l-4 border-military-gold" 
+                    : "text-gray-300 hover:text-white hover:bg-military-gold/10"
+                )}
+                onClick={() => onChannelChange('direct-messages')}
+              >
+                <div className="flex items-center space-x-3 w-full">
+                  <MessageSquare size={18} />
+                  <div className="flex-1 text-left">
+                    <div className="font-medium">Conversas Privadas</div>
+                    <div className="text-xs opacity-70">Mensagens diretas</div>
+                  </div>
+                </div>
+              </Button>
             </div>
 
             <Separator className="my-4 bg-military-gold/20" />

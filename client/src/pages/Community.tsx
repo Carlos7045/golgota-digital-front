@@ -14,9 +14,10 @@ export interface User {
   email: string;
   rank: UserRank;
   company: string;
+  avatar_url?: string;
 }
 
-export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'campanhas' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia' | 'financeiro';
+export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'campanhas' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia' | 'financeiro' | 'direct-messages';
 
 const Community = () => {
   const { user: authUser, profile, roles, loading } = useAuth();
@@ -40,7 +41,8 @@ const Community = () => {
         name: profile.name || 'Membro',
         email: authUser.email || '',
         rank: isAdmin ? 'admin' : ((profile.rank as UserRank) || 'aluno'),
-        company: profile.company || 'Não informada'
+        company: profile.company || 'Não informada',
+        avatar_url: profile.avatar_url
       });
     }
   }, [authUser, profile, roles, loading, navigate]);
