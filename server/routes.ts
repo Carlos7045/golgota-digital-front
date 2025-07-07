@@ -109,6 +109,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       
       await storage.updateProfile(user.id, profileData);
+
+      // Add user to company if specified
+      if (company) {
+        // Find the company by name
+        const companies = await storage.getCompanies();
+        const targetCompany = companies.find(c => c.name === company);
+        
+        if (targetCompany) {
+          // Determine role based on rank
+          let role = 'Membro';
+          if (rank === 'comandante') role = 'Comandante';
+          else if (rank === 'major' || rank === 'coronel') role = 'Sub-Comandante';
+          else if (rank === 'capitao' || rank === 'tenente') role = 'Oficial';
+          else if (rank === 'sargento' || rank === 'cabo') role = 'Graduado';
+          
+          await storage.addCompanyMember(targetCompany.id, user.id, role);
+        }
+      }
       
       // Remove password from response
       const { password: _, ...userResponse } = user;
