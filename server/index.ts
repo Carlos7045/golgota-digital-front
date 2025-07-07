@@ -80,6 +80,9 @@ app.use((req, res, next) => {
     await setupVite(app, server);
   } else {
     serveStatic(app);
+    
+    // Serve avatar files
+    app.use('/avatars', express.static('public/avatars'));
   }
 
   // ALWAYS serve the app on port 5000

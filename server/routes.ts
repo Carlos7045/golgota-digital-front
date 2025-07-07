@@ -7,6 +7,9 @@ import { z } from "zod";
 import { db } from "./db";
 import { sql, eq } from "drizzle-orm";
 import { asaasService, AsaasService } from "./asaas";
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
 
 // Extend the Express Request type to include user
 declare global {
@@ -16,6 +19,37 @@ declare global {
     }
   }
 }
+
+// Configure multer for avatar uploads
+const uploadDir = path.join(process.cwd(), 'public', 'avatars');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+const storage_multer = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    const ext = path.extname(file.originalname);
+    cb(null, `avatar-${uniqueSuffix}${ext}`);
+  }
+});
+
+const upload = multer({
+  storage: storage_multer,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  }
+});
 
 // Auth middleware
 async function requireAuth(req: Request, res: Response, next: any) {
@@ -322,6 +356,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ profile, roles });
     } catch (error) {
       console.error('Profile fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Avatar upload route
+  app.post('/api/profile/avatar', requireAuth, upload.single('avatar'), async (req: Request, res: Response) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No file uploaded' });
+      }
+
+      const avatarUrl = `/avatars/${req.file.filename}`;
+      
+      // Get current profile to check for existing avatar
+      const currentProfile = await storage.getProfile(req.user.id);
+      if (currentProfile?.avatar_url && currentProfile.avatar_url !== avatarUrl) {
+        // Remove old avatar file if it exists
+        const oldFilePath = path.join(process.cwd(), 'public', currentProfile.avatar_url);
+        if (fs.existsSync(oldFilePath)) {
+          fs.unlinkSync(oldFilePath);
+        }
+      }
+      
+      // Update user profile with new avatar URL
+      await storage.updateProfile(req.user.id, { avatar_url: avatarUrl });
+
+      res.json({ 
+        message: 'Avatar uploaded successfully',
+        avatar_url: avatarUrl 
+      });
+    } catch (error) {
+      console.error('Avatar upload error:', error);
+      
+      // Clean up uploaded file if there was an error
+      if (req.file) {
+        const filePath = path.join(uploadDir, req.file.filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      }
+      
       res.status(500).json({ message: 'Internal server error' });
     }
   });

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { User, Calendar, Award, Activity, Settings, Shield, Users, BookOpen, Camera, Edit, Save, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -39,6 +39,8 @@ const Profile = () => {
   const [achievements, setAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Form state for editing
   const [editForm, setEditForm] = useState({
@@ -156,6 +158,90 @@ const Profile = () => {
     setIsEditing(false);
   };
 
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast({
+        title: "Arquivo inválido",
+        description: "Por favor, selecione uma imagem válida.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "Arquivo muito grande",
+        description: "A imagem deve ter no máximo 5MB.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+
+      const response = await fetch('/api/profile/avatar', {
+        method: 'POST',
+        body: formData,
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Foto atualizada",
+          description: "Sua foto de perfil foi atualizada com sucesso!",
+        });
+        // Refresh the page to show new avatar
+        window.location.reload();
+      } else {
+        throw new Error('Upload failed');
+      }
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast({
+        title: "Erro no upload",
+        description: "Não foi possível atualizar sua foto de perfil.",
+        variant: "destructive"
+      });
+    } finally {
+      setUploadingAvatar(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+    }
+  };
+
+  const getAvatarFallback = (name: string) => {
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  };
+
+  const getActivityIcon = (type: string) => {
+    switch (type) {
+      case 'training': return <BookOpen className="h-4 w-4" />;
+      case 'camp': return <Shield className="h-4 w-4" />;
+      case 'event': return <Activity className="h-4 w-4" />;
+      default: return <Calendar className="h-4 w-4" />;
+    }
+  };
+
+  const getActivityColor = (type: string) => {
+    switch (type) {
+      case 'training': return 'bg-blue-600';
+      case 'camp': return 'bg-green-600';
+      case 'event': return 'bg-military-gold';
+      default: return 'bg-gray-600';
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-military-black flex items-center justify-center">
@@ -179,24 +265,6 @@ const Profile = () => {
       </div>
     );
   }
-
-  const getActivityIcon = (type: string) => {
-    switch (type) {
-      case 'training': return <Activity className="h-4 w-4" />;
-      case 'course': return <BookOpen className="h-4 w-4" />;
-      case 'achievement': return <Award className="h-4 w-4" />;
-      default: return <Activity className="h-4 w-4" />;
-    }
-  };
-
-  const getActivityColor = (type: string) => {
-    switch (type) {
-      case 'training': return 'bg-blue-600';
-      case 'course': return 'bg-green-600';
-      case 'achievement': return 'bg-secondary';
-      default: return 'bg-primary';
-    }
-  };
 
   return (
     <div className="min-h-screen bg-military-black">
@@ -224,17 +292,42 @@ const Profile = () => {
               {/* Avatar */}
               <div className="relative">
                 <div className="w-32 h-32 rounded-full bg-military-gold/20 flex items-center justify-center overflow-hidden border-4 border-military-gold/30">
-                  <img 
-                    src={profile.avatar_url || '/placeholder.svg'} 
-                    alt={profile.name}
-                    className="w-full h-full object-cover"
-                  />
+                  {profile.avatar_url ? (
+                    <img 
+                      src={profile.avatar_url} 
+                      alt={profile.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        e.currentTarget.nextElementSibling!.style.display = 'flex';
+                      }}
+                    />
+                  ) : null}
+                  <div 
+                    className={`w-full h-full flex items-center justify-center text-2xl font-bold text-military-gold ${profile.avatar_url ? 'hidden' : 'flex'}`}
+                    style={{ display: profile.avatar_url ? 'none' : 'flex' }}
+                  >
+                    {getAvatarFallback(profile.name)}
+                  </div>
                 </div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                />
                 <Button 
                   size="sm" 
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={uploadingAvatar}
                   className="absolute bottom-2 right-2 rounded-full w-8 h-8 p-0 bg-military-gold hover:bg-military-gold-dark text-black"
                 >
-                  <Camera className="h-4 w-4" />
+                  {uploadingAvatar ? (
+                    <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                  ) : (
+                    <Camera className="h-4 w-4" />
+                  )}
                 </Button>
               </div>
 
@@ -253,7 +346,15 @@ const Profile = () => {
                          CIA {profile.company || 'Não informada'}
                        </Badge>
                      </div>
-                     <p className="text-gray-300 mb-4 max-w-2xl">{profile.bio || 'Membro do Comando Gólgota'}</p>
+                     <p className="text-gray-300 mb-4 max-w-2xl">
+                       {profile.bio || 'Membro do Comando Gólgota'}
+                     </p>
+                     
+                     {/* Status Online/Offline */}
+                     <div className="flex items-center gap-2 mb-4">
+                       <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                       <span className="text-sm text-gray-400">Online agora</span>
+                     </div>
                    </div>
                   {isEditing ? (
                     <div className="flex items-center gap-2">
@@ -398,9 +499,13 @@ const Profile = () => {
                           value={editForm.bio}
                           onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
                           className="mt-1 bg-military-black border-military-gold/30 text-white resize-none"
-                          placeholder="Conte um pouco sobre você..."
-                          rows={3}
+                          placeholder="Escreva sobre você, suas experiências militares, especialidades, objetivos no Comando Gólgota..."
+                          rows={4}
+                          maxLength={500}
                         />
+                        <div className="text-xs text-gray-400 mt-1">
+                          {editForm.bio.length}/500 caracteres
+                        </div>
                       </div>
                     </>
                   ) : (
@@ -432,6 +537,10 @@ const Profile = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-400">Endereço</label>
                         <p className="text-white">{profile.address || 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Bio</label>
+                        <p className="text-white leading-relaxed">{profile.bio || 'Conte um pouco sobre você...'}</p>
                       </div>
                     </>
                   )}
@@ -507,7 +616,17 @@ const Profile = () => {
                       </div>
                     </div>
                   )) : (
-                    <p className="text-gray-400 text-center py-8">Nenhuma atividade registrada ainda.</p>
+                    <div className="text-center py-12">
+                      <Activity className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-white font-medium mb-2">Nenhuma atividade registrada</h3>
+                      <p className="text-gray-400 mb-4">Suas participações em treinamentos e eventos aparecerão aqui</p>
+                      <div className="space-y-2 text-sm text-gray-500 max-w-md mx-auto">
+                        <p>• Participação em acampamentos</p>
+                        <p>• Treinamentos concluídos</p>
+                        <p>• Eventos e reuniões</p>
+                        <p>• Conquistas e certificações</p>
+                      </div>
+                    </div>
                   )}
                 </div>
               </CardContent>
@@ -536,8 +655,16 @@ const Profile = () => {
                       </p>
                     </div>
                   )) : (
-                    <div className="col-span-full text-center py-8">
-                      <p className="text-gray-400">Nenhuma conquista registrada ainda.</p>
+                    <div className="col-span-full text-center py-12">
+                      <Award className="h-16 w-16 text-gray-600 mx-auto mb-4" />
+                      <h3 className="text-white font-medium mb-2">Nenhuma conquista registrada</h3>
+                      <p className="text-gray-400 mb-4">Suas certificações e reconhecimentos aparecerão aqui</p>
+                      <div className="space-y-2 text-sm text-gray-500 max-w-md mx-auto">
+                        <p>• Certificados de treinamento</p>
+                        <p>• Medalhas de participação</p>
+                        <p>• Reconhecimentos especiais</p>
+                        <p>• Marcos de desenvolvimento</p>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -560,21 +687,27 @@ const Profile = () => {
                     <h4 className="font-medium text-white">Notificações por Email</h4>
                     <p className="text-sm text-gray-400">Receber emails sobre atividades e eventos</p>
                   </div>
-                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black">Configurar</Button>
+                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black" disabled>
+                    Em breve
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 border border-military-gold/20 rounded-lg bg-military-black/50">
                   <div>
                     <h4 className="font-medium text-white">Privacidade do Perfil</h4>
                     <p className="text-sm text-gray-400">Controlar quem pode ver seu perfil</p>
                   </div>
-                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black">Editar</Button>
+                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black" disabled>
+                    Em breve
+                  </Button>
                 </div>
                 <div className="flex items-center justify-between p-4 border border-military-gold/20 rounded-lg bg-military-black/50">
                   <div>
                     <h4 className="font-medium text-white">Alterar Senha</h4>
                     <p className="text-sm text-gray-400">Atualizar sua senha de acesso</p>
                   </div>
-                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black">Alterar</Button>
+                  <Button variant="outline" size="sm" className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black" disabled>
+                    Em breve
+                  </Button>
                 </div>
               </CardContent>
             </Card>
