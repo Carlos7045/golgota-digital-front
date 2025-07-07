@@ -1362,7 +1362,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         category_id,
         user_id: req.user.id,
         transaction_date: transaction_date || new Date().toISOString().split('T')[0],
-        payment_method: payment_method || 'transfer',
+        payment_method: payment_method || 'cash',
         notes
       });
       

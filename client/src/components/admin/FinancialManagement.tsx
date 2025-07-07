@@ -31,6 +31,7 @@ const expenseSchema = z.object({
   amount: z.string().min(1, 'Valor é obrigatório'),
   category: z.string().min(1, 'Categoria é obrigatória'),
   date: z.string().min(1, 'Data é obrigatória'),
+  payment_method: z.string().min(1, 'Método de pagamento é obrigatório'),
   notes: z.string().optional()
 });
 
@@ -60,6 +61,7 @@ const FinancialManagement = () => {
       amount: '',
       category: '',
       date: new Date().toISOString().split('T')[0],
+      payment_method: 'cash',
       notes: ''
     }
   });
@@ -172,7 +174,7 @@ const FinancialManagement = () => {
         type: 'expense',
         category_id: data.category,
         transaction_date: data.date,
-        payment_method: 'transfer',
+        payment_method: data.payment_method,
         notes: data.notes
       });
       
@@ -464,6 +466,30 @@ const FinancialManagement = () => {
                                 <FormControl>
                                   <Input type="date" {...field} className="bg-military-black border-military-gold/30 text-white" />
                                 </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                          <FormField
+                            control={expenseForm.control}
+                            name="payment_method"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-white">Método de Pagamento</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl>
+                                    <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                      <SelectValue placeholder="Selecione o método" />
+                                    </SelectTrigger>
+                                  </FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="cash">Dinheiro</SelectItem>
+                                    <SelectItem value="bank_transfer">Transferência Bancária</SelectItem>
+                                    <SelectItem value="pix">PIX</SelectItem>
+                                    <SelectItem value="card">Cartão</SelectItem>
+                                    <SelectItem value="other">Outro</SelectItem>
+                                  </SelectContent>
+                                </Select>
                                 <FormMessage />
                               </FormItem>
                             )}
