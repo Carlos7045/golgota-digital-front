@@ -71,12 +71,21 @@ const TrainingsChannel = ({ user }: TrainingsChannelProps) => {
         const response = await apiPost(`/api/events/${eventId}/register`, {});
         
         if (response.payment) {
-          // Event requires payment - show payment info
-          alert(`Pagamento necessário: R$ ${response.payment.value}\nCódigo PIX: ${response.payment.pixCode}\nVencimento: ${new Date(response.payment.dueDate).toLocaleDateString()}`);
-          window.open(response.payment.invoiceUrl, '_blank');
+          // Event requires payment - open payment page
+          if (response.payment.paymentLinkUrl) {
+            // Open custom payment link with multiple payment options
+            window.open(response.payment.paymentLinkUrl, '_blank');
+          } else if (response.payment.invoiceUrl) {
+            // Fallback to invoice URL
+            window.open(response.payment.invoiceUrl, '_blank');
+          }
+          
+          // Show success message with payment info
+          alert(`✅ Inscrição iniciada!\n\n💰 Valor: R$ ${response.payment.value}\n📅 Vencimento: ${new Date(response.payment.dueDate).toLocaleDateString()}\n\n🔄 Você pode pagar via PIX, Cartão ou Boleto${response.payment.maxInstallments > 1 ? `\n💳 Até ${response.payment.maxInstallments}x no cartão` : ''}\n\nA página de pagamento foi aberta em uma nova aba.`);
         } else {
           // Free event - registration complete
           setEnrolledEvents(prev => [...prev, eventId]);
+          alert('✅ Inscrição realizada com sucesso!');
         }
         
         // Refresh events to update participant count
@@ -85,7 +94,7 @@ const TrainingsChannel = ({ user }: TrainingsChannelProps) => {
       }
     } catch (error: any) {
       console.error('Error with enrollment:', error);
-      alert(error.message || 'Erro ao processar inscrição');
+      alert(`❌ Erro: ${error.message || 'Erro ao processar inscrição'}`);
     }
   };
 

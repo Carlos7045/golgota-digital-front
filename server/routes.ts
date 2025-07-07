@@ -760,7 +760,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const eventPrice = parseFloat(event.price || '0');
       
       if (eventPrice > 0) {
-        // For paid events, create payment intent and return payment URL
+        // For paid events, create payment with multiple options
         try {
           // Get or create Asaas customer
           let asaasCustomer = await storage.getAsaasCustomer(userId);
@@ -781,14 +781,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             asaasCustomer = await storage.createAsaasCustomer(userId, newCustomer.id);
           }
 
-          // Create payment for event
+          // Create payment link with multiple payment methods
+          const paymentLinkData = {
+            name: `Inscrição - ${event.name}`,
+            description: `Pagamento da inscrição para ${event.name}`,
+            billingType: 'UNDEFINED', // Let customer choose payment method
+            chargeType: 'DETACHED',
+            value: eventPrice,
+            dueDateLimitDays: 7,
+            subscriptionCycle: null,
+            maxInstallmentCount: eventPrice >= 100 ? 3 : 1, // Max 3 installments for values >= R$100
+            notificationEnabled: true,
+            callback: {
+              successUrl: `${process.env.CLIENT_URL || 'http://localhost:5000'}/comunidade?payment=success`,
+              autoRedirect: true
+            }
+          };
+
+          const paymentLink = await asaasService.createPaymentLink(paymentLinkData);
+
+          // Create individual payment for tracking
           const paymentData = {
             customer: asaasCustomer.asaas_customer_id,
-            billingType: 'PIX',
+            billingType: 'UNDEFINED',
             value: eventPrice,
-            dueDate: AsaasService.getNextDueDate(7), // 7 days to pay
+            dueDate: AsaasService.getNextDueDate(7),
             description: `Inscrição - ${event.name}`,
-            externalReference: `event_${eventId}_${userId}`
+            externalReference: `event_${eventId}_${userId}`,
+            interest: { value: 1 }, // 1% monthly interest
+            fine: { value: 2 } // 2% fine for late payment
           };
 
           const payment = await asaasService.createPayment(paymentData);
@@ -798,18 +819,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             status: 'pending',
             asaas_payment_id: payment.id,
             amount_paid: eventPrice,
-            payment_method: 'PIX'
+            payment_method: 'UNDEFINED'
           });
 
           res.json({ 
             registration,
             payment: {
               id: payment.id,
-              pixCode: payment.pixCode,
               invoiceUrl: payment.invoiceUrl,
-              bankSlipUrl: payment.bankSlipUrl,
+              paymentLinkUrl: paymentLink.url,
+              paymentLinkId: paymentLink.id,
               value: eventPrice,
-              dueDate: payment.dueDate
+              dueDate: payment.dueDate,
+              maxInstallments: paymentLinkData.maxInstallmentCount
             }
           });
 

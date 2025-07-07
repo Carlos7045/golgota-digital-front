@@ -15,7 +15,7 @@ export interface AsaasCustomerData {
 
 export interface AsaasSubscriptionData {
   customer: string;
-  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD';
+  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UNDEFINED';
   nextDueDate: string;
   value: number;
   cycle: 'MONTHLY' | 'WEEKLY' | 'BIMONTHLY' | 'QUARTERLY' | 'YEARLY';
@@ -30,22 +30,36 @@ export interface AsaasPaymentData {
   value: number;
   netValue?: number;
   status: 'PENDING' | 'CONFIRMED' | 'RECEIVED' | 'OVERDUE' | 'CANCELLED';
-  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD';
+  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UNDEFINED';
   dueDate: string;
   paymentDate?: string;
   description?: string;
   invoiceUrl?: string;
   bankSlipUrl?: string;
   pixCode?: string;
+  installmentCount?: number;
+  installmentValue?: number;
 }
 
 export interface AsaasCreatePaymentData {
   customer: string;
-  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD';
+  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD' | 'DEBIT_CARD' | 'UNDEFINED';
   value: number;
   dueDate: string;
   description?: string;
   externalReference?: string;
+  installmentCount?: number;
+  installmentValue?: number;
+  interest?: {
+    value: number;
+  };
+  fine?: {
+    value: number;
+  };
+  discount?: {
+    value: number;
+    dueDateLimitDays: number;
+  };
 }
 
 export interface AsaasWebhookData {
@@ -212,6 +226,65 @@ export class AsaasService {
     }
   }
 
+  async createPaymentLink(paymentLinkData: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/paymentLinks`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(paymentLinkData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Erro ao criar link de pagamento: ${error.errors?.[0]?.description || response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao criar link de pagamento no Asaas:', error);
+      throw error;
+    }
+  }
+
+  async getPixQrCode(paymentId: string): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/payments/${paymentId}/pixQrCode`, {
+        method: 'GET',
+        headers: this.headers
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Erro ao buscar QR Code PIX: ${error.errors?.[0]?.description || response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao buscar QR Code PIX no Asaas:', error);
+      throw error;
+    }
+  }
+
+  async saveCheckoutCustomization(customization: any): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/myAccount/paymentCheckoutConfig`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(customization)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Erro ao personalizar checkout: ${error.errors?.[0]?.description || response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao personalizar checkout no Asaas:', error);
+      throw error;
+    }
+  }
+
   async getPayment(paymentId: string): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}/payments/${paymentId}`, {
@@ -266,3 +339,32 @@ export const asaasService = new AsaasService(
   process.env.ASAAS_API_KEY || '',
   process.env.NODE_ENV !== 'production'
 );
+
+// Configure checkout customization with Comando Gólgota theme
+export const configureAsaasCheckout = async () => {
+  try {
+    const customization = {
+      paymentCheckoutConfig: {
+        logoBackgroundColor: '#1A1A1A',
+        infoBackgroundColor: '#2A2A2A',
+        fontColor: '#FFFFFF',
+        primaryColor: '#D4AF37',
+        primaryFontColor: '#000000',
+        hideAsaasLogo: false
+      },
+      paymentCompanyInfoConfig: {
+        name: 'Comando Gólgota',
+        description: 'Comunidade Militar Cristã',
+        logoUrl: null, // Can be added later when you have a logo URL
+        primaryColor: '#D4AF37',
+        backgroundColor: '#1A1A1A'
+      }
+    };
+
+    await asaasService.saveCheckoutCustomization(customization);
+    console.log('Checkout customization configured successfully');
+  } catch (error) {
+    console.log('Checkout customization skipped:', error.message);
+    // Don't fail startup if customization fails
+  }
+};

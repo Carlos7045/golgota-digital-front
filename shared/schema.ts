@@ -15,7 +15,8 @@ export const courseStatusEnum = pgEnum("course_status", ["available", "coming-so
 export const enrollmentStatusEnum = pgEnum("enrollment_status", ["pending", "approved", "completed", "cancelled"]);
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "overdue", "cancelled"]);
 export const transactionTypeEnum = pgEnum("transaction_type", ["income", "expense"]);
-export const paymentMethodEnum = pgEnum("payment_method", ["cash", "bank_transfer", "pix", "card", "other"]);
+export const paymentMethodEnum = pgEnum("payment_method", ["cash", "bank_transfer", "pix", "credit_card", "debit_card", "boleto", "other"]);
+export const asaasBillingTypeEnum = pgEnum("asaas_billing_type", ["PIX", "BOLETO", "CREDIT_CARD", "DEBIT_CARD", "UNDEFINED"]);
 
 // Users table (for auth)
 export const users = pgTable("users", {
