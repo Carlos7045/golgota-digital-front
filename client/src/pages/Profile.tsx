@@ -226,7 +226,7 @@ const Profile = () => {
                        </Badge>
                        <Badge className="bg-military-olive text-white flex items-center gap-2">
                          <Users className="h-4 w-4" />
-                         CIA Alpha
+                         CIA {profile.company || 'Não informada'}
                        </Badge>
                      </div>
                      <p className="text-gray-300 mb-4 max-w-2xl">{profile.bio || 'Membro do Comando Gólgota'}</p>
@@ -402,7 +402,7 @@ const Profile = () => {
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Companhia</label>
-                    <p className="text-white">CIA Alpha</p>
+                    <p className="text-white">CIA {profile.company || 'Não informada'}</p>
                   </div>
                   <div>
                     <label className="text-sm font-medium text-gray-400">Data de Ingresso</label>

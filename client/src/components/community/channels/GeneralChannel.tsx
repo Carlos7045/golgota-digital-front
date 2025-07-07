@@ -143,7 +143,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       <Badge className={`${rankColors[message.author_rank || 'soldado']} text-white text-xs`}>
                         {(message.author_rank || 'soldado').toUpperCase()}
                       </Badge>
-                      <span className="text-gray-400 text-sm">Cia Alpha</span>
+                      <span className="text-gray-400 text-sm">Cia {message.author_company || 'Não informada'}</span>
                     </div>
                   </div>
                   <div className="text-xs text-gray-400">

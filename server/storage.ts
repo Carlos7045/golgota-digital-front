@@ -361,6 +361,7 @@ export class DatabaseStorage implements IStorage {
           interactions: content.interactions,
           author_name: profiles.name,
           author_rank: profiles.rank,
+          author_company: profiles.company,
         })
         .from(content)
         .leftJoin(profiles, eq(content.author_id, profiles.user_id))

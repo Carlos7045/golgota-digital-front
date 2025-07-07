@@ -40,7 +40,7 @@ const Community = () => {
         name: profile.name || 'Membro',
         email: authUser.email || '',
         rank: isAdmin ? 'admin' : ((profile.rank as UserRank) || 'aluno'),
-        company: 'Alpha' // Default for now, will implement companies later
+        company: profile.company || 'Não informada'
       });
     }
   }, [authUser, profile, roles, loading, navigate]);
