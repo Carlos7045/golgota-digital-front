@@ -1,5 +1,7 @@
 import { AsaasCustomer, AsaasSubscription, AsaasPayment } from '@shared/schema';
 
+export { AsaasCreatePaymentData };
+
 export interface AsaasCustomerData {
   name: string;
   email: string;
@@ -35,6 +37,15 @@ export interface AsaasPaymentData {
   invoiceUrl?: string;
   bankSlipUrl?: string;
   pixCode?: string;
+}
+
+export interface AsaasCreatePaymentData {
+  customer: string;
+  billingType: 'BOLETO' | 'PIX' | 'CREDIT_CARD';
+  value: number;
+  dueDate: string;
+  description?: string;
+  externalReference?: string;
 }
 
 export interface AsaasWebhookData {
@@ -177,6 +188,26 @@ export class AsaasService {
       return await response.json();
     } catch (error) {
       console.error('Erro ao buscar pagamentos no Asaas:', error);
+      throw error;
+    }
+  }
+
+  async createPayment(paymentData: AsaasCreatePaymentData): Promise<any> {
+    try {
+      const response = await fetch(`${this.baseUrl}/payments`, {
+        method: 'POST',
+        headers: this.headers,
+        body: JSON.stringify(paymentData)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`Erro ao criar pagamento: ${error.errors?.[0]?.description || response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error('Erro ao criar pagamento no Asaas:', error);
       throw error;
     }
   }
