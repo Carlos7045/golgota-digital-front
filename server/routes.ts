@@ -803,6 +803,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             payment_method: 'UNDEFINED'
           });
 
+          // Create financial transaction for this event registration
+          const eventCategory = await storage.getFinancialCategoryByName('Eventos');
+          await storage.createFinancialTransaction({
+            description: `Inscrição em evento: ${event.name}`,
+            amount: eventPrice.toString(),
+            type: 'income',
+            category_id: eventCategory?.id || null,
+            user_id: userId,
+            transaction_date: new Date().toISOString().split('T')[0],
+            payment_method: 'pix', // Default, will be updated when payment is confirmed
+            notes: `Pagamento Asaas ID: ${payment.id} - Status: Pendente`
+          });
+
           res.json({ 
             registration,
             payment: {
@@ -1123,26 +1136,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/financial/transactions', requireAuth, async (req: Request, res: Response) => {
     try {
-      // Get real transactions from Asaas payments
-      const allUsers = await storage.getUsersByRank();
-      const transactions = [];
+      // Get financial transactions from database
+      const financialTransactions = await storage.getFinancialTransactions();
       
-      // Get recent paid subscriptions as transactions
+      // Format transactions for display
+      const transactions = financialTransactions.map(transaction => ({
+        id: transaction.id,
+        description: transaction.description,
+        amount: parseFloat(transaction.amount).toFixed(2),
+        type: transaction.type,
+        transaction_date: transaction.transaction_date,
+        payment_method: transaction.payment_method || 'not_specified',
+        notes: transaction.notes || '',
+        category_name: transaction.category_id ? 'Categorizado' : 'Sem categoria'
+      }));
+      
+      // Also get recent paid subscriptions as backup
+      const allUsers = await storage.getUsersByRank();
       for (const user of allUsers) {
         const payments = await storage.getAsaasPayments(user.user_id);
         
         for (const payment of payments) {
           if (payment.status === 'RECEIVED' && payment.payment_date) {
-            transactions.push({
-              id: payment.id,
-              description: `Mensalidade - ${user.name}`,
-              amount: payment.value.toFixed(2),
-              type: 'income',
-              transaction_date: payment.payment_date.split('T')[0],
-              payment_method: payment.billing_type.toLowerCase(),
-              notes: `Pagamento de mensalidade via ${payment.billing_type}`,
-              category_name: 'Mensalidades'
-            });
+            // Check if this payment is not already in financial transactions
+            const existingTransaction = transactions.find(t => 
+              t.notes?.includes(payment.asaas_payment_id)
+            );
+            
+            if (!existingTransaction) {
+              transactions.push({
+                id: payment.id,
+                description: `Mensalidade - ${user.name}`,
+                amount: payment.value.toFixed(2),
+                type: 'income',
+                transaction_date: payment.payment_date.split('T')[0],
+                payment_method: payment.billing_type.toLowerCase(),
+                notes: `Pagamento de mensalidade via ${payment.billing_type}`,
+                category_name: 'Mensalidades'
+              });
+            }
           }
         }
       }
@@ -1344,6 +1376,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add expense/transaction endpoint
+  app.post('/api/financial/transactions', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { description, amount, type, category_id, payment_method, notes } = req.body;
+      
+      const transaction = await storage.createFinancialTransaction({
+        description,
+        amount: amount.toString(),
+        type,
+        category_id,
+        user_id: req.user.id,
+        transaction_date: new Date().toISOString().split('T')[0],
+        payment_method,
+        notes
+      });
+      
+      res.json({ transaction });
+    } catch (error) {
+      console.error('Error creating financial transaction:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Mark payment as received
   app.post('/api/financial/payments/:paymentId/mark-paid', requireAuth, async (req: Request, res: Response) => {
     try {
@@ -1478,6 +1533,44 @@ async function processAsaasWebhook(webhookData: any) {
           payment_date: new Date(payment.paymentDate || new Date()),
           net_value: payment.netValue,
         });
+        
+        // Check if this is an event registration payment
+        if (payment.externalReference?.startsWith('event_')) {
+          try {
+            const [, eventId, userId] = payment.externalReference.split('_');
+            
+            // Update event registration status
+            const registrations = await storage.getEventRegistrations(eventId);
+            const userRegistration = registrations.find(r => r.user_id === userId);
+            
+            if (userRegistration) {
+              await storage.updateEventRegistration(userRegistration.id, {
+                payment_status: 'paid',
+                payment_method: payment.billingType,
+                notes: `Pagamento confirmado via ${payment.billingType}`
+              });
+              
+              // Update corresponding financial transaction
+              const financialTransactions = await storage.getFinancialTransactions();
+              const relatedTransaction = financialTransactions.find(t => 
+                t.notes?.includes(payment.id) && t.user_id === userId
+              );
+              
+              if (relatedTransaction) {
+                await storage.updateFinancialTransaction(relatedTransaction.id, {
+                  payment_method: payment.billingType.toLowerCase(),
+                  notes: `Pagamento confirmado via ${payment.billingType} - ID: ${payment.id}`,
+                  updated_at: new Date()
+                });
+                console.log('Updated financial transaction for event payment');
+              }
+              
+              console.log('Updated event registration payment status');
+            }
+          } catch (error) {
+            console.error('Error updating event registration:', error);
+          }
+        }
         break;
 
       case 'PAYMENT_OVERDUE':

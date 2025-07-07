@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, profiles, userRoles, companies, companyMembers, events, eventRegistrations, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, type User, type InsertUser, type Profile, type Company, type Event, type EventRegistration, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
-import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count } from "drizzle-orm";
+import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count, ilike } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -55,12 +55,14 @@ export interface IStorage {
 
   // Financial management
   getFinancialCategories(): Promise<FinancialCategory[]>;
+  getFinancialCategoryByName(name: string): Promise<FinancialCategory | undefined>;
   createFinancialCategory(category: any): Promise<FinancialCategory>;
   getMonthlyPayments(month?: number, year?: number): Promise<any[]>;
   createMonthlyPayment(payment: any): Promise<MonthlyPayment>;
   updateMonthlyPayment(paymentId: string, data: any): Promise<MonthlyPayment>;
   getFinancialTransactions(startDate?: string, endDate?: string): Promise<any[]>;
   createFinancialTransaction(transaction: any): Promise<FinancialTransaction>;
+  updateFinancialTransaction(transactionId: string, data: any): Promise<FinancialTransaction>;
   getFinancialSummary(month?: number, year?: number): Promise<any>;
 
   // Asaas payment integration
@@ -579,6 +581,33 @@ export class DatabaseStorage implements IStorage {
         processed_at: new Date() 
       })
       .where(eq(asaasWebhooks.id, webhookId));
+  }
+
+  // Financial transaction methods
+  async getFinancialCategoryByName(name: string): Promise<FinancialCategory | undefined> {
+    const [category] = await db.select()
+      .from(financialCategories)
+      .where(ilike(financialCategories.name, `%${name}%`))
+      .limit(1);
+    return category;
+  }
+
+  async createFinancialTransaction(transaction: any): Promise<FinancialTransaction> {
+    const [newTransaction] = await db.insert(financialTransactions)
+      .values({
+        ...transaction,
+        amount: transaction.amount.toString()
+      })
+      .returning();
+    return newTransaction;
+  }
+
+  async updateFinancialTransaction(transactionId: string, data: any): Promise<FinancialTransaction> {
+    const [updated] = await db.update(financialTransactions)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(financialTransactions.id, transactionId))
+      .returning();
+    return updated;
   }
 
   // Event registration methods
