@@ -2,10 +2,10 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
-import { insertUserSchema } from "@shared/schema";
+import { insertUserSchema, users } from "@shared/schema";
 import { z } from "zod";
 import { db } from "./db";
-import { sql } from "drizzle-orm";
+import { sql, eq } from "drizzle-orm";
 
 // Extend the Express Request type to include user
 declare global {
@@ -268,6 +268,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Logout error:', error);
       res.status(500).json({ error: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/auth/change-password', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { currentPassword, newPassword } = req.body;
+      
+      if (!currentPassword || !newPassword) {
+        return res.status(400).json({ message: 'Senha atual e nova senha são obrigatórias' });
+      }
+      
+      if (newPassword.length < 6) {
+        return res.status(400).json({ message: 'A nova senha deve ter pelo menos 6 caracteres' });
+      }
+      
+      // Get current user
+      const user = await storage.getUser(req.user.id);
+      if (!user) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+      
+      // Verify current password
+      const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Senha atual incorreta' });
+      }
+      
+      // Hash new password and update
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+      await db.update(users)
+        .set({ 
+          password: hashedNewPassword,
+          force_password_change: false,
+          updated_at: new Date()
+        })
+        .where(eq(users.id, req.user.id));
+      
+      res.json({ message: 'Senha alterada com sucesso' });
+    } catch (error) {
+      console.error('Change password error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
     }
   });
 

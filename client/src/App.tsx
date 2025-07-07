@@ -12,6 +12,7 @@ import Community from "./pages/Community";
 import AdminDashboard from "./pages/AdminDashboard";
 import Courses from "./pages/Courses";
 import Profile from "./pages/Profile";
+import ChangePassword from "./pages/ChangePassword";
 import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import ProtectedRoute from "./components/ProtectedRoute";
@@ -48,6 +49,11 @@ const App = () => (
             <Route path="/admin" element={
               <ProtectedRoute>
                 <AdminDashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/change-password" element={
+              <ProtectedRoute>
+                <ChangePassword />
               </ProtectedRoute>
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
