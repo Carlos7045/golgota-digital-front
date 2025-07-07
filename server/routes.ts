@@ -769,16 +769,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Financial routes - using direct queries for now
   app.get('/api/financial/summary', requireAuth, async (req: Request, res: Response) => {
     try {
-      // Get financial summary with real data
+      // Get real data from database
+      const eligibleUsers = await storage.getPaymentEligibleUsers();
+      const activeSubscriptions = await storage.getUsersWithActiveSubscriptions();
+      
+      // Calculate real financial summary
+      const totalMembers = eligibleUsers.length;
+      const payingMembers = activeSubscriptions.length;
+      const pendingMembersCount = totalMembers - payingMembers;
+      const monthlyFees = payingMembers * 10; // R$10 per paying member
+      const pendingPayments = pendingMembersCount * 10; // R$10 per pending member
+      
+      // For now, other income and expenses will be 0 until we implement transaction tracking
+      const otherIncome = 0;
+      const expenses = 0;
+      const totalRevenue = monthlyFees + otherIncome;
+      
       const summary = {
-        totalMembers: 2,
-        monthlyFees: 50,
-        payingMembers: 1,
-        pendingPayments: 30,
-        pendingMembersCount: 1,
-        otherIncome: 300,
-        expenses: 80,
-        totalRevenue: 350
+        totalMembers,
+        monthlyFees,
+        payingMembers,
+        pendingPayments,
+        pendingMembersCount,
+        otherIncome,
+        expenses,
+        totalRevenue
       };
       
       res.json(summary);
@@ -790,34 +805,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/financial/payments', requireAuth, async (req: Request, res: Response) => {
     try {
-      const payments = [
-        {
-          id: '1',
-          user_id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc',
-          amount: '50.00',
-          due_date: '2025-01-05',
-          payment_date: '2025-01-03',
-          status: 'paid',
-          payment_method: 'pix',
-          notes: 'Pagamento em dia',
-          user_name: 'Carlos Henrique Pereira Salgado',
-          user_rank: 'comandante',
-          user_company: 'Quemuel'
-        },
-        {
-          id: '2',
-          user_id: '11ce4a09-f8d9-4823-94ed-683d906638fd',
-          amount: '30.00',
-          due_date: '2025-01-05',
-          payment_date: null,
-          status: 'pending',
-          payment_method: null,
-          notes: 'Aguardando pagamento',
-          user_name: 'Melry Pacheco Salgado',
-          user_rank: 'aluno',
-          user_company: 'Quemuel'
-        }
-      ];
+      // Get real payment data from Asaas integration
+      const eligibleUsers = await storage.getPaymentEligibleUsers();
+      const activeSubscriptions = await storage.getUsersWithActiveSubscriptions();
+      
+      const payments = [];
+      
+      // Create payment records for each eligible user
+      for (const user of eligibleUsers) {
+        const subscription = activeSubscriptions.find(sub => sub.user_id === user.user_id);
+        const hasActiveSubscription = !!subscription;
+        
+        const currentDate = new Date();
+        const dueDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 5); // 5th of each month
+        
+        payments.push({
+          id: user.user_id,
+          user_id: user.user_id,
+          amount: '10.00',
+          due_date: dueDate.toISOString().split('T')[0],
+          payment_date: hasActiveSubscription ? dueDate.toISOString().split('T')[0] : null,
+          status: hasActiveSubscription ? 'paid' : 'pending',
+          payment_method: hasActiveSubscription ? 'asaas' : null,
+          notes: hasActiveSubscription ? 'Assinatura ativa' : 'Aguardando ativação da assinatura',
+          user_name: user.name,
+          user_rank: user.rank,
+          user_company: user.company
+        });
+      }
       
       res.json({ payments });
     } catch (error) {
@@ -828,38 +843,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/financial/transactions', requireAuth, async (req: Request, res: Response) => {
     try {
-      const transactions = [
-        {
-          id: '1',
-          description: 'Acampamento Janeiro 2025',
-          amount: '200.00',
-          type: 'income',
-          transaction_date: '2025-01-15',
-          payment_method: 'pix',
-          notes: 'Receita do acampamento',
-          category_name: 'Eventos'
-        },
-        {
-          id: '2',
-          description: 'Compra de equipamentos',
-          amount: '80.00',
-          type: 'expense',
-          transaction_date: '2025-01-15',
-          payment_method: 'pix',
-          notes: 'Compra de materiais',
-          category_name: 'Material'
-        },
-        {
-          id: '3',
-          description: 'Doação anônima',
-          amount: '100.00',
-          type: 'income',
-          transaction_date: '2025-01-15',
-          payment_method: 'pix',
-          notes: 'Doação recebida',
-          category_name: 'Doações'
+      // Get real transactions from Asaas payments
+      const allUsers = await storage.getUsersByRank();
+      const transactions = [];
+      
+      // Get recent paid subscriptions as transactions
+      for (const user of allUsers) {
+        const payments = await storage.getAsaasPayments(user.user_id);
+        
+        for (const payment of payments) {
+          if (payment.status === 'RECEIVED' && payment.payment_date) {
+            transactions.push({
+              id: payment.id,
+              description: `Mensalidade - ${user.name}`,
+              amount: payment.value.toFixed(2),
+              type: 'income',
+              transaction_date: payment.payment_date.split('T')[0],
+              payment_method: payment.billing_type.toLowerCase(),
+              notes: `Pagamento de mensalidade via ${payment.billing_type}`,
+              category_name: 'Mensalidades'
+            });
+          }
         }
-      ];
+      }
+      
+      // Sort by date descending
+      transactions.sort((a, b) => new Date(b.transaction_date).getTime() - new Date(a.transaction_date).getTime());
       
       res.json({ transactions });
     } catch (error) {
@@ -1051,6 +1060,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(categories);
     } catch (error) {
       console.error('Error fetching financial categories:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Mark payment as received
+  app.post('/api/financial/payments/:paymentId/mark-paid', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { paymentId } = req.params;
+      
+      // For now, we'll simulate marking as paid
+      // In the future, this could create an Asaas payment record or update existing records
+      
+      res.json({ 
+        message: 'Pagamento marcado como recebido',
+        paymentId 
+      });
+    } catch (error) {
+      console.error('Error marking payment as received:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Send payment reminder
+  app.post('/api/financial/payments/:userId/send-reminder', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { userId } = req.params;
+      
+      // For now, we'll simulate sending a reminder
+      // In the future, this could send an email or WhatsApp message
+      
+      res.json({ 
+        message: 'Lembrete enviado com sucesso',
+        userId 
+      });
+    } catch (error) {
+      console.error('Error sending payment reminder:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

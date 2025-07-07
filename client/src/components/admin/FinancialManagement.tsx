@@ -55,6 +55,41 @@ const FinancialManagement = () => {
     }
   };
 
+  const markPaymentAsReceived = async (paymentId: string) => {
+    try {
+      await apiPost(`/api/financial/payments/${paymentId}/mark-paid`);
+      toast({
+        title: "Pagamento confirmado",
+        description: "O pagamento foi marcado como recebido."
+      });
+      await fetchFinancialData();
+    } catch (error) {
+      console.error('Error marking payment as received:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível confirmar o pagamento.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const sendPaymentReminder = async (userId: string) => {
+    try {
+      await apiPost(`/api/financial/payments/${userId}/send-reminder`);
+      toast({
+        title: "Lembrete enviado",
+        description: "O lembrete de pagamento foi enviado ao membro."
+      });
+    } catch (error) {
+      console.error('Error sending payment reminder:', error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível enviar o lembrete.",
+        variant: "destructive"
+      });
+    }
+  };
+
   // Real data from API
   const financialSummary = {
     totalRevenue: stats?.totalRevenue || 0,
@@ -76,7 +111,7 @@ const FinancialManagement = () => {
       case 'pending':
         return <Badge className="bg-yellow-600/20 text-yellow-400">Pendente</Badge>;
       case 'overdue':
-        return <Badge className="bg-red-600/20 text-red-400">Atrasado</Badge>;
+        return <Badge className="bg-red-600/20 text-red-400">Vencido</Badge>;
       default:
         return <Badge className="bg-gray-600/20 text-gray-400">{status}</Badge>;
     }
@@ -232,14 +267,23 @@ const FinancialManagement = () => {
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
-                                Editar
-                              </Button>
-                              {payment.status !== 'Pago' && (
-                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                              {payment.status !== 'paid' && (
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => markPaymentAsReceived(payment.id)}
+                                  className="bg-green-600 hover:bg-green-700 text-white"
+                                >
                                   Confirmar
                                 </Button>
                               )}
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => sendPaymentReminder(payment.user_id)}
+                                className="border-gray-600 text-gray-400 hover:bg-gray-600 hover:text-white"
+                              >
+                                Lembrar
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>

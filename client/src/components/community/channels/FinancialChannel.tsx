@@ -96,10 +96,14 @@ const FinancialChannel = () => {
         apiGet('/api/payments/history')
       ]);
       
-      setSubscription(subscriptionRes);
-      setPayments(paymentsRes);
+      setSubscription(subscriptionRes || null);
+      setPayments(paymentsRes || []);
     } catch (error: any) {
       console.error('Erro ao carregar dados de pagamento:', error);
+      // Don't show error toast for normal "no data" responses
+      if (error.message && !error.message.includes('404') && !error.message.includes('Unauthorized')) {
+        // Show error only for actual errors, not missing data
+      }
     } finally {
       setLoading(false);
     }
