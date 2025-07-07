@@ -291,6 +291,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           p.company,
           p.city,
           p.phone,
+          p.cpf,
+          p.birth_date,
           p.created_at,
           p.updated_at
         FROM users u
@@ -301,6 +303,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ profiles: profiles.rows });
     } catch (error) {
       console.error('Profiles fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Update user profile
+  app.put('/api/profiles/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.id;
+      const updateData = req.body;
+      
+      const profile = await storage.updateProfile(userId, updateData);
+      
+      if (!profile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+      
+      res.json({ profile });
+    } catch (error) {
+      console.error('Profile update error:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });
@@ -329,10 +350,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get upcoming events
       const upcomingEventsQuery = await db.execute(sql`
-        SELECT name, date, type 
+        SELECT name, event_date, type 
         FROM events 
-        WHERE date >= CURRENT_DATE AND status != 'cancelled'
-        ORDER BY date ASC 
+        WHERE event_date >= CURRENT_DATE AND status != 'cancelled'
+        ORDER BY event_date ASC 
         LIMIT 5
       `);
       
@@ -370,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         })),
         upcomingEvents: upcomingEventsQuery.rows.map(row => ({
           name: row.name,
-          date: new Date(row.date).toLocaleDateString('pt-BR'),
+          date: new Date(row.event_date).toLocaleDateString('pt-BR'),
           type: row.type
         })),
         membersByRank: membersByRankQuery.rows.map(row => ({

@@ -68,14 +68,18 @@ const UserManagement = () => {
     try {
       const data = await apiGet('/api/profiles');
       const mappedUsers = (data.profiles || []).map((profile: any) => ({
-        id: profile.user_id,
-        name: profile.name,
-        email: profile.email,
-        rank: profile.rank || 'soldado',
-        company: 'Cia Gólgota',
-        joinDate: new Date(profile.created_at).toLocaleDateString('pt-BR'),
+        id: profile.user_id || profile.id,
+        name: profile.name || 'Nome não informado',
+        email: profile.email || 'Email não informado',
+        rank: profile.rank || 'aluno',
+        company: profile.company || 'Sem companhia',
+        joinDate: profile.created_at ? new Date(profile.created_at).toLocaleDateString('pt-BR') : 'N/A',
         lastActive: 'Hoje',
-        status: 'active'
+        status: 'active' as const,
+        cpglRegister: profile.cpf || '',
+        city: profile.city || '',
+        cpglYear: profile.birth_date ? new Date(profile.birth_date).getFullYear() : undefined,
+        cpglMonth: profile.birth_date ? new Date(profile.birth_date).getMonth() + 1 : undefined
       }));
       setUsers(mappedUsers);
     } catch (error) {
@@ -113,34 +117,55 @@ const UserManagement = () => {
   };
 
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (user.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (user.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRank = rankFilter === 'all' || user.rank === rankFilter;
     const matchesCompany = companyFilter === 'all' || user.company === companyFilter;
     
     return matchesSearch && matchesRank && matchesCompany;
   });
 
-  const promoteUser = (userId: string, newRank: UserRank) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, rank: newRank } : user
-    ));
-    
-    toast({
-      title: "Usuário promovido",
-      description: `Usuário foi promovido para ${newRank}!`
-    });
+  const promoteUser = async (userId: string, newRank: UserRank) => {
+    try {
+      await apiPut(`/api/profiles/${userId}`, { rank: newRank });
+      
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, rank: newRank } : user
+      ));
+      
+      toast({
+        title: "Usuário promovido",
+        description: `Usuário foi promovido para ${newRank}!`
+      });
+    } catch (error) {
+      console.error('Error promoting user:', error);
+      toast({
+        title: "Erro ao promover usuário",
+        description: "Não foi possível alterar a patente do usuário.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const toggleUserStatus = (userId: string, newStatus: 'active' | 'inactive') => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, status: newStatus } : user
-    ));
-    
-    toast({
-      title: "Status alterado",
-      description: `Usuário está agora ${newStatus === 'active' ? 'ativo' : 'inativo'}!`
-    });
+  const toggleUserStatus = async (userId: string, newStatus: 'active' | 'inactive') => {
+    try {
+      // For now, just update locally since we don't have a status field in the database yet
+      setUsers(users.map(user => 
+        user.id === userId ? { ...user, status: newStatus } : user
+      ));
+      
+      toast({
+        title: "Status alterado",
+        description: `Usuário está agora ${newStatus === 'active' ? 'ativo' : 'inativo'}!`
+      });
+    } catch (error) {
+      console.error('Error toggling user status:', error);
+      toast({
+        title: "Erro ao alterar status",
+        description: "Não foi possível alterar o status do usuário.",
+        variant: "destructive"
+      });
+    }
   };
 
   const rankColors: Record<UserRank, string> = {
@@ -355,7 +380,9 @@ const UserManagement = () => {
                           <Button
                             variant="outline"
                             size="sm"
+                            onClick={() => promoteUser(user.id, user.rank === 'admin' ? 'comandante' : 'admin')}
                             className="border-military-gold/30 text-white hover:bg-military-gold/10"
+                            title="Promover usuário"
                           >
                             <Shield className="w-4 h-4" />
                           </Button>
@@ -364,6 +391,7 @@ const UserManagement = () => {
                             size="sm"
                             onClick={() => toggleUserStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
                             className="border-military-gold/30 text-white hover:bg-military-gold/10"
+                            title="Alterar status"
                           >
                             <UserCheck className="w-4 h-4" />
                           </Button>
