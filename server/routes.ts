@@ -185,14 +185,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/companies', requireAuth, async (req: Request, res: Response) => {
     try {
-      const { name, commander_id, description, color, status } = req.body;
+      const { name, commander_id, sub_commander_id, description, city, state, color, members } = req.body;
+      
       const company = await storage.createCompany({
         name,
-        commander_id,
-        description,
-        color,
-        status: status || 'Planejamento'
+        commander_id: commander_id || null,
+        sub_commander_id: sub_commander_id || null,
+        description: description || null,
+        city: city || null,
+        state: state || null,
+        color: color || '#FFD700',
+        status: 'Planejamento'
       });
+
+      // Add additional members if provided
+      if (members && Array.isArray(members)) {
+        for (const member of members) {
+          if (member.user_id && member.user_id !== commander_id && member.user_id !== sub_commander_id) {
+            await storage.addCompanyMember(company.id, member.user_id, member.role || 'Membro');
+          }
+        }
+      }
+
       res.json({ company });
     } catch (error) {
       console.error('Company creation error:', error);
@@ -210,12 +224,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/companies/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const company = await storage.updateCompany(req.params.id, req.body);
+      res.json({ company });
+    } catch (error) {
+      console.error('Company update error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   app.get('/api/companies/:id/members', requireAuth, async (req: Request, res: Response) => {
     try {
       const members = await storage.getCompanyMembers(req.params.id);
       res.json({ members });
     } catch (error) {
       console.error('Company members fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.post('/api/companies/:id/members', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { user_id, role } = req.body;
+      await storage.addCompanyMember(req.params.id, user_id, role || 'Membro');
+      res.json({ message: 'Member added successfully' });
+    } catch (error) {
+      console.error('Error adding company member:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/companies/:id/members/:userId', requireAuth, async (req: Request, res: Response) => {
+    try {
+      await storage.removeCompanyMember(req.params.id, req.params.userId);
+      res.json({ message: 'Member removed successfully' });
+    } catch (error) {
+      console.error('Error removing company member:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/companies/:id/members/:userId', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { role } = req.body;
+      await storage.updateMemberRole(req.params.id, req.params.userId, role);
+      res.json({ message: 'Member role updated successfully' });
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/commanders', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const commanders = await storage.getAvailableCommanders();
+      res.json({ commanders });
+    } catch (error) {
+      console.error('Error fetching commanders:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.get('/api/users', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { rank } = req.query;
+      const users = await storage.getUsersByRank(rank as string);
+      res.json({ users });
+    } catch (error) {
+      console.error('Error fetching users:', error);
       res.status(500).json({ message: 'Internal server error' });
     }
   });

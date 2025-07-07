@@ -1,6 +1,6 @@
 import { db } from "./db";
 import { users, profiles, userRoles, companies, companyMembers, events, content, trainings, courses, enrollments, userActivities, achievements, type User, type InsertUser, type Profile, type Company, type Event, type Training, type Course, type UserActivity, type Achievement } from "@shared/schema";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, and, desc, inArray, isNotNull } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
 export interface IStorage {
@@ -17,7 +17,13 @@ export interface IStorage {
   getCompanies(): Promise<Company[]>;
   getCompanyMembers(companyId: string): Promise<Profile[]>;
   createCompany(company: any): Promise<Company>;
+  updateCompany(companyId: string, data: any): Promise<Company>;
   deleteCompany(companyId: string): Promise<void>;
+  addCompanyMember(companyId: string, userId: string, role?: string): Promise<void>;
+  removeCompanyMember(companyId: string, userId: string): Promise<void>;
+  updateMemberRole(companyId: string, userId: string, role: string): Promise<void>;
+  getAvailableCommanders(): Promise<Profile[]>;
+  getUsersByRank(rank?: string): Promise<Profile[]>;
   
   // Training management
   getTrainings(): Promise<Training[]>;
@@ -92,7 +98,26 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getCompanies(): Promise<Company[]> {
-    return await db.select().from(companies);
+    const companiesList = await db
+      .select({
+        id: companies.id,
+        name: companies.name,
+        commander_id: companies.commander_id,
+        sub_commander_id: companies.sub_commander_id,
+        status: companies.status,
+        description: companies.description,
+        city: companies.city,
+        state: companies.state,
+        founded_date: companies.founded_date,
+        color: companies.color,
+        created_at: companies.created_at,
+        updated_at: companies.updated_at,
+        commander_name: profiles.name,
+      })
+      .from(companies)
+      .leftJoin(profiles, eq(companies.commander_id, profiles.user_id));
+    
+    return companiesList as Company[];
   }
 
   async createCompany(companyData: any): Promise<Company> {
@@ -100,10 +125,31 @@ export class DatabaseStorage implements IStorage {
       .insert(companies)
       .values(companyData)
       .returning();
+    
+    // Add commander and sub-commander as members with appropriate roles
+    if (company.commander_id) {
+      await this.addCompanyMember(company.id, company.commander_id, 'Comandante');
+    }
+    if (company.sub_commander_id) {
+      await this.addCompanyMember(company.id, company.sub_commander_id, 'Subcomandante');
+    }
+    
+    return company;
+  }
+
+  async updateCompany(companyId: string, data: any): Promise<Company> {
+    const [company] = await db
+      .update(companies)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(companies.id, companyId))
+      .returning();
     return company;
   }
 
   async deleteCompany(companyId: string): Promise<void> {
+    // Remove all members first
+    await db.delete(companyMembers).where(eq(companyMembers.company_id, companyId));
+    // Then delete the company
     await db.delete(companies).where(eq(companies.id, companyId));
   }
 
@@ -126,12 +172,73 @@ export class DatabaseStorage implements IStorage {
       joined_at: profiles.joined_at,
       created_at: profiles.created_at,
       updated_at: profiles.updated_at,
+      company_role: companyMembers.role,
+      joined_date: companyMembers.joined_date,
     })
     .from(companyMembers)
     .innerJoin(profiles, eq(companyMembers.user_id, profiles.user_id))
     .where(eq(companyMembers.company_id, companyId));
     
     return members;
+  }
+
+  async addCompanyMember(companyId: string, userId: string, role: string = 'Membro'): Promise<void> {
+    await db.insert(companyMembers).values({
+      company_id: companyId,
+      user_id: userId,
+      role: role
+    });
+  }
+
+  async removeCompanyMember(companyId: string, userId: string): Promise<void> {
+    await db
+      .delete(companyMembers)
+      .where(
+        and(
+          eq(companyMembers.company_id, companyId),
+          eq(companyMembers.user_id, userId)
+        )
+      );
+  }
+
+  async updateMemberRole(companyId: string, userId: string, role: string): Promise<void> {
+    await db
+      .update(companyMembers)
+      .set({ role })
+      .where(
+        and(
+          eq(companyMembers.company_id, companyId),
+          eq(companyMembers.user_id, userId)
+        )
+      );
+  }
+
+  async getAvailableCommanders(): Promise<Profile[]> {
+    // Get profiles with ranks suitable for commanding
+    const commanderRanks = ['sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante', 'admin'];
+    
+    return await db
+      .select()
+      .from(profiles)
+      .where(
+        and(
+          inArray(profiles.rank, commanderRanks),
+          isNotNull(profiles.name)
+        )
+      );
+  }
+
+  async getUsersByRank(rank?: string): Promise<Profile[]> {
+    if (rank) {
+      return await db
+        .select()
+        .from(profiles)
+        .where(eq(profiles.rank, rank));
+    }
+    return await db
+      .select()
+      .from(profiles)
+      .where(isNotNull(profiles.name));
   }
 
   async getTrainings(): Promise<Training[]> {

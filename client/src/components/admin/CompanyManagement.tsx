@@ -30,30 +30,65 @@ const CompanyManagement = () => {
   const [companyMembers, setCompanyMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isAddMemberDialogOpen, setIsAddMemberDialogOpen] = useState(false);
   const [commanders, setCommanders] = useState<any[]>([]);
+  const [allUsers, setAllUsers] = useState<any[]>([]);
+  const [editingCompany, setEditingCompany] = useState<any>(null);
   
   // Form states
   const [formData, setFormData] = useState({
     name: '',
     commander_id: '',
+    sub_commander_id: '',
     description: '',
-    color: '#FFD700'
+    city: '',
+    state: '',
+    color: '#FFD700',
+    members: [] as any[]
+  });
+
+  const [newMemberData, setNewMemberData] = useState({
+    user_id: '',
+    role: 'Membro'
   });
   
   const { toast } = useToast();
 
+  const brazilianStates = [
+    'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS',
+    'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC',
+    'SP', 'SE', 'TO'
+  ];
+
+  const memberRoles = ['Membro', 'Soldado', 'Cabo', 'Sargento', 'Tenente', 'Capitão'];
+
   useEffect(() => {
     fetchCompanies();
     fetchCommanders();
+    fetchAllUsers();
   }, []);
 
   const fetchCommanders = async () => {
     try {
-      // For now, we'll use mock data since we don't have a specific commanders endpoint
-      // In a real implementation, you'd create /api/commanders endpoint
-      setCommanders([]);
+      const response = await apiGet('/api/commanders');
+      setCommanders(response.commanders || []);
     } catch (error) {
       console.error('Error fetching commanders:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao carregar comandantes",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const fetchAllUsers = async () => {
+    try {
+      const response = await apiGet('/api/users');
+      setAllUsers(response.users || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
     }
   };
 
@@ -67,14 +102,17 @@ const CompanyManagement = () => {
       return;
     }
 
-    try {
-      await apiPost('/api/companies', {
-        name: formData.name,
-        commander_id: formData.commander_id || null,
-        description: formData.description || null,
-        color: formData.color,
-        status: 'Planejamento'
+    if (!formData.city.trim() || !formData.state) {
+      toast({
+        title: "Erro",
+        description: "Cidade e estado são obrigatórios",
+        variant: "destructive"
       });
+      return;
+    }
+
+    try {
+      await apiPost('/api/companies', formData);
 
       toast({
         title: "Sucesso",
@@ -89,6 +127,108 @@ const CompanyManagement = () => {
       toast({
         title: "Erro",
         description: "Erro ao criar companhia",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleEditCompany = async () => {
+    if (!editingCompany) return;
+
+    try {
+      await apiPut(`/api/companies/${editingCompany.id}`, formData);
+
+      toast({
+        title: "Sucesso",
+        description: "Companhia atualizada com sucesso!"
+      });
+
+      setIsEditDialogOpen(false);
+      setEditingCompany(null);
+      resetForm();
+      fetchCompanies();
+    } catch (error) {
+      console.error('Error updating company:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar companhia",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleAddMember = async () => {
+    if (!selectedCompany || !newMemberData.user_id) {
+      toast({
+        title: "Erro",
+        description: "Selecione um usuário",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await apiPost(`/api/companies/${selectedCompany}/members`, newMemberData);
+
+      toast({
+        title: "Sucesso",
+        description: "Membro adicionado com sucesso!"
+      });
+
+      setIsAddMemberDialogOpen(false);
+      setNewMemberData({ user_id: '', role: 'Membro' });
+      fetchCompanyMembers(selectedCompany);
+    } catch (error) {
+      console.error('Error adding member:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao adicionar membro",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleRemoveMember = async (userId: string) => {
+    if (!selectedCompany) return;
+
+    if (!confirm('Tem certeza que deseja remover este membro?')) return;
+
+    try {
+      await apiDelete(`/api/companies/${selectedCompany}/members/${userId}`);
+
+      toast({
+        title: "Sucesso",
+        description: "Membro removido com sucesso!"
+      });
+
+      fetchCompanyMembers(selectedCompany);
+    } catch (error) {
+      console.error('Error removing member:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao remover membro",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateMemberRole = async (userId: string, newRole: string) => {
+    if (!selectedCompany) return;
+
+    try {
+      await apiPut(`/api/companies/${selectedCompany}/members/${userId}`, { role: newRole });
+
+      toast({
+        title: "Sucesso",
+        description: "Função atualizada com sucesso!"
+      });
+
+      fetchCompanyMembers(selectedCompany);
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar função",
         variant: "destructive"
       });
     }
@@ -123,9 +263,64 @@ const CompanyManagement = () => {
     setFormData({
       name: '',
       commander_id: '',
+      sub_commander_id: '',
       description: '',
-      color: '#FFD700'
+      city: '',
+      state: '',
+      color: '#FFD700',
+      members: []
     });
+  };
+
+  const fetchCompanyMembers = async (companyId: string) => {
+    try {
+      const response = await apiGet(`/api/companies/${companyId}/members`);
+      setCompanyMembers(response.members || []);
+    } catch (error) {
+      console.error('Error fetching company members:', error);
+    }
+  };
+
+  const openEditDialog = (company: any) => {
+    setEditingCompany(company);
+    setFormData({
+      name: company.name || '',
+      commander_id: company.commander_id || '',
+      sub_commander_id: company.sub_commander_id || '',
+      description: company.description || '',
+      city: company.city || '',
+      state: company.state || '',
+      color: company.color || '#FFD700',
+      members: []
+    });
+    setIsEditDialogOpen(true);
+  };
+
+  const addMemberToForm = () => {
+    if (!newMemberData.user_id) return;
+    
+    const user = allUsers.find(u => u.user_id === newMemberData.user_id);
+    if (!user) return;
+
+    const newMember = {
+      user_id: newMemberData.user_id,
+      name: user.name,
+      role: newMemberData.role
+    };
+
+    setFormData(prev => ({
+      ...prev,
+      members: [...prev.members, newMember]
+    }));
+
+    setNewMemberData({ user_id: '', role: 'Membro' });
+  };
+
+  const removeMemberFromForm = (userId: string) => {
+    setFormData(prev => ({
+      ...prev,
+      members: prev.members.filter(m => m.user_id !== userId)
+    }));
   };
 
   const fetchCompanies = async () => {
@@ -261,56 +456,182 @@ const CompanyManagement = () => {
                         Nova Companhia
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-military-black-light border-military-gold/20">
+                    <DialogContent className="max-w-5xl bg-military-black-light border-military-gold/20">
                       <DialogHeader>
                         <DialogTitle className="text-military-gold">Criar Nova Companhia</DialogTitle>
                         <DialogDescription className="text-gray-400">
-                          Preencha as informações da nova companhia
+                          Preencha as informações da nova companhia e adicione membros
                         </DialogDescription>
                       </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label className="text-white">Nome da Companhia</Label>
-                          <Input 
-                            className="bg-military-black border-military-gold/30 text-white" 
-                            placeholder="Ex: Foxtrot"
-                            value={formData.name}
-                            onChange={(e) => setFormData({...formData, name: e.target.value})}
-                          />
+                      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Left Column - Basic Info */}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-white">Nome da Companhia *</Label>
+                            <Input 
+                              className="bg-military-black border-military-gold/30 text-white" 
+                              placeholder="Ex: CIA Alpha"
+                              value={formData.name}
+                              onChange={(e) => setFormData({...formData, name: e.target.value})}
+                            />
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <Label className="text-white">Cidade *</Label>
+                              <Input 
+                                className="bg-military-black border-military-gold/30 text-white" 
+                                placeholder="Ex: São Paulo"
+                                value={formData.city}
+                                onChange={(e) => setFormData({...formData, city: e.target.value})}
+                              />
+                            </div>
+                            <div className="space-y-2">
+                              <Label className="text-white">Estado *</Label>
+                              <Select value={formData.state} onValueChange={(value) => setFormData({...formData, state: value})}>
+                                <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                  <SelectValue placeholder="Selecione" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-military-black-light border-military-gold/20">
+                                  {brazilianStates.map(state => (
+                                    <SelectItem key={state} value={state} className="text-white hover:bg-military-gold/20">
+                                      {state}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-white">Comandante</Label>
+                            <Select value={formData.commander_id} onValueChange={(value) => setFormData({...formData, commander_id: value})}>
+                              <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                <SelectValue placeholder="Selecione o comandante" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-military-black-light border-military-gold/20">
+                                <SelectItem value="" className="text-white hover:bg-military-gold/20">Sem comandante</SelectItem>
+                                {commanders.map((commander) => (
+                                  <SelectItem key={commander.user_id} value={commander.user_id} className="text-white hover:bg-military-gold/20">
+                                    {commander.name} - {commander.rank}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-white">Subcomandante</Label>
+                            <Select value={formData.sub_commander_id} onValueChange={(value) => setFormData({...formData, sub_commander_id: value})}>
+                              <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                <SelectValue placeholder="Selecione o subcomandante" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-military-black-light border-military-gold/20">
+                                <SelectItem value="" className="text-white hover:bg-military-gold/20">Sem subcomandante</SelectItem>
+                                {commanders
+                                  .filter(c => c.user_id !== formData.commander_id)
+                                  .map(commander => (
+                                    <SelectItem key={commander.user_id} value={commander.user_id} className="text-white hover:bg-military-gold/20">
+                                      {commander.name} - {commander.rank}
+                                    </SelectItem>
+                                  ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-white">Descrição</Label>
+                            <Textarea 
+                              className="bg-military-black border-military-gold/30 text-white" 
+                              placeholder="Descreva o propósito da companhia..."
+                              value={formData.description}
+                              onChange={(e) => setFormData({...formData, description: e.target.value})}
+                            />
+                          </div>
+
+                          <div className="space-y-2">
+                            <Label className="text-white">Cor Identificadora</Label>
+                            <Input 
+                              type="color" 
+                              className="bg-military-black border-military-gold/30 h-10"
+                              value={formData.color}
+                              onChange={(e) => setFormData({...formData, color: e.target.value})}
+                            />
+                          </div>
                         </div>
-                        <div className="space-y-2">
-                          <Label className="text-white">Comandante</Label>
-                          <Select value={formData.commander_id} onValueChange={(value) => setFormData({...formData, commander_id: value})}>
-                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
-                              <SelectValue placeholder="Selecione o comandante" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="">Sem comandante</SelectItem>
-                              {commanders.map((commander) => (
-                                <SelectItem key={commander.user_id} value={commander.user_id}>
-                                  {commander.name} ({commander.rank})
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-white">Descrição</Label>
-                          <Textarea 
-                            className="bg-military-black border-military-gold/30 text-white" 
-                            placeholder="Descreva o propósito da companhia..."
-                            value={formData.description}
-                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-white">Cor Identificadora</Label>
-                          <Input 
-                            type="color" 
-                            className="bg-military-black border-military-gold/30 h-10"
-                            value={formData.color}
-                            onChange={(e) => setFormData({...formData, color: e.target.value})}
-                          />
+
+                        {/* Right Column - Members */}
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label className="text-white font-medium">Adicionar Membros</Label>
+                            <div className="flex gap-2">
+                              <Select value={newMemberData.user_id} onValueChange={(value) => setNewMemberData({...newMemberData, user_id: value})}>
+                                <SelectTrigger className="bg-military-black border-military-gold/30 text-white flex-1">
+                                  <SelectValue placeholder="Selecione um membro" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-military-black-light border-military-gold/20">
+                                  {allUsers
+                                    .filter(user => 
+                                      user.user_id !== formData.commander_id && 
+                                      user.user_id !== formData.sub_commander_id &&
+                                      !formData.members.some(m => m.user_id === user.user_id)
+                                    )
+                                    .map(user => (
+                                      <SelectItem key={user.user_id} value={user.user_id} className="text-white hover:bg-military-gold/20">
+                                        {user.name} - {user.rank}
+                                      </SelectItem>
+                                    ))}
+                                </SelectContent>
+                              </Select>
+                              <Select value={newMemberData.role} onValueChange={(value) => setNewMemberData({...newMemberData, role: value})}>
+                                <SelectTrigger className="bg-military-black border-military-gold/30 text-white w-32">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-military-black-light border-military-gold/20">
+                                  {memberRoles.map(role => (
+                                    <SelectItem key={role} value={role} className="text-white hover:bg-military-gold/20">
+                                      {role}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                type="button"
+                                onClick={addMemberToForm}
+                                className="bg-military-gold hover:bg-military-gold-dark text-black"
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+
+                          {/* Members List */}
+                          <div className="border border-military-gold/20 rounded-lg p-3 max-h-80 overflow-y-auto">
+                            <Label className="text-white text-sm">Membros Adicionados ({formData.members.length})</Label>
+                            {formData.members.length === 0 ? (
+                              <p className="text-gray-400 text-sm mt-2">Nenhum membro adicionado ainda</p>
+                            ) : (
+                              <div className="space-y-2 mt-2">
+                                {formData.members.map((member, index) => (
+                                  <div key={index} className="flex items-center justify-between bg-military-black/50 p-2 rounded">
+                                    <div>
+                                      <span className="text-white text-sm">{member.name}</span>
+                                      <span className="text-gray-400 text-xs ml-2">({member.role})</span>
+                                    </div>
+                                    <Button
+                                      type="button"
+                                      size="sm"
+                                      variant="ghost"
+                                      onClick={() => removeMemberFromForm(member.user_id)}
+                                      className="text-red-400 hover:bg-red-600/20"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <DialogFooter>
@@ -445,11 +766,70 @@ const CompanyManagement = () => {
                     <div className="space-y-2">
                       <h4 className="text-white font-medium">Ações Rápidas</h4>
                       <div className="space-y-2">
-                        <Button size="sm" className="w-full bg-military-gold hover:bg-military-gold-dark text-black">
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          Adicionar Membro
-                        </Button>
-                        <Button size="sm" variant="outline" className="w-full border-military-gold/30 text-white hover:bg-military-gold/20">
+                        <Dialog open={isAddMemberDialogOpen} onOpenChange={setIsAddMemberDialogOpen}>
+                          <DialogTrigger asChild>
+                            <Button size="sm" className="w-full bg-military-gold hover:bg-military-gold-dark text-black">
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Adicionar Membro
+                            </Button>
+                          </DialogTrigger>
+                          <DialogContent className="bg-military-black-light border-military-gold/20">
+                            <DialogHeader>
+                              <DialogTitle className="text-military-gold">Adicionar Membro</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                              <div className="space-y-2">
+                                <Label className="text-white">Selecionar Membro</Label>
+                                <Select value={newMemberData.user_id} onValueChange={(value) => setNewMemberData({...newMemberData, user_id: value})}>
+                                  <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                    <SelectValue placeholder="Selecione um usuário" />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-military-black-light border-military-gold/20">
+                                    {allUsers
+                                      .filter(user => !companyMembers.some(m => m.user_id === user.user_id))
+                                      .map(user => (
+                                        <SelectItem key={user.user_id} value={user.user_id} className="text-white hover:bg-military-gold/20">
+                                          {user.name} - {user.rank}
+                                        </SelectItem>
+                                      ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-2">
+                                <Label className="text-white">Função na Companhia</Label>
+                                <Select value={newMemberData.role} onValueChange={(value) => setNewMemberData({...newMemberData, role: value})}>
+                                  <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-military-black-light border-military-gold/20">
+                                    {memberRoles.map(role => (
+                                      <SelectItem key={role} value={role} className="text-white hover:bg-military-gold/20">
+                                        {role}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </div>
+                            <DialogFooter>
+                              <Button variant="outline" onClick={() => setIsAddMemberDialogOpen(false)} className="border-military-gold/30 text-white hover:bg-military-gold/20">
+                                Cancelar
+                              </Button>
+                              <Button onClick={handleAddMember} className="bg-military-gold hover:bg-military-gold-dark text-black">
+                                Adicionar
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
+                        <Button 
+                          size="sm" 
+                          variant="outline" 
+                          className="w-full border-military-gold/30 text-white hover:bg-military-gold/20"
+                          onClick={() => {
+                            const company = companies.find(c => c.id === selectedCompany);
+                            if (company) openEditDialog(company);
+                          }}
+                        >
                           <Edit className="h-4 w-4 mr-2" />
                           Editar Companhia
                         </Button>

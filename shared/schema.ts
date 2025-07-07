@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, uuid, timestamp, date, decimal, pgEnum } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, uuid, timestamp, date, decimal, pgEnum, unique } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -47,8 +47,11 @@ export const companies = pgTable("companies", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull().unique(),
   commander_id: uuid("commander_id").references(() => users.id),
+  sub_commander_id: uuid("sub_commander_id").references(() => users.id),
   status: companyStatusEnum("status").default("Planejamento"),
   description: text("description"),
+  city: text("city"),
+  state: text("state"),
   founded_date: date("founded_date"),
   color: text("color").default("#FFD700"),
   created_at: timestamp("created_at").defaultNow().notNull(),
@@ -60,10 +63,12 @@ export const companyMembers = pgTable("company_members", {
   id: uuid("id").primaryKey().defaultRandom(),
   user_id: uuid("user_id").notNull().references(() => users.id),
   company_id: uuid("company_id").notNull().references(() => companies.id),
-  role: text("role").default("Membro"),
+  role: text("role").default("Membro"), // Membro, Comandante, Subcomandante
   joined_date: date("joined_date").defaultNow(),
   created_at: timestamp("created_at").defaultNow().notNull(),
-});
+}, (table) => ({
+  userCompanyUnique: unique().on(table.user_id, table.company_id),
+}));
 
 // User roles table
 export const userRoles = pgTable("user_roles", {
