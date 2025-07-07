@@ -30,7 +30,7 @@ interface CommunitySidebarProps {
 const channels = [
   { id: 'geral' as ChannelType, name: 'Geral', icon: MessageCircle, description: 'Conversas gerais', minRank: 'aluno' },
   { id: 'treinamentos' as ChannelType, name: 'Treinamentos', icon: GraduationCap, description: 'Rally, CPLG, FEG', minRank: 'aluno' },
-  { id: 'acampamentos' as ChannelType, name: 'Acampamentos', icon: Tent, description: 'Acampamento Gólgota', minRank: 'soldado' },
+  { id: 'acampamentos' as ChannelType, name: 'Acampamentos', icon: Tent, description: 'Acampamento Gólgota', minRank: 'aluno' },
   { id: 'campanhas' as ChannelType, name: 'Campanhas', icon: Heart, description: 'Campanhas sociais e doações', minRank: 'soldado' },
   { id: 'ensine-aprenda' as ChannelType, name: 'Ensine/Aprenda', icon: BookOpen, description: 'Compartilhe conhecimento', minRank: 'soldado' },
   { id: 'eventos' as ChannelType, name: 'Eventos', icon: Calendar, description: 'Zoom e encontros', minRank: 'soldado' },
