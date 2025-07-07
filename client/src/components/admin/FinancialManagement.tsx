@@ -26,6 +26,25 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+// Function to safely format dates without timezone issues
+const formatDateSafe = (dateString: string) => {
+  if (!dateString) return 'Não informado';
+  
+  // If it's already in format DD/MM/YYYY, return as is
+  if (dateString.includes('/')) return dateString;
+  
+  // If it's in ISO format (YYYY-MM-DD), parse it as local date
+  const parts = dateString.split('T')[0].split('-');
+  if (parts.length === 3) {
+    const year = parts[0];
+    const month = parts[1];
+    const day = parts[2];
+    return `${day}/${month}/${year}`;
+  }
+  
+  return dateString;
+};
+
 const expenseSchema = z.object({
   description: z.string().min(3, 'Descrição deve ter pelo menos 3 caracteres'),
   amount: z.string().min(1, 'Valor é obrigatório'),
@@ -363,7 +382,7 @@ const FinancialManagement = () => {
                           <TableCell className="text-gray-300">{payment.user_rank}</TableCell>
                           <TableCell className="text-gray-300">{payment.user_company}</TableCell>
                           <TableCell className="text-white">R$ {Number(payment.amount).toFixed(2)}</TableCell>
-                          <TableCell className="text-gray-300">{new Date(payment.due_date).toLocaleDateString('pt-BR')}</TableCell>
+                          <TableCell className="text-gray-300">{formatDateSafe(payment.due_date)}</TableCell>
                           <TableCell>{getStatusBadge(payment.status)}</TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">

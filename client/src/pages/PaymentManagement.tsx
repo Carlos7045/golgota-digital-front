@@ -129,7 +129,21 @@ const PaymentManagement = () => {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR');
+    if (!dateString) return 'Não informado';
+    
+    // If it's already in format DD/MM/YYYY, return as is
+    if (dateString.includes('/')) return dateString;
+    
+    // If it's in ISO format (YYYY-MM-DD), parse it as local date
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parts[1];
+      const day = parts[2];
+      return `${day}/${month}/${year}`;
+    }
+    
+    return dateString;
   };
 
   const formatCurrency = (value: number) => {

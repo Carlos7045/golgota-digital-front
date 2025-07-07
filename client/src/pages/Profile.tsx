@@ -13,6 +13,24 @@ import { useToast } from '@/hooks/use-toast';
 import { apiPut } from '@/lib/api';
 
 const Profile = () => {
+  // Function to safely format dates without timezone issues
+  const formatDateSafe = (dateString: string) => {
+    if (!dateString) return 'Não informado';
+    
+    // If it's already in format DD/MM/YYYY, return as is
+    if (dateString.includes('/')) return dateString;
+    
+    // If it's in ISO format (YYYY-MM-DD), parse it as local date
+    const parts = dateString.split('T')[0].split('-');
+    if (parts.length === 3) {
+      const year = parts[0];
+      const month = parts[1];
+      const day = parts[2];
+      return `${day}/${month}/${year}`;
+    }
+    
+    return dateString;
+  };
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
   const { toast } = useToast();
@@ -401,7 +419,7 @@ const Profile = () => {
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-400">Data de Nascimento</label>
-                        <p className="text-white">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : 'Não informado'}</p>
+                        <p className="text-white">{profile.birth_date ? formatDateSafe(profile.birth_date) : 'Não informado'}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-400">CPF</label>
