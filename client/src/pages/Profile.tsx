@@ -1,24 +1,50 @@
 import { useState, useEffect } from 'react';
-import { User, Calendar, Award, Activity, Settings, Shield, Users, BookOpen, Camera, Edit } from 'lucide-react';
+import { User, Calendar, Award, Activity, Settings, Shield, Users, BookOpen, Camera, Edit, Save, X } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { apiPut } from '@/lib/api';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useAuth();
+  const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
   const [achievements, setAchievements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  // Form state for editing
+  const [editForm, setEditForm] = useState({
+    name: '',
+    phone: '',
+    birth_date: '',
+    address: '',
+    bio: '',
+    specialties: [] as string[]
+  });
 
   useEffect(() => {
     if (user && profile) {
       fetchActivities();
       fetchAchievements();
+      // Initialize edit form with current profile data
+      setEditForm({
+        name: profile.name || '',
+        phone: profile.phone || '',
+        birth_date: profile.birth_date || '',
+        address: profile.address || '',
+        bio: profile.bio || '',
+        specialties: profile.specialties || []
+      });
     } else {
       setLoading(false);
     }
@@ -64,6 +90,46 @@ const Profile = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!profile) return;
+    
+    setSaving(true);
+    try {
+      const updatedProfile = await apiPut('/api/profile', editForm);
+      
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram salvas com sucesso!",
+      });
+      
+      setIsEditing(false);
+      // Refresh profile data
+      window.location.reload();
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Erro ao salvar perfil",
+        description: "Não foi possível salvar as alterações.",
+        variant: "destructive"
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    // Reset form to original values
+    setEditForm({
+      name: profile?.name || '',
+      phone: profile?.phone || '',
+      birth_date: profile?.birth_date || '',
+      address: profile?.address || '',
+      bio: profile?.bio || '',
+      specialties: profile?.specialties || []
+    });
+    setIsEditing(false);
   };
 
   if (loading) {
@@ -165,14 +231,36 @@ const Profile = () => {
                      </div>
                      <p className="text-gray-300 mb-4 max-w-2xl">{profile.bio || 'Membro do Comando Gólgota'}</p>
                    </div>
-                  <Button 
-                    variant="outline"
-                    onClick={() => setIsEditing(!isEditing)}
-                    className="flex items-center gap-2 border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
-                  >
-                    <Edit className="h-4 w-4" />
-                    Editar Perfil
-                  </Button>
+                  {isEditing ? (
+                    <div className="flex items-center gap-2">
+                      <Button 
+                        onClick={handleSaveProfile}
+                        disabled={saving}
+                        className="flex items-center gap-2 bg-military-gold text-black hover:bg-military-gold-dark"
+                      >
+                        <Save className="h-4 w-4" />
+                        {saving ? 'Salvando...' : 'Salvar'}
+                      </Button>
+                      <Button 
+                        variant="outline"
+                        onClick={handleCancelEdit}
+                        disabled={saving}
+                        className="flex items-center gap-2 border-gray-600 text-gray-400 hover:bg-gray-600/20"
+                      >
+                        <X className="h-4 w-4" />
+                        Cancelar
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      onClick={() => setIsEditing(true)}
+                      className="flex items-center gap-2 border-military-gold text-military-gold hover:bg-military-gold hover:text-black"
+                    >
+                      <Edit className="h-4 w-4" />
+                      Editar Perfil
+                    </Button>
+                  )}
                 </div>
 
                 {/* Stats */}
@@ -219,22 +307,84 @@ const Profile = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Email</label>
-                    <p className="text-white">{profile.email}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Telefone</label>
-                    <p className="text-white">{profile.phone || 'Não informado'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Data de Nascimento</label>
-                    <p className="text-white">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : 'Não informado'}</p>
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium text-gray-400">Endereço</label>
-                    <p className="text-white">{profile.address || 'Não informado'}</p>
-                  </div>
+                  {isEditing ? (
+                    <>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Nome Completo</Label>
+                        <Input
+                          value={editForm.name}
+                          onChange={(e) => setEditForm({...editForm, name: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                          placeholder="Digite seu nome completo"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Email</Label>
+                        <p className="text-gray-400 text-sm mt-1">O email não pode ser alterado</p>
+                        <p className="text-white">{profile.email}</p>
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Telefone</Label>
+                        <Input
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({...editForm, phone: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                          placeholder="(11) 99999-9999"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Data de Nascimento</Label>
+                        <Input
+                          type="date"
+                          value={editForm.birth_date ? editForm.birth_date.split('T')[0] : ''}
+                          onChange={(e) => setEditForm({...editForm, birth_date: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Endereço</Label>
+                        <Input
+                          value={editForm.address}
+                          onChange={(e) => setEditForm({...editForm, address: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                          placeholder="Rua, número, bairro, cidade"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Bio</Label>
+                        <Textarea
+                          value={editForm.bio}
+                          onChange={(e) => setEditForm({...editForm, bio: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white resize-none"
+                          placeholder="Conte um pouco sobre você..."
+                          rows={3}
+                        />
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Nome Completo</label>
+                        <p className="text-white">{profile.name || 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Email</label>
+                        <p className="text-white">{profile.email}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Telefone</label>
+                        <p className="text-white">{profile.phone || 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Data de Nascimento</label>
+                        <p className="text-white">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Endereço</label>
+                        <p className="text-white">{profile.address || 'Não informado'}</p>
+                      </div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
