@@ -9,7 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Search, UserPlus, MoreHorizontal, Shield, UserCheck, Eye, EyeOff } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Search, UserPlus, MoreHorizontal, Shield, UserCheck, Eye, EyeOff, Trash2, AlertTriangle } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -54,6 +55,9 @@ const UserManagement = () => {
   const [rankFilter, setRankFilter] = useState<string>('all');
   const [companyFilter, setCompanyFilter] = useState<string>('all');
   const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<CommunityUser | null>(null);
+  const [deletePassword, setDeletePassword] = useState('');
   
   const { toast } = useToast();
   
@@ -226,6 +230,47 @@ const UserManagement = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete || !deletePassword) {
+      toast({
+        title: "Erro",
+        description: "Senha do administrador é obrigatória para excluir usuário",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      await apiPost('/api/auth/delete-user', {
+        userId: userToDelete.id,
+        adminPassword: deletePassword
+      });
+
+      toast({
+        title: "Usuário excluído",
+        description: `${userToDelete.name} foi removido do sistema com sucesso!`
+      });
+
+      setIsDeleteDialogOpen(false);
+      setUserToDelete(null);
+      setDeletePassword('');
+      fetchUsers();
+    } catch (error: any) {
+      console.error('Error deleting user:', error);
+      toast({
+        title: "Erro ao excluir usuário",
+        description: error.response?.data?.message || "Senha incorreta ou erro interno.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const openDeleteDialog = (user: CommunityUser) => {
+    setUserToDelete(user);
+    setDeletePassword('');
+    setIsDeleteDialogOpen(true);
   };
 
   const rankColors: Record<UserRank, string> = {
@@ -535,26 +580,36 @@ const UserManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => promoteUser(user.id, user.rank === 'admin' ? 'comandante' : 'admin')}
-                            className="border-military-gold/30 text-white hover:bg-military-gold/10"
-                            title="Promover usuário"
-                          >
-                            <Shield className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleUserStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
-                            className="border-military-gold/30 text-white hover:bg-military-gold/10"
-                            title="Alterar status"
-                          >
-                            <UserCheck className="w-4 h-4" />
-                          </Button>
-                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0 text-white hover:bg-military-gold/20">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="bg-military-black-light border-military-gold/20">
+                            <DropdownMenuItem 
+                              onClick={() => promoteUser(user.id, user.rank === 'admin' ? 'comandante' : 'admin')}
+                              className="text-white hover:bg-military-gold/20"
+                            >
+                              <Shield className="mr-2 h-4 w-4" />
+                              Promover
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => toggleUserStatus(user.id, user.status === 'active' ? 'inactive' : 'active')}
+                              className="text-white hover:bg-military-gold/20"
+                            >
+                              <UserCheck className="mr-2 h-4 w-4" />
+                              {user.status === 'active' ? 'Desativar' : 'Ativar'}
+                            </DropdownMenuItem>
+                            <DropdownMenuItem 
+                              onClick={() => openDeleteDialog(user)}
+                              className="text-red-400 hover:bg-red-600/20"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Excluir
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -563,6 +618,67 @@ const UserManagement = () => {
             )}
           </CardContent>
         </Card>
+
+        {/* Delete User Confirmation Dialog */}
+        <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+          <DialogContent className="bg-military-black-light border-military-gold/20">
+            <DialogHeader>
+              <DialogTitle className="text-red-400 flex items-center">
+                <AlertTriangle className="mr-2 h-5 w-5" />
+                Confirmar Exclusão
+              </DialogTitle>
+              <DialogDescription className="text-gray-400">
+                Esta ação é irreversível. Para confirmar a exclusão do usuário{' '}
+                <span className="text-military-gold font-semibold">{userToDelete?.name}</span>,
+                digite sua senha de administrador abaixo.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4">
+              <div className="bg-red-600/10 border border-red-600/20 rounded-lg p-4">
+                <div className="flex items-center">
+                  <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+                  <p className="text-red-400 text-sm">
+                    <strong>Atenção:</strong> O usuário será permanentemente removido do sistema, incluindo todos os seus dados e histórico.
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-white text-sm font-medium">Senha do Administrador *</label>
+                <Input
+                  type="password"
+                  placeholder="Digite sua senha para confirmar"
+                  value={deletePassword}
+                  onChange={(e) => setDeletePassword(e.target.value)}
+                  className="bg-military-black border-military-gold/30 text-white"
+                />
+              </div>
+            </div>
+
+            <DialogFooter>
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  setIsDeleteDialogOpen(false);
+                  setUserToDelete(null);
+                  setDeletePassword('');
+                }}
+                className="border-military-gold/30 text-white hover:bg-military-gold/20"
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleDeleteUser}
+                className="bg-red-600 hover:bg-red-700 text-white"
+                disabled={!deletePassword}
+              >
+                <Trash2 className="mr-2 h-4 w-4" />
+                Confirmar Exclusão
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

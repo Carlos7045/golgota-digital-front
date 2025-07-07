@@ -38,6 +38,9 @@ export interface IStorage {
   getUserRoles(userId: string): Promise<string[]>;
   assignRole(userId: string, role: string): Promise<void>;
   
+  // User deletion
+  deleteUser(userId: string): Promise<void>;
+  
   // Activities and achievements
   getUserActivities(userId: string): Promise<UserActivity[]>;
   getUserAchievements(userId: string): Promise<Achievement[]>;
@@ -336,6 +339,21 @@ export class DatabaseStorage implements IStorage {
       return newMessage;
     } catch (error) {
       console.error('Error creating message:', error);
+      throw error;
+    }
+  }
+
+  async deleteUser(userId: string): Promise<void> {
+    try {
+      // First delete related records
+      await this.db.delete(companyMembers).where(eq(companyMembers.user_id, userId));
+      await this.db.delete(userRoles).where(eq(userRoles.user_id, userId));
+      await this.db.delete(profiles).where(eq(profiles.user_id, userId));
+      
+      // Finally delete the user
+      await this.db.delete(users).where(eq(users.id, userId));
+    } catch (error) {
+      console.error('Error deleting user:', error);
       throw error;
     }
   }

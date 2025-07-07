@@ -179,6 +179,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete user route (admin only with password confirmation)
+  app.post('/api/auth/delete-user', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const { userId, adminPassword } = req.body;
+      const adminUserId = req.user?.id;
+
+      if (!userId || !adminPassword) {
+        return res.status(400).json({ message: 'ID do usuário e senha do admin são obrigatórios' });
+      }
+
+      // Verify admin password
+      const adminUser = await storage.getUser(adminUserId);
+      if (!adminUser) {
+        return res.status(401).json({ message: 'Usuário admin não encontrado' });
+      }
+
+      const isValidPassword = await bcrypt.compare(adminPassword, adminUser.password);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: 'Senha do administrador incorreta' });
+      }
+
+      // Check if user exists
+      const userToDelete = await storage.getUser(userId);
+      if (!userToDelete) {
+        return res.status(404).json({ message: 'Usuário não encontrado' });
+      }
+
+      // Prevent self-deletion
+      if (userId === adminUserId) {
+        return res.status(400).json({ message: 'Você não pode excluir sua própria conta' });
+      }
+
+      // Delete user profile and user record
+      await storage.deleteUser(userId);
+
+      res.json({ 
+        message: 'Usuário excluído com sucesso',
+        deletedUserId: userId
+      });
+    } catch (error) {
+      console.error('Delete user error:', error);
+      res.status(500).json({ message: 'Erro interno do servidor' });
+    }
+  });
+
   app.post('/api/auth/logout', async (req: Request, res: Response) => {
     try {
       req.session.destroy((err) => {
