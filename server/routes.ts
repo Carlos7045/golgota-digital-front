@@ -38,18 +38,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.post('/api/auth/register', async (req: Request, res: Response) => {
     try {
-      const userData = insertUserSchema.parse(req.body);
+      const { email, password, fullName, cpf, phone, city, address, birthYear, company, rank } = req.body;
       
       // Check if user already exists
-      const existingUser = await storage.getUserByEmail(userData.email);
+      const existingUser = await storage.getUserByEmail(email);
       if (existingUser) {
         return res.status(400).json({ message: 'User already exists' });
       }
       
+      // Create basic user account
+      const userData = insertUserSchema.parse({ email, password });
       const user = await storage.createUser(userData);
       
+      // Update profile with additional data from unified form
+      const profileData = {
+        name: fullName || '',
+        cpf: cpf || '',
+        phone: phone || '',
+        city: city || '',
+        address: address || '',
+        birth_date: birthYear ? `${birthYear}-01-01` : null,
+        company: company || '',
+        rank: rank || 'aluno'
+      };
+      
+      await storage.updateProfile(user.id, profileData);
+      
       // Remove password from response
-      const { password, ...userResponse } = user;
+      const { password: _, ...userResponse } = user;
       res.status(201).json({ user: userResponse });
     } catch (error) {
       if (error instanceof z.ZodError) {

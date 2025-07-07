@@ -7,18 +7,20 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { apiPost } from '@/lib/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
     fullName: '',
+    cpf: '',
     email: '',
     password: '',
     confirmPassword: '',
     phone: '',
     city: '',
+    address: '',
+    birthYear: '',
     company: '',
-    cpglYear: '',
-    cpglMonth: '',
     currentRank: 'aluno'
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -54,37 +56,37 @@ const Register = () => {
 
     setIsLoading(true);
     
-    // Simular envio do cadastro
-    setTimeout(() => {
-      // Criar usuário com status pendente
-      const newUser = {
-        id: Date.now().toString(),
-        name: formData.fullName,
+    try {
+      // Fazer cadastro via API
+      await apiPost('/api/auth/register', {
         email: formData.email,
-        rank: formData.currentRank,
-        company: formData.company,
-        city: formData.city,
+        password: formData.password,
+        fullName: formData.fullName,
+        cpf: formData.cpf,
         phone: formData.phone,
-        cpglYear: formData.cpglYear,
-        cpglMonth: formData.cpglMonth,
-        status: 'pendente', // Status de pré-aprovação
-        registeredAt: new Date().toISOString()
-      };
-
-      // Salvar no localStorage (temporário)
-      const pendingUsers = JSON.parse(localStorage.getItem('pendingUsers') || '[]');
-      pendingUsers.push(newUser);
-      localStorage.setItem('pendingUsers', JSON.stringify(pendingUsers));
-
-      setIsLoading(false);
-      
-      toast({
-        title: "Cadastro realizado com sucesso!",
-        description: "Seu cadastro foi enviado para análise. Aguarde aprovação dos administradores.",
+        city: formData.city,
+        address: formData.address,
+        birthYear: formData.birthYear,
+        company: formData.company,
+        rank: formData.currentRank
       });
 
-      navigate('/login');
-    }, 2000);
+      toast({
+        title: "Cadastro realizado com sucesso!",
+        description: "Sua conta foi criada. Faça login para acessar a plataforma.",
+      });
+
+      navigate('/auth');
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      toast({
+        title: "Erro no cadastro",
+        description: error.response?.data?.message || "Erro ao criar conta",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (field: string, value: string) => {
@@ -241,34 +243,33 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* CPGL Data e Patente */}
+              {/* Dados Pessoais Adicionais */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label className="text-foreground">Ano CPGL</Label>
+                  <Label htmlFor="cpf" className="text-foreground">CPF *</Label>
                   <Input
-                    type="number"
-                    value={formData.cpglYear}
-                    onChange={(e) => handleInputChange('cpglYear', e.target.value)}
+                    id="cpf"
+                    type="text"
+                    value={formData.cpf}
+                    onChange={(e) => handleInputChange('cpf', e.target.value)}
                     className="bg-background border-border text-foreground"
-                    placeholder="2024"
-                    min="2000"
-                    max={new Date().getFullYear()}
+                    placeholder="000.000.000-00"
+                    required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Mês CPGL</Label>
-                  <Select value={formData.cpglMonth} onValueChange={(value) => handleInputChange('cpglMonth', value)}>
-                    <SelectTrigger className="bg-background border-border text-foreground">
-                      <SelectValue placeholder="Mês" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <SelectItem key={i + 1} value={(i + 1).toString().padStart(2, '0')}>
-                          {new Date(2024, i).toLocaleDateString('pt-BR', { month: 'long' })}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="birthYear" className="text-foreground">Ano de Nascimento *</Label>
+                  <Input
+                    id="birthYear"
+                    type="number"
+                    value={formData.birthYear}
+                    onChange={(e) => handleInputChange('birthYear', e.target.value)}
+                    className="bg-background border-border text-foreground"
+                    placeholder="1990"
+                    min="1940"
+                    max={new Date().getFullYear() - 16}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <Label className="text-foreground">Patente Atual *</Label>
@@ -285,6 +286,20 @@ const Register = () => {
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              {/* Endereço */}
+              <div className="space-y-2">
+                <Label htmlFor="address" className="text-foreground">Endereço Completo *</Label>
+                <Input
+                  id="address"
+                  type="text"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange('address', e.target.value)}
+                  className="bg-background border-border text-foreground"
+                  placeholder="Rua, número, bairro, CEP"
+                  required
+                />
               </div>
 
               <Button 
