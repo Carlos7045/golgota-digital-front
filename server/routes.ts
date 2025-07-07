@@ -1014,6 +1014,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Financial categories endpoint
+  app.get('/api/financial/categories', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const categories = [
+        {
+          id: 'mensalidade',
+          name: 'Mensalidade',
+          description: 'Taxa mensal de membro ativo',
+          value: 10.00,
+          eligibleRanks: ['soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
+        },
+        {
+          id: 'doacao',
+          name: 'Doação',
+          description: 'Contribuição voluntária para a obra',
+          value: 0,
+          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
+        },
+        {
+          id: 'evento',
+          name: 'Eventos',
+          description: 'Inscrições para acampamentos e eventos',
+          value: 0,
+          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
+        },
+        {
+          id: 'oferta',
+          name: 'Ofertas Especiais',
+          description: 'Contribuições para projetos especiais',
+          value: 0,
+          eligibleRanks: ['aluno', 'soldado', 'cabo', 'sargento', 'tenente', 'capitao', 'major', 'coronel', 'comandante']
+        }
+      ];
+      
+      res.json(categories);
+    } catch (error) {
+      console.error('Error fetching financial categories:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   return httpServer;
 }
 

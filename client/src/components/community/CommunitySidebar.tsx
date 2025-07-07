@@ -11,7 +11,8 @@ import {
   Briefcase, 
   Shield,
   X,
-  Users
+  Users,
+  DollarSign
 } from 'lucide-react';
 import { User, ChannelType } from '@/pages/Community';
 import { cn } from '@/lib/utils';
@@ -30,6 +31,7 @@ const channels = [
   { id: 'acampamentos' as ChannelType, name: 'Acampamentos', icon: Tent, description: 'Acampamento Gólgota', minRank: 'soldado' },
   { id: 'ensine-aprenda' as ChannelType, name: 'Ensine/Aprenda', icon: BookOpen, description: 'Compartilhe conhecimento', minRank: 'soldado' },
   { id: 'eventos' as ChannelType, name: 'Eventos', icon: Calendar, description: 'Zoom e encontros', minRank: 'soldado' },
+  { id: 'financeiro' as ChannelType, name: 'Financeiro', icon: DollarSign, description: 'Mensalidades e pagamentos', minRank: 'aluno' },
   { id: 'oportunidades' as ChannelType, name: 'Oportunidades', icon: Briefcase, description: 'Vagas e cruzadas', minRank: 'cabo' },
   { id: 'painel-cia' as ChannelType, name: 'Painel da Cia', icon: Shield, description: 'Área de comandantes', minRank: 'comandante' },
 ];

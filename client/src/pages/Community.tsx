@@ -16,7 +16,7 @@ export interface User {
   company: string;
 }
 
-export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia';
+export type ChannelType = 'geral' | 'treinamentos' | 'acampamentos' | 'ensine-aprenda' | 'eventos' | 'oportunidades' | 'painel-cia' | 'financeiro';
 
 const Community = () => {
   const { user: authUser, profile, roles, loading } = useAuth();

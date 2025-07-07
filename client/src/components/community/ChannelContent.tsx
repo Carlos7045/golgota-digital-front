@@ -5,6 +5,7 @@ import TrainingsChannel from './channels/TrainingsChannel';
 import CampsChannel from './channels/CampsChannel';
 import TeachLearnChannel from './channels/TeachLearnChannel';
 import EventsChannel from './channels/EventsChannel';
+import FinancialChannel from './channels/FinancialChannel';
 import OpportunitiesChannel from './channels/OpportunitiesChannel';
 import CompanyPanelChannel from './channels/CompanyPanelChannel';
 
@@ -25,6 +26,8 @@ const ChannelContent = ({ user, channel }: ChannelContentProps) => {
       return <TeachLearnChannel user={user} />;
     case 'eventos':
       return <EventsChannel user={user} />;
+    case 'financeiro':
+      return <FinancialChannel />;
     case 'oportunidades':
       return <OpportunitiesChannel user={user} />;
     case 'painel-cia':
