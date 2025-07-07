@@ -27,6 +27,8 @@ const Profile = () => {
     name: '',
     phone: '',
     birth_date: '',
+    cpf: '',
+    city: '',
     address: '',
     bio: '',
     specialties: [] as string[]
@@ -41,6 +43,8 @@ const Profile = () => {
         name: profile.name || '',
         phone: profile.phone || '',
         birth_date: profile.birth_date || '',
+        cpf: profile.cpf || '',
+        city: profile.city || '',
         address: profile.address || '',
         bio: profile.bio || '',
         specialties: profile.specialties || []
@@ -125,6 +129,8 @@ const Profile = () => {
       name: profile?.name || '',
       phone: profile?.phone || '',
       birth_date: profile?.birth_date || '',
+      cpf: profile?.cpf || '',
+      city: profile?.city || '',
       address: profile?.address || '',
       bio: profile?.bio || '',
       specialties: profile?.specialties || []
@@ -342,12 +348,30 @@ const Profile = () => {
                         />
                       </div>
                       <div>
+                        <Label className="text-sm font-medium text-gray-400">CPF</Label>
+                        <Input
+                          value={editForm.cpf}
+                          onChange={(e) => setEditForm({...editForm, cpf: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                          placeholder="000.000.000-00"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm font-medium text-gray-400">Cidade</Label>
+                        <Input
+                          value={editForm.city}
+                          onChange={(e) => setEditForm({...editForm, city: e.target.value})}
+                          className="mt-1 bg-military-black border-military-gold/30 text-white"
+                          placeholder="Sua cidade"
+                        />
+                      </div>
+                      <div>
                         <Label className="text-sm font-medium text-gray-400">Endereço</Label>
                         <Input
                           value={editForm.address}
                           onChange={(e) => setEditForm({...editForm, address: e.target.value})}
                           className="mt-1 bg-military-black border-military-gold/30 text-white"
-                          placeholder="Rua, número, bairro, cidade"
+                          placeholder="Rua, número, bairro"
                         />
                       </div>
                       <div>
@@ -378,6 +402,14 @@ const Profile = () => {
                       <div>
                         <label className="text-sm font-medium text-gray-400">Data de Nascimento</label>
                         <p className="text-white">{profile.birth_date ? new Date(profile.birth_date).toLocaleDateString('pt-BR') : 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">CPF</label>
+                        <p className="text-white">{profile.cpf || 'Não informado'}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-400">Cidade</label>
+                        <p className="text-white">{profile.city || 'Não informado'}</p>
                       </div>
                       <div>
                         <label className="text-sm font-medium text-gray-400">Endereço</label>

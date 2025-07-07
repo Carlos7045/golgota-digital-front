@@ -129,6 +129,7 @@ A comprehensive web application built for the Comando Gólgota community - a mil
 - July 07, 2025. Implemented complete financial management system with real database data, payment tracking, and transaction management
 - July 07, 2025. Fixed login issue for Melry Pacheco Salgado (melrysalgado704@gmail.com) by updating password hash
 - July 07, 2025. Corrected hardcoded company names: removed "CIA Alpha" references and now displaying actual user companies from database
+- July 07, 2025. Enhanced profile data display: added CPF and city fields to profile view and editing form, all personal data now properly displayed
 
 ## User Preferences
 
