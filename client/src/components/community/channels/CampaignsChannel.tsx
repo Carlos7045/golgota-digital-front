@@ -2,15 +2,15 @@ import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Tent, Users, Clock, MapPin, DollarSign, Calendar } from 'lucide-react';
+import { Heart, Users, Clock, MapPin, DollarSign, Calendar, Target } from 'lucide-react';
 import { User } from '@/pages/Community';
 import { apiGet } from '@/lib/api';
 
 interface Event {
   id: string;
   name: string;
-  type: 'acampamento';
-  category: 'acampamento';
+  type: 'campanha' | 'doacao';
+  category: 'campanha';
   start_date: string;
   end_date: string;
   location: string;
@@ -25,37 +25,48 @@ interface Event {
   instructor: string;
 }
 
-interface CampsChannelProps {
+interface CampaignsChannelProps {
   user: User;
 }
 
-const CampsChannel = ({ user }: CampsChannelProps) => {
+const CampaignsChannel = ({ user }: CampaignsChannelProps) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [enrolledEvents, setEnrolledEvents] = useState<string[]>([]);
+  const [participatingEvents, setParticipatingEvents] = useState<string[]>([]);
 
   useEffect(() => {
-    fetchCampEvents();
+    fetchCampaignEvents();
   }, []);
 
-  const fetchCampEvents = async () => {
+  const fetchCampaignEvents = async () => {
     try {
       const data = await apiGet('/api/events');
-      const campEvents = data.events.filter((event: Event) => event.category === 'acampamento');
-      setEvents(campEvents);
+      const campaignEvents = data.events.filter((event: Event) => event.category === 'campanha');
+      setEvents(campaignEvents);
     } catch (error) {
-      console.error('Error fetching camp events:', error);
+      console.error('Error fetching campaign events:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEnroll = (eventId: string) => {
-    setEnrolledEvents(prev => 
+  const handleParticipate = (eventId: string) => {
+    setParticipatingEvents(prev => 
       prev.includes(eventId) 
         ? prev.filter(id => id !== eventId)
         : [...prev, eventId]
     );
+  };
+
+  const getTypeBadge = (type: string) => {
+    switch (type) {
+      case 'campanha':
+        return <Badge className="bg-blue-600/20 text-blue-400">Campanha</Badge>;
+      case 'doacao':
+        return <Badge className="bg-purple-600/20 text-purple-400">Doação</Badge>;
+      default:
+        return <Badge className="bg-gray-600/20 text-gray-400">{type}</Badge>;
+    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -79,7 +90,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
     return (
       <div className="max-w-6xl mx-auto p-6">
         <div className="text-center text-gray-400 py-8">
-          Carregando acampamentos...
+          Carregando campanhas...
         </div>
       </div>
     );
@@ -88,17 +99,17 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="mb-8">
-        <h2 className="text-2xl font-bold text-military-gold mb-2">Canal de Acampamentos</h2>
+        <h2 className="text-2xl font-bold text-military-gold mb-2">Canal de Campanhas</h2>
         <p className="text-gray-400">
-          Acampamentos e eventos de longa duração para fortalecimento espiritual e comunitário.
+          Campanhas sociais, evangelísticas e projetos de doação para impactar vidas e comunidades.
         </p>
       </div>
 
       {events.length === 0 ? (
         <div className="text-center text-gray-400 py-12">
-          <Tent className="w-16 h-16 mx-auto mb-4 text-gray-600" />
-          <h3 className="text-xl font-semibold mb-2">Nenhum acampamento disponível</h3>
-          <p>Novos acampamentos serão publicados em breve.</p>
+          <Heart className="w-16 h-16 mx-auto mb-4 text-gray-600" />
+          <h3 className="text-xl font-semibold mb-2">Nenhuma campanha ativa</h3>
+          <p>Novas campanhas e projetos de doação serão publicados em breve.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -108,7 +119,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                 <div className="flex justify-between items-start">
                   <CardTitle className="text-white text-lg">{event.name}</CardTitle>
                   <div className="flex gap-2">
-                    <Badge className="bg-green-600/20 text-green-400">Acampamento</Badge>
+                    {getTypeBadge(event.type)}
                     {getStatusBadge(event.status)}
                   </div>
                 </div>
@@ -135,13 +146,13 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                 {event.price && parseFloat(event.price) > 0 && (
                   <div className="flex items-center text-military-gold text-sm font-bold">
                     <DollarSign className="w-4 h-4 mr-2" />
-                    R$ {parseFloat(event.price).toFixed(2)}
+                    Meta: R$ {parseFloat(event.price).toFixed(2)}
                   </div>
                 )}
                 {event.instructor && (
                   <div className="flex items-center text-gray-300 text-sm">
-                    <Tent className="w-4 h-4 mr-2 text-military-gold" />
-                    Responsável: {event.instructor}
+                    <Target className="w-4 h-4 mr-2 text-military-gold" />
+                    Coordenador: {event.instructor}
                   </div>
                 )}
                 {event.description && (
@@ -149,7 +160,7 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                 )}
                 {event.requirements && (
                   <div className="text-gray-400 text-sm">
-                    <strong>Requisitos:</strong> {event.requirements}
+                    <strong>Como ajudar:</strong> {event.requirements}
                   </div>
                 )}
                 {event.objectives && (
@@ -159,15 +170,15 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
                 )}
                 <div className="flex gap-2 pt-4">
                   <Button
-                    onClick={() => handleEnroll(event.id)}
+                    onClick={() => handleParticipate(event.id)}
                     className={`flex-1 ${
-                      enrolledEvents.includes(event.id)
+                      participatingEvents.includes(event.id)
                         ? 'bg-green-600 hover:bg-green-700 text-white'
                         : 'bg-military-gold text-military-black hover:bg-military-gold/80'
                     }`}
                     disabled={event.status === 'cancelled' || event.status === 'completed'}
                   >
-                    {enrolledEvents.includes(event.id) ? 'Inscrito' : 'Inscrever-se'}
+                    {participatingEvents.includes(event.id) ? 'Participando' : 'Participar'}
                   </Button>
                 </div>
               </CardContent>
@@ -179,4 +190,4 @@ const CampsChannel = ({ user }: CampsChannelProps) => {
   );
 };
 
-export default CampsChannel;
+export default CampaignsChannel;

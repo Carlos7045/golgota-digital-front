@@ -5,8 +5,9 @@ import { z } from "zod";
 // Enums
 export const appRoleEnum = pgEnum("app_role", ["admin", "moderator", "user"]);
 export const companyStatusEnum = pgEnum("company_status", ["Ativa", "Reorganização", "Planejamento", "Inativa"]);
-export const eventTypeEnum = pgEnum("event_type", ["rally", "camp", "training", "meeting"]);
-export const eventStatusEnum = pgEnum("event_status", ["planning", "active", "completed", "cancelled"]);
+export const eventTypeEnum = pgEnum("event_type", ["rally", "cplg", "feg", "acampamento", "campanha", "doacao"]);
+export const eventCategoryEnum = pgEnum("event_category", ["treinamento", "acampamento", "campanha"]);
+export const eventStatusEnum = pgEnum("event_status", ["planning", "active", "completed", "cancelled", "published"]);
 export const contentTypeEnum = pgEnum("content_type", ["announcement", "training", "event", "resource"]);
 export const contentStatusEnum = pgEnum("content_status", ["published", "draft", "archived"]);
 export const courseLevelEnum = pgEnum("course_level", ["Básico", "Intermediário", "Avançado"]);
@@ -87,13 +88,20 @@ export const events = pgTable("events", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: text("name").notNull(),
   type: eventTypeEnum("type").notNull(),
-  event_date: date("event_date").notNull(),
+  category: eventCategoryEnum("category").notNull(),
+  start_date: date("start_date").notNull(),
+  end_date: date("end_date").notNull(),
   location: text("location").notNull(),
   duration: text("duration"),
   max_participants: integer("max_participants").default(50),
   registered_participants: integer("registered_participants").default(0),
   status: eventStatusEnum("status").default("planning"),
   description: text("description"),
+  price: decimal("price", { precision: 10, scale: 2 }).default("0.00"),
+  asaas_product_id: text("asaas_product_id"),
+  requirements: text("requirements"),
+  objectives: text("objectives"),
+  instructor: text("instructor"),
   created_by: uuid("created_by").references(() => users.id),
   created_at: timestamp("created_at").defaultNow().notNull(),
   updated_at: timestamp("updated_at").defaultNow().notNull(),

@@ -33,6 +33,10 @@ export interface IStorage {
   
   // Event management
   getEvents(): Promise<Event[]>;
+  createEvent(event: any): Promise<Event>;
+  updateEvent(eventId: string, data: any): Promise<Event>;
+  deleteEvent(eventId: string): Promise<void>;
+  getEventsByCategory(category: string): Promise<Event[]>;
   
   // User roles
   getUserRoles(userId: string): Promise<string[]>;
@@ -324,7 +328,33 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getEvents(): Promise<Event[]> {
-    return await db.select().from(events);
+    return await db.select().from(events).orderBy(events.start_date);
+  }
+
+  async createEvent(eventData: any): Promise<Event> {
+    const [event] = await db.insert(events).values(eventData).returning();
+    return event;
+  }
+
+  async updateEvent(eventId: string, data: any): Promise<Event> {
+    const [event] = await db
+      .update(events)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(events.id, eventId))
+      .returning();
+    return event;
+  }
+
+  async deleteEvent(eventId: string): Promise<void> {
+    await db.delete(events).where(eq(events.id, eventId));
+  }
+
+  async getEventsByCategory(category: string): Promise<Event[]> {
+    return await db
+      .select()
+      .from(events)
+      .where(eq(events.category, category))
+      .orderBy(events.start_date);
   }
 
   async getUserRoles(userId: string): Promise<string[]> {

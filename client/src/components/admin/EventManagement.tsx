@@ -13,14 +13,20 @@ import { CalendarIcon, MapPinIcon, UsersIcon, ClockIcon, PlusIcon } from 'lucide
 interface Event {
   id: string;
   name: string;
-  type: 'rally' | 'camp' | 'training' | 'meeting';
-  date: string;
+  type: 'rally' | 'cplg' | 'feg' | 'acampamento' | 'campanha' | 'doacao';
+  category: 'treinamento' | 'acampamento' | 'campanha';
+  start_date: string;
+  end_date: string;
   location: string;
   duration: string;
-  maxParticipants: number;
-  registeredParticipants: number;
-  status: 'planning' | 'active' | 'completed' | 'cancelled';
+  max_participants: number;
+  registered_participants: number;
+  status: 'planning' | 'active' | 'completed' | 'cancelled' | 'published';
   description: string;
+  price: string;
+  requirements: string;
+  objectives: string;
+  instructor: string;
 }
 
 const EventManagement = () => {
@@ -30,11 +36,17 @@ const EventManagement = () => {
   const [newEvent, setNewEvent] = useState({
     name: '',
     type: 'rally' as Event['type'],
-    date: '',
+    category: 'treinamento' as Event['category'],
+    start_date: '',
+    end_date: '',
     location: '',
     duration: '',
-    maxParticipants: 50,
-    description: ''
+    max_participants: 50,
+    description: '',
+    price: '0.00',
+    requirements: '',
+    objectives: '',
+    instructor: ''
   });
   
   const { toast } = useToast();
@@ -60,10 +72,10 @@ const EventManagement = () => {
   };
 
   const handleCreateEvent = async () => {
-    if (!newEvent.name.trim() || !newEvent.date || !newEvent.location.trim()) {
+    if (!newEvent.name.trim() || !newEvent.start_date || !newEvent.end_date || !newEvent.location.trim()) {
       toast({
         title: "Erro",
-        description: "Nome, data e local são obrigatórios",
+        description: "Nome, datas de início/fim e local são obrigatórios",
         variant: "destructive"
       });
       return;
@@ -73,13 +85,19 @@ const EventManagement = () => {
       await apiPost('/api/events', {
         name: newEvent.name,
         type: newEvent.type,
-        event_date: newEvent.date,
+        category: newEvent.category,
+        start_date: newEvent.start_date,
+        end_date: newEvent.end_date,
         location: newEvent.location,
         duration: newEvent.duration,
-        max_participants: newEvent.maxParticipants,
+        max_participants: newEvent.max_participants,
         registered_participants: 0,
         status: 'planning',
-        description: newEvent.description
+        description: newEvent.description,
+        price: newEvent.price,
+        requirements: newEvent.requirements,
+        objectives: newEvent.objectives,
+        instructor: newEvent.instructor
       });
 
       toast({
@@ -91,11 +109,17 @@ const EventManagement = () => {
       setNewEvent({
         name: '',
         type: 'rally',
-        date: '',
+        category: 'treinamento',
+        start_date: '',
+        end_date: '',
         location: '',
         duration: '',
-        maxParticipants: 50,
-        description: ''
+        max_participants: 50,
+        description: '',
+        price: '0.00',
+        requirements: '',
+        objectives: '',
+        instructor: ''
       });
       fetchEvents();
     } catch (error) {
@@ -133,14 +157,31 @@ const EventManagement = () => {
     switch (type) {
       case 'rally':
         return <Badge className="bg-red-600/20 text-red-400">Rally</Badge>;
-      case 'camp':
+      case 'cplg':
+        return <Badge className="bg-orange-600/20 text-orange-400">CPLG</Badge>;
+      case 'feg':
+        return <Badge className="bg-yellow-600/20 text-yellow-400">FEG</Badge>;
+      case 'acampamento':
         return <Badge className="bg-green-600/20 text-green-400">Acampamento</Badge>;
-      case 'training':
-        return <Badge className="bg-blue-600/20 text-blue-400">Treinamento</Badge>;
-      case 'meeting':
-        return <Badge className="bg-purple-600/20 text-purple-400">Reunião</Badge>;
+      case 'campanha':
+        return <Badge className="bg-blue-600/20 text-blue-400">Campanha</Badge>;
+      case 'doacao':
+        return <Badge className="bg-purple-600/20 text-purple-400">Doação</Badge>;
       default:
         return <Badge className="bg-gray-600/20 text-gray-400">{type}</Badge>;
+    }
+  };
+
+  const getCategoryBadge = (category: string) => {
+    switch (category) {
+      case 'treinamento':
+        return <Badge className="bg-military-gold/20 text-military-gold">Treinamento</Badge>;
+      case 'acampamento':
+        return <Badge className="bg-green-600/20 text-green-400">Acampamento</Badge>;
+      case 'campanha':
+        return <Badge className="bg-blue-600/20 text-blue-400">Campanha</Badge>;
+      default:
+        return <Badge className="bg-gray-600/20 text-gray-400">{category}</Badge>;
     }
   };
 
@@ -194,21 +235,14 @@ const EventManagement = () => {
                     </SelectTrigger>
                     <SelectContent className="bg-military-black-light border-military-gold/20">
                       <SelectItem value="rally">Rally</SelectItem>
-                      <SelectItem value="camp">Acampamento</SelectItem>
-                      <SelectItem value="training">Treinamento</SelectItem>
-                      <SelectItem value="meeting">Reunião</SelectItem>
+                      <SelectItem value="cplg">CPLG</SelectItem>
+                      <SelectItem value="feg">FEG</SelectItem>
+                      <SelectItem value="acampamento">Acampamento</SelectItem>
+                      <SelectItem value="campanha">Campanha</SelectItem>
+                      <SelectItem value="doacao">Doação</SelectItem>
+
                     </SelectContent>
                   </Select>
-                </div>
-                <div>
-                  <Label htmlFor="date" className="text-white">Data</Label>
-                  <Input
-                    id="date"
-                    type="datetime-local"
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                    className="bg-military-black border-military-gold/30 text-white"
-                  />
                 </div>
                 <div>
                   <Label htmlFor="location" className="text-white">Local</Label>
@@ -218,6 +252,80 @@ const EventManagement = () => {
                     onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
                     className="bg-military-black border-military-gold/30 text-white"
                     placeholder="Ex: Base Principal"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="price" className="text-white">Valor (R$)</Label>
+                    <Input
+                      id="price"
+                      type="number"
+                      step="0.01"
+                      value={newEvent.price}
+                      onChange={(e) => setNewEvent({...newEvent, price: e.target.value})}
+                      className="bg-military-black border-military-gold/30 text-white"
+                      placeholder="0.00"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="max_participants" className="text-white">Máx. Participantes</Label>
+                    <Input
+                      id="max_participants"
+                      type="number"
+                      value={newEvent.max_participants}
+                      onChange={(e) => setNewEvent({...newEvent, max_participants: parseInt(e.target.value) || 50})}
+                      className="bg-military-black border-military-gold/30 text-white"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label htmlFor="duration" className="text-white">Duração</Label>
+                  <Input
+                    id="duration"
+                    value={newEvent.duration}
+                    onChange={(e) => setNewEvent({...newEvent, duration: e.target.value})}
+                    className="bg-military-black border-military-gold/30 text-white"
+                    placeholder="Ex: 2 dias, 4 horas"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="instructor" className="text-white">Instrutor (opcional)</Label>
+                  <Input
+                    id="instructor"
+                    value={newEvent.instructor}
+                    onChange={(e) => setNewEvent({...newEvent, instructor: e.target.value})}
+                    className="bg-military-black border-military-gold/30 text-white"
+                    placeholder="Nome do instrutor"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="description" className="text-white">Descrição</Label>
+                  <Input
+                    id="description"
+                    value={newEvent.description}
+                    onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
+                    className="bg-military-black border-military-gold/30 text-white"
+                    placeholder="Descrição do evento"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="requirements" className="text-white">Requisitos (opcional)</Label>
+                  <Input
+                    id="requirements"
+                    value={newEvent.requirements}
+                    onChange={(e) => setNewEvent({...newEvent, requirements: e.target.value})}
+                    className="bg-military-black border-military-gold/30 text-white"
+                    placeholder="Requisitos para participação"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="objectives" className="text-white">Objetivos (opcional)</Label>
+                  <Input
+                    id="objectives"
+                    value={newEvent.objectives}
+                    onChange={(e) => setNewEvent({...newEvent, objectives: e.target.value})}
+                    className="bg-military-black border-military-gold/30 text-white"
+                    placeholder="Objetivos do evento"
                   />
                 </div>
                 <Button onClick={handleCreateEvent} className="w-full bg-military-gold text-military-black hover:bg-military-gold/80">
@@ -248,7 +356,10 @@ const EventManagement = () => {
                 <CardContent className="space-y-4">
                   <div className="flex items-center text-gray-300 text-sm">
                     <CalendarIcon className="w-4 h-4 mr-2 text-military-gold" />
-                    {new Date(event.date).toLocaleDateString('pt-BR')}
+                    {new Date(event.start_date).toLocaleDateString('pt-BR')} - {new Date(event.end_date).toLocaleDateString('pt-BR')}
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    {getCategoryBadge(event.category)}
                   </div>
                   <div className="flex items-center text-gray-300 text-sm">
                     <MapPinIcon className="w-4 h-4 mr-2 text-military-gold" />
@@ -256,8 +367,14 @@ const EventManagement = () => {
                   </div>
                   <div className="flex items-center text-gray-300 text-sm">
                     <UsersIcon className="w-4 h-4 mr-2 text-military-gold" />
-                    {event.registeredParticipants}/{event.maxParticipants} participantes
+                    {event.registered_participants}/{event.max_participants} participantes
                   </div>
+                  {event.price && parseFloat(event.price) > 0 && (
+                    <div className="flex items-center text-military-gold text-sm font-bold">
+                      <span className="mr-2">💰</span>
+                      R$ {parseFloat(event.price).toFixed(2)}
+                    </div>
+                  )}
                   {event.duration && (
                     <div className="flex items-center text-gray-300 text-sm">
                       <ClockIcon className="w-4 h-4 mr-2 text-military-gold" />

@@ -588,6 +588,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post('/api/events', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const {
+        name,
+        type,
+        category,
+        start_date,
+        end_date,
+        location,
+        duration,
+        max_participants,
+        description,
+        price,
+        requirements,
+        objectives,
+        instructor
+      } = req.body;
+
+      // Validate required fields
+      if (!name || !type || !category || !start_date || !end_date || !location) {
+        return res.status(400).json({ 
+          message: 'Nome, tipo, categoria, datas de início/fim e local são obrigatórios' 
+        });
+      }
+
+      // Create event in database
+      const event = await storage.createEvent({
+        name,
+        type,
+        category,
+        start_date,
+        end_date,
+        location,
+        duration: duration || null,
+        max_participants: max_participants || 50,
+        registered_participants: 0,
+        status: 'planning',
+        description: description || null,
+        price: price || '0.00',
+        requirements: requirements || null,
+        objectives: objectives || null,
+        instructor: instructor || null,
+        created_by: req.user.id
+      });
+
+      // If event has a price, create Asaas product for payment integration
+      if (price && parseFloat(price) > 0) {
+        try {
+          // TODO: Integrate with Asaas to create product/service
+          // const asaasProduct = await asaasService.createProduct({
+          //   name: event.name,
+          //   description: event.description,
+          //   value: parseFloat(price)
+          // });
+          // 
+          // await storage.updateEvent(event.id, {
+          //   asaas_product_id: asaasProduct.id
+          // });
+        } catch (asaasError) {
+          console.error('Error creating Asaas product:', asaasError);
+          // Continue without Asaas integration for now
+        }
+      }
+
+      res.json({ event });
+    } catch (error) {
+      console.error('Event creation error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.put('/api/events/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const event = await storage.updateEvent(req.params.id, req.body);
+      res.json({ event });
+    } catch (error) {
+      console.error('Event update error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  app.delete('/api/events/:id', requireAuth, async (req: Request, res: Response) => {
+    try {
+      await storage.deleteEvent(req.params.id);
+      res.json({ message: 'Event deleted successfully' });
+    } catch (error) {
+      console.error('Event deletion error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   // Activities routes
   app.get('/api/activities', requireAuth, async (req: Request, res: Response) => {
     try {

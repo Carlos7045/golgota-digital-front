@@ -13,6 +13,8 @@ import {
   X,
   Users,
   DollarSign
+,
+  Heart
 } from 'lucide-react';
 import { User, ChannelType } from '@/pages/Community';
 import { cn } from '@/lib/utils';
@@ -29,6 +31,7 @@ const channels = [
   { id: 'geral' as ChannelType, name: 'Geral', icon: MessageCircle, description: 'Conversas gerais', minRank: 'aluno' },
   { id: 'treinamentos' as ChannelType, name: 'Treinamentos', icon: GraduationCap, description: 'Rally, CPLG, FEG', minRank: 'aluno' },
   { id: 'acampamentos' as ChannelType, name: 'Acampamentos', icon: Tent, description: 'Acampamento Gólgota', minRank: 'soldado' },
+  { id: 'campanhas' as ChannelType, name: 'Campanhas', icon: Heart, description: 'Campanhas sociais e doações', minRank: 'soldado' },
   { id: 'ensine-aprenda' as ChannelType, name: 'Ensine/Aprenda', icon: BookOpen, description: 'Compartilhe conhecimento', minRank: 'soldado' },
   { id: 'eventos' as ChannelType, name: 'Eventos', icon: Calendar, description: 'Zoom e encontros', minRank: 'soldado' },
   { id: 'financeiro' as ChannelType, name: 'Financeiro', icon: DollarSign, description: 'Mensalidades e pagamentos', minRank: 'aluno' },

@@ -142,6 +142,7 @@ A comprehensive web application built for the Comando Gólgota community - a mil
 - July 07, 2025. Added Financial Channel to community section: all members can now view payment status, available categories (donations, events, special offers), and manage contributions through dedicated financial panel
 - July 07, 2025. Removed all mock financial data and connected payment system to real database: admin panel now shows actual payment status, functional buttons for payment confirmation and reminders, integrated with Asaas payment system
 - July 07, 2025. Implemented Interactive Financial Health Dashboard: comprehensive real-time monitoring with health score calculation, collection rate tracking, member growth analysis, payment delay metrics, and strategic recommendations for organizational financial health
+- July 07, 2025. Implemented comprehensive categorized event management system: created TrainingsChannel, CampsChannel, and CampaignsChannel for different event types (Rally/CPLG/FEG for training, Acampamentos for camps, Campanhas/Doações for campaigns), updated database schema with new event categorization, enhanced EventManagement component with full event creation capabilities including payment integration, all events properly categorized and displayed in appropriate community channels
 
 ## User Preferences
 

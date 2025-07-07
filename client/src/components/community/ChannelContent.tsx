@@ -3,6 +3,7 @@ import { User, ChannelType } from '@/pages/Community';
 import GeneralChannel from './channels/GeneralChannel';
 import TrainingsChannel from './channels/TrainingsChannel';
 import CampsChannel from './channels/CampsChannel';
+import CampaignsChannel from './channels/CampaignsChannel';
 import TeachLearnChannel from './channels/TeachLearnChannel';
 import EventsChannel from './channels/EventsChannel';
 import FinancialChannel from './channels/FinancialChannel';
@@ -22,6 +23,8 @@ const ChannelContent = ({ user, channel }: ChannelContentProps) => {
       return <TrainingsChannel user={user} />;
     case 'acampamentos':
       return <CampsChannel user={user} />;
+    case 'campanhas':
+      return <CampaignsChannel user={user} />;
     case 'ensine-aprenda':
       return <TeachLearnChannel user={user} />;
     case 'eventos':
