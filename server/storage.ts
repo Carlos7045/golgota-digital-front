@@ -180,19 +180,54 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getChannelMessages(channel: string): Promise<any[]> {
-    // For now, return mock data - we would implement proper message storage later
-    return [];
+    try {
+      const messages = await db
+        .select({
+          id: content.id,
+          title: content.title,
+          body: content.body,
+          author_id: content.author_id,
+          created_at: content.created_at,
+          views: content.views,
+          interactions: content.interactions,
+          author_name: profiles.name,
+          author_rank: profiles.rank,
+        })
+        .from(content)
+        .leftJoin(profiles, eq(content.author_id, profiles.user_id))
+        .where(and(
+          eq(content.channel, channel),
+          eq(content.status, 'published')
+        ))
+        .orderBy(desc(content.created_at));
+      
+      return messages;
+    } catch (error) {
+      console.error('Error fetching channel messages:', error);
+      return [];
+    }
   }
 
-  async createMessage(userId: string, channel: string, content: string): Promise<any> {
-    // For now, return mock data - we would implement proper message storage later
-    return {
-      id: Date.now().toString(),
-      userId,
-      channel,
-      content,
-      createdAt: new Date().toISOString()
-    };
+  async createMessage(userId: string, channel: string, messageContent: string): Promise<any> {
+    try {
+      const [newMessage] = await db
+        .insert(content)
+        .values({
+          title: 'Mensagem no Canal Geral',
+          body: messageContent,
+          type: 'announcement',
+          channel: channel,
+          author_id: userId,
+          status: 'published',
+          published_at: new Date(),
+        })
+        .returning();
+      
+      return newMessage;
+    } catch (error) {
+      console.error('Error creating message:', error);
+      throw error;
+    }
   }
 }
 
