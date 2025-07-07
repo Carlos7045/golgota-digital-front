@@ -39,8 +39,8 @@ const CompanyManagement = () => {
   // Form states
   const [formData, setFormData] = useState({
     name: '',
-    commander_id: '',
-    sub_commander_id: '',
+    commander_id: 'none',
+    sub_commander_id: 'none',
     description: '',
     city: '',
     state: '',
@@ -112,7 +112,14 @@ const CompanyManagement = () => {
     }
 
     try {
-      await apiPost('/api/companies', formData);
+      const dataToSend = {
+        ...formData,
+        commander_id: formData.commander_id === 'none' ? null : formData.commander_id,
+        sub_commander_id: formData.sub_commander_id === 'none' ? null : formData.sub_commander_id,
+        status: 'Planejamento'
+      };
+
+      await apiPost('/api/companies', dataToSend);
 
       toast({
         title: "Sucesso",
@@ -262,8 +269,8 @@ const CompanyManagement = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      commander_id: '',
-      sub_commander_id: '',
+      commander_id: 'none',
+      sub_commander_id: 'none',
       description: '',
       city: '',
       state: '',
@@ -285,8 +292,8 @@ const CompanyManagement = () => {
     setEditingCompany(company);
     setFormData({
       name: company.name || '',
-      commander_id: company.commander_id || '',
-      sub_commander_id: company.sub_commander_id || '',
+      commander_id: company.commander_id || 'none',
+      sub_commander_id: company.sub_commander_id || 'none',
       description: company.description || '',
       city: company.city || '',
       state: company.state || '',
@@ -510,7 +517,7 @@ const CompanyManagement = () => {
                                 <SelectValue placeholder="Selecione o comandante" />
                               </SelectTrigger>
                               <SelectContent className="bg-military-black-light border-military-gold/20">
-                                <SelectItem value="" className="text-white hover:bg-military-gold/20">Sem comandante</SelectItem>
+                                <SelectItem value="none" className="text-white hover:bg-military-gold/20">Sem comandante</SelectItem>
                                 {commanders.map((commander) => (
                                   <SelectItem key={commander.user_id} value={commander.user_id} className="text-white hover:bg-military-gold/20">
                                     {commander.name} - {commander.rank}
@@ -527,7 +534,7 @@ const CompanyManagement = () => {
                                 <SelectValue placeholder="Selecione o subcomandante" />
                               </SelectTrigger>
                               <SelectContent className="bg-military-black-light border-military-gold/20">
-                                <SelectItem value="" className="text-white hover:bg-military-gold/20">Sem subcomandante</SelectItem>
+                                <SelectItem value="none" className="text-white hover:bg-military-gold/20">Sem subcomandante</SelectItem>
                                 {commanders
                                   .filter(c => c.user_id !== formData.commander_id)
                                   .map(commander => (
