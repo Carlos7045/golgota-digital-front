@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { apiGet, apiPost, apiDelete } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,15 +23,9 @@ interface Content {
   interactions: number;
 }
 
-const mockContent: Content[] = [
-  { id: '1', title: 'Rally Missionário 2025 - Inscrições Abertas', type: 'announcement', channel: 'geral', author: 'Admin', createdAt: '2024-12-20', status: 'published', views: 234, interactions: 45 },
-  { id: '2', title: 'Guia de Sobrevivência na Selva', type: 'training', channel: 'treinamentos', author: 'Sgt. Silva', createdAt: '2024-12-19', status: 'published', views: 189, interactions: 32 },
-  { id: '3', title: 'Cronograma do Acampamento de Julho', type: 'event', channel: 'acampamentos', author: 'Cap. Santos', createdAt: '2024-12-18', status: 'draft', views: 0, interactions: 0 },
-  { id: '4', title: 'Manual de Conduta - Atualizado', type: 'resource', channel: 'geral', author: 'Admin', createdAt: '2024-12-17', status: 'published', views: 156, interactions: 23 },
-];
-
 const ContentManagement = () => {
-  const [content, setContent] = useState<Content[]>(mockContent);
+  const [content, setContent] = useState<Content[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedTab, setSelectedTab] = useState('content');
   const [newContent, setNewContent] = useState({
     title: '',
@@ -40,7 +35,27 @@ const ContentManagement = () => {
   });
   const { toast } = useToast();
 
-  const handleCreateContent = () => {
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      // Since we don't have a content endpoint yet, we'll show empty state
+      setContent([]);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      toast({
+        title: "Erro ao carregar conteúdo",
+        description: "Não foi possível carregar o conteúdo.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCreateContent = async () => {
     if (!newContent.title || !newContent.content) {
       toast({
         title: "Erro",
@@ -140,52 +155,66 @@ const ContentManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {content.map((item) => (
-                      <TableRow key={item.id} className="border-gray-700">
-                        <TableCell className="text-white font-medium max-w-xs truncate">
-                          {item.title}
-                        </TableCell>
-                        <TableCell>
-                          <Badge className={`${getTypeColor(item.type)} text-white text-xs`}>
-                            {item.type}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-300">#{item.channel}</TableCell>
-                        <TableCell>
-                          <Badge className={`${getStatusColor(item.status)} text-white text-xs`}>
-                            {item.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-gray-300">{item.views}</TableCell>
-                        <TableCell className="text-gray-300">{item.interactions}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-blue-400 hover:bg-blue-600/20"
-                            >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              className="text-military-gold hover:bg-military-gold/20"
-                            >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => handleDeleteContent(item.id)}
-                              className="text-red-400 hover:bg-red-600/20"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-gray-400 py-8">
+                          Carregando conteúdo...
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : content.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-gray-400 py-8">
+                          Nenhum conteúdo encontrado. Crie o primeiro conteúdo para começar.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      content.map((item) => (
+                        <TableRow key={item.id} className="border-gray-700">
+                          <TableCell className="text-white font-medium max-w-xs truncate">
+                            {item.title}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`${getTypeColor(item.type)} text-white text-xs`}>
+                              {item.type}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-gray-300">#{item.channel}</TableCell>
+                          <TableCell>
+                            <Badge className={`${getStatusColor(item.status)} text-white text-xs`}>
+                              {item.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-gray-300">{item.views}</TableCell>
+                          <TableCell className="text-gray-300">{item.interactions}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-blue-400 hover:bg-blue-600/20"
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                className="text-military-gold hover:bg-military-gold/20"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => handleDeleteContent(item.id)}
+                                className="text-red-400 hover:bg-red-600/20"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>

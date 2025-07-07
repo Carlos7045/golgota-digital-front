@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { apiGet } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,34 +18,46 @@ import {
   Filter,
   Download
 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 const FinancialManagement = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<any>(null);
+  const { toast } = useToast();
 
-  // Mock data para demonstração
-  const financialSummary = {
-    totalRevenue: 2470,
-    monthlyFees: 2200,
-    otherIncome: 270,
-    pendingPayments: 150,
-    totalMembers: 247,
-    payingMembers: 232
+  useEffect(() => {
+    fetchFinancialData();
+  }, []);
+
+  const fetchFinancialData = async () => {
+    try {
+      const data = await apiGet('/api/stats');
+      setStats(data);
+    } catch (error) {
+      console.error('Error fetching financial data:', error);
+      toast({
+        title: "Erro ao carregar dados financeiros",
+        description: "Não foi possível carregar os dados financeiros.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const monthlyPayments = [
-    { id: '1', name: 'João Silva', rank: 'Soldado', company: 'Alpha', amount: 10, status: 'Pago', dueDate: '2025-01-05', paidDate: '2025-01-03' },
-    { id: '2', name: 'Maria Santos', rank: 'Cabo', company: 'Bravo', amount: 10, status: 'Pago', dueDate: '2025-01-05', paidDate: '2025-01-04' },
-    { id: '3', name: 'Pedro Costa', rank: 'Sargento', company: 'Charlie', amount: 10, status: 'Pendente', dueDate: '2025-01-05', paidDate: null },
-    { id: '4', name: 'Ana Oliveira', rank: 'Soldado', company: 'Alpha', amount: 10, status: 'Atrasado', dueDate: '2024-12-05', paidDate: null },
-    { id: '5', name: 'Carlos Lima', rank: 'Cabo', company: 'Delta', amount: 10, status: 'Pago', dueDate: '2025-01-05', paidDate: '2025-01-05' },
-  ];
+  // Real data based on current stats
+  const financialSummary = {
+    totalRevenue: 0, // No financial system implemented yet
+    monthlyFees: 0,
+    otherIncome: 0,
+    pendingPayments: 0,
+    totalMembers: stats?.totalMembers || 0,
+    payingMembers: 0
+  };
 
-  const otherTransactions = [
-    { id: '1', description: 'Venda de camisetas', amount: 150, type: 'Entrada', date: '2025-01-04', category: 'Merchandising' },
-    { id: '2', description: 'Doação anônima', amount: 50, type: 'Entrada', date: '2025-01-03', category: 'Doações' },
-    { id: '3', description: 'Taxa de inscrição Rally', amount: 70, type: 'Entrada', date: '2025-01-02', category: 'Eventos' },
-    { id: '4', description: 'Compra de materiais', amount: -80, type: 'Saída', date: '2025-01-01', category: 'Despesas' },
-  ];
+  const monthlyPayments: any[] = []; // No payment data yet
+  const otherTransactions: any[] = []; // No transaction data yet
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -186,28 +199,42 @@ const FinancialManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {monthlyPayments.map((payment) => (
-                      <TableRow key={payment.id} className="border-military-gold/20">
-                        <TableCell className="text-white font-medium">{payment.name}</TableCell>
-                        <TableCell className="text-gray-300">{payment.rank}</TableCell>
-                        <TableCell className="text-gray-300">{payment.company}</TableCell>
-                        <TableCell className="text-white">R$ {payment.amount}</TableCell>
-                        <TableCell className="text-gray-300">{payment.dueDate}</TableCell>
-                        <TableCell>{getStatusBadge(payment.status)}</TableCell>
-                        <TableCell>
-                          <div className="flex items-center space-x-2">
-                            <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
-                              Editar
-                            </Button>
-                            {payment.status !== 'Pago' && (
-                              <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
-                                Confirmar
-                              </Button>
-                            )}
-                          </div>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-gray-400 py-8">
+                          Carregando pagamentos...
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : monthlyPayments.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={7} className="text-center text-gray-400 py-8">
+                          Nenhum pagamento registrado. Sistema financeiro será implementado em breve.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      monthlyPayments.map((payment) => (
+                        <TableRow key={payment.id} className="border-military-gold/20">
+                          <TableCell className="text-white font-medium">{payment.name}</TableCell>
+                          <TableCell className="text-gray-300">{payment.rank}</TableCell>
+                          <TableCell className="text-gray-300">{payment.company}</TableCell>
+                          <TableCell className="text-white">R$ {payment.amount}</TableCell>
+                          <TableCell className="text-gray-300">{payment.dueDate}</TableCell>
+                          <TableCell>{getStatusBadge(payment.status)}</TableCell>
+                          <TableCell>
+                            <div className="flex items-center space-x-2">
+                              <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
+                                Editar
+                              </Button>
+                              {payment.status !== 'Pago' && (
+                                <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white">
+                                  Confirmar
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -238,22 +265,36 @@ const FinancialManagement = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {otherTransactions.map((transaction) => (
-                      <TableRow key={transaction.id} className="border-military-gold/20">
-                        <TableCell className="text-white font-medium">{transaction.description}</TableCell>
-                        <TableCell className={`font-medium ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          R$ {Math.abs(transaction.amount)}
-                        </TableCell>
-                        <TableCell>{getTransactionBadge(transaction.type)}</TableCell>
-                        <TableCell className="text-gray-300">{transaction.date}</TableCell>
-                        <TableCell className="text-gray-300">{transaction.category}</TableCell>
-                        <TableCell>
-                          <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
-                            Editar
-                          </Button>
+                    {loading ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                          Carregando transações...
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : otherTransactions.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={6} className="text-center text-gray-400 py-8">
+                          Nenhuma transação registrada. Sistema financeiro será implementado em breve.
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      otherTransactions.map((transaction) => (
+                        <TableRow key={transaction.id} className="border-military-gold/20">
+                          <TableCell className="text-white font-medium">{transaction.description}</TableCell>
+                          <TableCell className={`font-medium ${transaction.amount > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            R$ {Math.abs(transaction.amount)}
+                          </TableCell>
+                          <TableCell>{getTransactionBadge(transaction.type)}</TableCell>
+                          <TableCell className="text-gray-300">{transaction.date}</TableCell>
+                          <TableCell className="text-gray-300">{transaction.category}</TableCell>
+                          <TableCell>
+                            <Button size="sm" variant="ghost" className="text-military-gold hover:bg-military-gold/20">
+                              Editar
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
