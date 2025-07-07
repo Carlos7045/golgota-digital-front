@@ -116,9 +116,11 @@ export class DatabaseStorage implements IStorage {
         created_at: companies.created_at,
         updated_at: companies.updated_at,
         commander_name: profiles.name,
+        commander_rank: profiles.rank,
       })
       .from(companies)
-      .leftJoin(profiles, eq(companies.commander_id, profiles.user_id));
+      .leftJoin(users, eq(companies.commander_id, users.id))
+      .leftJoin(profiles, eq(users.id, profiles.user_id));
     
     return companiesList as Company[];
   }

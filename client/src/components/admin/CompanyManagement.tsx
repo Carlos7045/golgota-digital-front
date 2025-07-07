@@ -699,13 +699,13 @@ const CompanyManagement = () => {
                           <div>
                             <h3 className="font-bold text-white text-lg">CIA {company.name}</h3>
                             <p className="text-sm text-gray-400">
-                              {company.commander ? `Comandante: ${company.commander.name}` : 'Sem comandante'}
+                              {company.commander_name ? `Comandante: ${company.commander_name}` : 'Sem comandante'}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center space-x-4">
                           <div className="text-center">
-                            <p className="text-white font-bold">0</p>
+                            <p className="text-white font-bold">{company.members || 0}</p>
                             <p className="text-xs text-gray-400">membros</p>
                           </div>
                           {getStatusBadge(company.status)}
@@ -744,7 +744,17 @@ const CompanyManagement = () => {
             <Card className="bg-military-black-light border-military-gold/20">
               <CardHeader>
                 <CardTitle className="text-military-gold">
-                  {selectedCompany ? `CIA ${companies.find(c => c.id === selectedCompany)?.name}` : 'Selecione uma Companhia'}
+                  {selectedCompany ? (
+                    <div>
+                      <div>CIA {companies.find(c => c.id === selectedCompany)?.name}</div>
+                      <div className="text-sm text-gray-400 font-normal mt-1">
+                        {companies.find(c => c.id === selectedCompany)?.commander_name 
+                          ? `Comandante: ${companies.find(c => c.id === selectedCompany)?.commander_name}`
+                          : 'Sem comandante'
+                        }
+                      </div>
+                    </div>
+                  ) : 'Selecione uma Companhia'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
