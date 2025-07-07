@@ -11,10 +11,10 @@ import CommunityStats from '@/components/admin/CommunityStats';
 import ContentManagement from '@/components/admin/ContentManagement';
 import EventManagement from '@/components/admin/EventManagement';
 import FinancialManagement from '@/components/admin/FinancialManagement';
-import FinancialHealthDashboard from '@/components/admin/FinancialHealthDashboard';
+
 import CompanyManagement from '@/components/admin/CompanyManagement';
 
-export type AdminView = 'overview' | 'users' | 'stats' | 'content' | 'events' | 'financial' | 'financial-health' | 'companies';
+export type AdminView = 'overview' | 'users' | 'stats' | 'content' | 'events' | 'financial' | 'companies';
 
 interface AdminUser {
   id: string;
@@ -104,8 +104,7 @@ const AdminDashboard = () => {
         return <EventManagement />;
       case 'financial':
         return <FinancialManagement />;
-      case 'financial-health':
-        return <FinancialHealthDashboard />;
+
       case 'companies':
         return <CompanyManagement />;
       default:
