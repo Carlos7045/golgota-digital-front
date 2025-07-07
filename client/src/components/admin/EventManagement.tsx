@@ -51,6 +51,23 @@ const EventManagement = () => {
   
   const { toast } = useToast();
 
+  // Função para definir categoria automaticamente baseada no tipo
+  const getCategoryFromType = (type: Event['type']): Event['category'] => {
+    switch (type) {
+      case 'rally':
+      case 'cplg':
+      case 'feg':
+        return 'treinamento';
+      case 'acampamento':
+        return 'acampamento';
+      case 'campanha':
+      case 'doacao':
+        return 'campanha';
+      default:
+        return 'treinamento';
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
   }, []);
@@ -229,7 +246,11 @@ const EventManagement = () => {
                 </div>
                 <div>
                   <Label htmlFor="type" className="text-white">Tipo</Label>
-                  <Select value={newEvent.type} onValueChange={(value: Event['type']) => setNewEvent({...newEvent, type: value})}>
+                  <Select value={newEvent.type} onValueChange={(value: Event['type']) => setNewEvent({
+                    ...newEvent, 
+                    type: value,
+                    category: getCategoryFromType(value)
+                  })}>
                     <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
                       <SelectValue />
                     </SelectTrigger>
