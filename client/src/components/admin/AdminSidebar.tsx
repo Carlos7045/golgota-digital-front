@@ -7,6 +7,7 @@ import {
   Calendar,
   DollarSign,
   Building,
+  Activity,
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
@@ -29,6 +30,7 @@ const menuItems = [
   { id: 'content' as AdminView, label: 'Conteúdo', icon: FileText },
   { id: 'events' as AdminView, label: 'Eventos', icon: Calendar },
   { id: 'financial' as AdminView, label: 'Financeiro', icon: DollarSign },
+  { id: 'financial-health' as AdminView, label: 'Saúde Financeira', icon: Activity },
   { id: 'companies' as AdminView, label: 'Companhias', icon: Building },
 ];
 

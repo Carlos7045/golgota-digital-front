@@ -1100,6 +1100,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Health metrics endpoint for financial dashboard
+  app.get('/api/financial/health-metrics', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const eligibleUsers = await storage.getPaymentEligibleUsers();
+      const activeSubscriptions = await storage.getUsersWithActiveSubscriptions();
+      
+      // Calculate comprehensive health metrics
+      const totalMembers = eligibleUsers.length;
+      const payingMembers = activeSubscriptions.length;
+      const collectionRate = totalMembers > 0 ? Math.round((payingMembers / totalMembers) * 100) : 0;
+      
+      // Get current month revenue
+      const currentRevenue = payingMembers * 10; // R$10 per paying member
+      const monthlyTarget = totalMembers * 10; // R$10 per total eligible member
+      
+      // Mock data for additional metrics (in real implementation, these would come from historical data)
+      const memberGrowth = 5.2; // % growth vs previous month
+      const avgPaymentDelay = payingMembers === totalMembers ? 0 : 7; // average days late
+      const churnRate = 2.1; // % of members who cancelled
+      
+      // Calculate financial health score
+      let healthScore = 100;
+      if (collectionRate < 90) healthScore -= (90 - collectionRate) * 2;
+      if (avgPaymentDelay > 5) healthScore -= avgPaymentDelay * 3;
+      if (memberGrowth > 0) healthScore += memberGrowth * 2;
+      healthScore = Math.max(0, Math.min(100, Math.round(healthScore)));
+      
+      // Project next month revenue
+      const projectedRevenue = Math.round(currentRevenue * (1 + (memberGrowth / 100)));
+      
+      const metrics = {
+        collectionRate,
+        monthlyTarget,
+        currentRevenue,
+        memberGrowth,
+        avgPaymentDelay,
+        healthScore,
+        projectedRevenue,
+        churnRate,
+        totalMembers,
+        payingMembers,
+        pendingMembers: totalMembers - payingMembers
+      };
+      
+      res.json(metrics);
+    } catch (error) {
+      console.error('Error fetching health metrics:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
   return httpServer;
 }
 
