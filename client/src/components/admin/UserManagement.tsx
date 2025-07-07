@@ -31,6 +31,9 @@ interface CommunityUser {
   city?: string;
   cpglYear?: number;
   cpglMonth?: number;
+  phone?: string;
+  address?: string;
+  birthDate?: string;
 }
 
 const addUserSchema = z.object({
@@ -137,7 +140,10 @@ const UserManagement = () => {
         cpglRegister: profile.cpf || '',
         city: profile.city || '',
         cpglYear: profile.birth_date ? new Date(profile.birth_date).getFullYear() : undefined,
-        cpglMonth: profile.birth_date ? new Date(profile.birth_date).getMonth() + 1 : undefined
+        cpglMonth: profile.birth_date ? new Date(profile.birth_date).getMonth() + 1 : undefined,
+        phone: profile.phone || '',
+        address: profile.address || '',
+        birthDate: profile.birth_date || '',
       }));
       setUsers(mappedUsers);
     } catch (error) {
