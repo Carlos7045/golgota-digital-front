@@ -183,7 +183,7 @@ const EventManagement = () => {
       console.error('Error updating event status:', error);
       toast({
         title: "Erro",
-        description: "Erro ao atualizar status do evento",
+        description: error instanceof Error ? error.message : "Erro ao atualizar status do evento",
         variant: "destructive"
       });
     }

@@ -704,11 +704,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.put('/api/events/:id/status', requireAuth, async (req: Request, res: Response) => {
     try {
       const { status } = req.body;
+      
+      if (!status) {
+        return res.status(400).json({ message: 'Status is required' });
+      }
+      
       const event = await storage.updateEvent(req.params.id, { status });
       res.json({ event });
     } catch (error) {
       console.error('Event status update error:', error);
-      res.status(500).json({ message: 'Internal server error' });
+      res.status(500).json({ message: error instanceof Error ? error.message : 'Internal server error' });
     }
   });
 
