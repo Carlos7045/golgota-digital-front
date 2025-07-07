@@ -46,13 +46,30 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  const fetchMessages = async () => {
+    try {
+      setLoading(true);
+      const data = await apiGet('/api/messages/general');
+      setMessages(data.messages || []);
+    } catch (error) {
+      console.error('Error fetching messages:', error);
+      toast({
+        title: "Erro ao carregar mensagens",
+        description: "Não foi possível carregar as mensagens.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Auto-refresh messages every 30 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      refetch();
+      fetchMessages();
     }, 30000);
     return () => clearInterval(interval);
-  }, [refetch]);
+  }, []);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
@@ -86,26 +103,10 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     }
   };
 
-  const fetchMessages = async () => {
-    try {
-      const data = await apiGet('/api/messages/geral');
-      setMessages(data.messages || []);
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      toast({
-        title: "Erro ao carregar mensagens",
-        description: "Não foi possível carregar as mensagens.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSendMessage = async () => {
     if (newMessage.trim()) {
       try {
-        await apiPost('/api/messages/geral', { content: newMessage });
+        await apiPost('/api/messages/general', { content: newMessage });
         setNewMessage('');
         await fetchMessages();
         
