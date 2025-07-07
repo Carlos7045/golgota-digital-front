@@ -46,6 +46,7 @@ const FinancialManagement = () => {
     paymentRate: 0
   });
   const [expenseCategories, setExpenseCategories] = useState<any[]>([]);
+  const [healthMetrics, setHealthMetrics] = useState<any>(null);
   const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
   const { toast } = useToast();
   
@@ -73,10 +74,11 @@ const FinancialManagement = () => {
 
   const fetchFinancialData = async () => {
     try {
-      const [summaryData, paymentsData, transactionsData] = await Promise.all([
+      const [summaryData, paymentsData, transactionsData, healthData] = await Promise.all([
         apiGet('/api/financial/summary'),
         apiGet('/api/financial/payments'),
-        apiGet('/api/financial/transactions')
+        apiGet('/api/financial/transactions'),
+        apiGet('/api/financial/health-metrics')
       ]);
       
       setStats({
@@ -110,6 +112,7 @@ const FinancialManagement = () => {
 
       setMonthlyPayments(payments);
       setOtherTransactions(transactions);
+      setHealthMetrics(healthData);
     } catch (error) {
       console.error('Error fetching financial data:', error);
       toast({
@@ -286,12 +289,15 @@ const FinancialManagement = () => {
 
         {/* Financial Management Tabs */}
         <Tabs defaultValue="monthly-fees" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-military-black-light">
+          <TabsList className="grid w-full grid-cols-4 bg-military-black-light">
             <TabsTrigger value="monthly-fees" className="text-white data-[state=active]:bg-military-gold data-[state=active]:text-black">
               Mensalidades
             </TabsTrigger>
             <TabsTrigger value="transactions" className="text-white data-[state=active]:bg-military-gold data-[state=active]:text-black">
               Outras Transações
+            </TabsTrigger>
+            <TabsTrigger value="health" className="text-white data-[state=active]:bg-military-gold data-[state=active]:text-black">
+              Saúde Financeira
             </TabsTrigger>
             <TabsTrigger value="reports" className="text-white data-[state=active]:bg-military-gold data-[state=active]:text-black">
               Relatórios
@@ -574,6 +580,246 @@ const FinancialManagement = () => {
                 </Table>
               </CardContent>
             </Card>
+          </TabsContent>
+
+          <TabsContent value="health">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Health Score Card */}
+              <Card className="bg-military-black-light border-military-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-military-gold">Score de Saúde Financeira</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {healthMetrics ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center">
+                        <div className="relative w-32 h-32">
+                          <div className="absolute inset-0 rounded-full bg-military-black">
+                            <div 
+                              className="absolute inset-0 rounded-full border-8 border-military-gold"
+                              style={{
+                                background: `conic-gradient(#D4AF37 0deg ${(healthMetrics.healthScore * 3.6)}deg, transparent ${(healthMetrics.healthScore * 3.6)}deg 360deg)`
+                              }}
+                            ></div>
+                          </div>
+                          <div className="absolute inset-0 flex items-center justify-center">
+                            <div className="text-center">
+                              <div className="text-2xl font-bold text-white">{healthMetrics.healthScore}</div>
+                              <div className="text-sm text-gray-400">pontos</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400">Status:</span>
+                          <span className={`font-medium ${
+                            healthMetrics.healthScore >= 80 ? 'text-green-400' :
+                            healthMetrics.healthScore >= 60 ? 'text-yellow-400' : 'text-red-400'
+                          }`}>
+                            {healthMetrics.healthScore >= 80 ? 'Excelente' :
+                             healthMetrics.healthScore >= 60 ? 'Bom' : 'Precisa Atenção'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400">Fluxo de Caixa:</span>
+                          <span className={`font-medium ${healthMetrics.cashFlow === 'positive' ? 'text-green-400' : 'text-red-400'}`}>
+                            {healthMetrics.cashFlow === 'positive' ? 'Positivo' : 'Negativo'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
+                          <span className="text-gray-400">Status Orçamentário:</span>
+                          <span className={`font-medium ${
+                            healthMetrics.budgetStatus === 'healthy' ? 'text-green-400' :
+                            healthMetrics.budgetStatus === 'warning' ? 'text-yellow-400' : 'text-red-400'
+                          }`}>
+                            {healthMetrics.budgetStatus === 'healthy' ? 'Saudável' :
+                             healthMetrics.budgetStatus === 'warning' ? 'Atenção' : 'Crítico'}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 py-8">
+                      Carregando métricas de saúde...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Financial Metrics */}
+              <Card className="bg-military-black-light border-military-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-military-gold">Métricas Financeiras</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {healthMetrics ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-military-black rounded-lg">
+                          <div className="text-green-400 text-xl font-bold">R$ {healthMetrics.totalIncome}</div>
+                          <div className="text-xs text-gray-400">Receitas Totais</div>
+                        </div>
+                        <div className="text-center p-3 bg-military-black rounded-lg">
+                          <div className="text-red-400 text-xl font-bold">R$ {healthMetrics.totalExpenses}</div>
+                          <div className="text-xs text-gray-400">Despesas Totais</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-center p-4 bg-military-black rounded-lg border border-military-gold/20">
+                        <div className="text-military-gold text-2xl font-bold">R$ {healthMetrics.netBalance}</div>
+                        <div className="text-sm text-gray-400">Saldo Líquido</div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-sm">Taxa de Cobrança</span>
+                          <span className="text-white font-medium">{healthMetrics.collectionRate}%</span>
+                        </div>
+                        <div className="w-full bg-military-black rounded-full h-2">
+                          <div 
+                            className="bg-military-gold h-2 rounded-full transition-all duration-300"
+                            style={{ width: `${healthMetrics.collectionRate}%` }}
+                          ></div>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-sm">Proporção de Gastos</span>
+                          <span className="text-white font-medium">{healthMetrics.expenseRatio}%</span>
+                        </div>
+                        <div className="w-full bg-military-black rounded-full h-2">
+                          <div 
+                            className={`h-2 rounded-full transition-all duration-300 ${
+                              healthMetrics.expenseRatio > 80 ? 'bg-red-400' :
+                              healthMetrics.expenseRatio > 60 ? 'bg-yellow-400' : 'bg-green-400'
+                            }`}
+                            style={{ width: `${Math.min(healthMetrics.expenseRatio, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 py-8">
+                      Carregando métricas...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Activity Metrics */}
+              <Card className="bg-military-black-light border-military-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-military-gold">Atividade Financeira</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {healthMetrics ? (
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-3 bg-military-black rounded-lg">
+                          <div className="text-military-gold text-xl font-bold">{healthMetrics.transactionCount}</div>
+                          <div className="text-xs text-gray-400">Transações</div>
+                        </div>
+                        <div className="text-center p-3 bg-military-black rounded-lg">
+                          <div className="text-military-gold text-xl font-bold">R$ {healthMetrics.avgTransactionAmount}</div>
+                          <div className="text-xs text-gray-400">Valor Médio</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-sm">Nível de Atividade</span>
+                          <span className={`font-medium ${
+                            healthMetrics.activityLevel === 'high' ? 'text-green-400' :
+                            healthMetrics.activityLevel === 'medium' ? 'text-yellow-400' : 'text-red-400'
+                          }`}>
+                            {healthMetrics.activityLevel === 'high' ? 'Alto' :
+                             healthMetrics.activityLevel === 'medium' ? 'Médio' : 'Baixo'}
+                          </span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-sm">Membros Ativos</span>
+                          <span className="text-white font-medium">{healthMetrics.payingMembers}/{healthMetrics.totalMembers}</span>
+                        </div>
+                        
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-400 text-sm">Crescimento Estimado</span>
+                          <span className={`font-medium ${healthMetrics.memberGrowth > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                            {healthMetrics.memberGrowth > 0 ? '+' : ''}{healthMetrics.memberGrowth.toFixed(1)}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 py-8">
+                      Carregando atividade...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Recommendations */}
+              <Card className="bg-military-black-light border-military-gold/20">
+                <CardHeader>
+                  <CardTitle className="text-military-gold">Recomendações Estratégicas</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {healthMetrics ? (
+                    <div className="space-y-3">
+                      {healthMetrics.healthScore < 70 && (
+                        <div className="p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                          <div className="text-red-400 font-medium text-sm">⚠️ Atenção Necessária</div>
+                          <div className="text-gray-300 text-xs mt-1">
+                            O score de saúde financeira está baixo. Revise despesas e melhore a cobrança.
+                          </div>
+                        </div>
+                      )}
+                      
+                      {healthMetrics.expenseRatio > 70 && (
+                        <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg">
+                          <div className="text-yellow-400 font-medium text-sm">💡 Otimização de Gastos</div>
+                          <div className="text-gray-300 text-xs mt-1">
+                            Proporção de gastos alta ({healthMetrics.expenseRatio}%). Considere revisar despesas.
+                          </div>
+                        </div>
+                      )}
+                      
+                      {healthMetrics.collectionRate < 80 && (
+                        <div className="p-3 bg-orange-900/20 border border-orange-500/30 rounded-lg">
+                          <div className="text-orange-400 font-medium text-sm">📈 Melhoria na Cobrança</div>
+                          <div className="text-gray-300 text-xs mt-1">
+                            Taxa de cobrança em {healthMetrics.collectionRate}%. Intensifique ações de cobrança.
+                          </div>
+                        </div>
+                      )}
+                      
+                      {healthMetrics.netBalance > 0 && healthMetrics.healthScore >= 80 && (
+                        <div className="p-3 bg-green-900/20 border border-green-500/30 rounded-lg">
+                          <div className="text-green-400 font-medium text-sm">✅ Situação Saudável</div>
+                          <div className="text-gray-300 text-xs mt-1">
+                            Excelente gestão financeira! Continue monitorando as métricas.
+                          </div>
+                        </div>
+                      )}
+                      
+                      {healthMetrics.transactionCount < 5 && (
+                        <div className="p-3 bg-blue-900/20 border border-blue-500/30 rounded-lg">
+                          <div className="text-blue-400 font-medium text-sm">📊 Aumentar Atividade</div>
+                          <div className="text-gray-300 text-xs mt-1">
+                            Baixa atividade financeira. Promova mais eventos e atividades.
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-center text-gray-400 py-8">
+                      Carregando recomendações...
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           <TabsContent value="reports">
