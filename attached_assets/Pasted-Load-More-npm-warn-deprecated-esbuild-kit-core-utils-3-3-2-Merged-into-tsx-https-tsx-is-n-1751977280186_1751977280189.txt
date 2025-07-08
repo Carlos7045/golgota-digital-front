@@ -1,0 +1,83 @@
+Load More
+
+npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+
+npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+
+
+added 163 packages, and audited 164 packages in 13s
+
+
+21 packages are looking for funding
+
+  run `npm fund` for details
+
+
+4 moderate severity vulnerabilities
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+[stage-0  6/10] RUN --mount=type=cache,id=s/70cef9b4-d91c-4ae2-ae7d-b370cc701363-/root/npm,target=/root/.npm npm i  ✔ 13s
+
+[stage-0  7/10] COPY . /app/.
+
+[stage-0  7/10] COPY . /app/.  ✔ 55ms
+
+[stage-0  8/10] RUN --mount=type=cache,id=s/70cef9b4-d91c-4ae2-ae7d-b370cc701363-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+npm warn config production Use `--omit=dev` instead.
+
+
+> comando-golgota-backend@1.0.0 build
+> esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+
+✘ [ERROR] Could not resolve "./routes"
+
+    server/index.ts:3:31:
+      3 │ import { registerRoutes } from "./routes";
+        ╵                                ~~~~~~~~~~
+
+✘ [ERROR] Could not resolve "./asaas"
+
+    server/index.ts:4:39:
+      4 │ import { configureAsaasCheckout } from "./asaas";
+        ╵                                        ~~~~~~~~~
+
+✘ [ERROR] Could not resolve "./vite"
+
+    server/index.ts:5:44:
+      5 │ import { setupVite, serveStatic, log } from "./vite";
+        ╵                                             ~~~~~~~~
+
+
+3 errors
+
+✕ [stage-0  8/10] RUN --mount=type=cache,id=s/70cef9b4-d91c-4ae2-ae7d-b370cc701363-node_modules/cache,target=/app/node_modules/.cache npm run build 
+process "/bin/bash -ol pipefail -c npm run build" did not complete successfully: exit code: 1
+ 
+
+Dockerfile:24
+
+-------------------
+
+22 |     # build phase
+
+23 |     COPY . /app/.
+
+24 | >>> RUN --mount=type=cache,id=s/70cef9b4-d91c-4ae2-ae7d-b370cc701363-node_modules/cache,target=/app/node_modules/.cache npm run build
+
+25 |
+
+26 |
+
+-------------------
+
+ERROR: failed to build: failed to solve: process "/bin/bash -ol pipefail -c npm run build" did not complete successfully: exit code: 1
+
+Error: Docker build failed
+
+Load More
