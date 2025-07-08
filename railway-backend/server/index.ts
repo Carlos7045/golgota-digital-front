@@ -72,17 +72,24 @@ app.use((req, res, next) => {
 // Static file serving for uploads
 app.use('/uploads', express.static('/tmp/uploads'));
 
-// Initialize Asaas configuration
+// Initialize Asaas configuration (non-blocking)
 if (process.env.ASAAS_API_KEY) {
-  configureAsaasCheckout().catch(error => {
-    console.error('Failed to configure Asaas checkout:', error);
-  });
+  setTimeout(() => {
+    configureAsaasCheckout().catch(error => {
+      console.warn('Asaas checkout configuration skipped:', error.message);
+    });
+  }, 2000);
 } else {
-  console.warn('ASAAS_API_KEY not configured - payment features will not work');
+  console.log('💳 ASAAS_API_KEY not configured - payment features disabled');
 }
 
-// Health check endpoint
+// Health check endpoint - DEVE ser simples e rápido
 app.get('/health', (req: Request, res: Response) => {
+  res.status(200).json({ status: 'ok' });
+});
+
+// Health check mais detalhado (opcional)
+app.get('/health/detailed', (req: Request, res: Response) => {
   res.json({ 
     status: 'ok', 
     timestamp: new Date().toISOString(),
@@ -124,12 +131,17 @@ app.get('/', (req: Request, res: Response) => {
 registerRoutes(app).then(server => {
   console.log(`🚀 Comando Gólgota Backend running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+  console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
   console.log(`💾 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
   console.log(`💳 Payments: ${process.env.ASAAS_API_KEY ? 'Enabled' : 'Disabled'}`);
-  console.log(`🔌 WebSocket: ws://localhost:${PORT}/ws`);
+  console.log(`🔌 WebSocket: ws://0.0.0.0:${PORT}/ws`);
+  
+  // Test health endpoint
+  setTimeout(() => {
+    console.log('✅ Server startup complete - health check ready');
+  }, 1000);
 }).catch(error => {
-  console.error('Failed to start server:', error);
+  console.error('❌ Failed to start server:', error);
   process.exit(1);
 });
 

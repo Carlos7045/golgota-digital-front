@@ -48,7 +48,9 @@ const upload = multer({
 });
 
 export async function registerRoutes(app: express.Application): Promise<Server> {
-  const httpServer = app.listen(process.env.PORT || 3000, "0.0.0.0");
+  const httpServer = app.listen(process.env.PORT || 3000, "0.0.0.0", () => {
+    console.log(`✅ HTTP server listening on port ${process.env.PORT || 3000}`);
+  });
 
   // WebSocket Server
   const wss = new WebSocketServer({ server: httpServer, path: '/ws' });
