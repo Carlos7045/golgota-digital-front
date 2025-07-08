@@ -9,12 +9,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Configure session middleware
+if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('SESSION_SECRET environment variable is required in production');
+}
+
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'golgota-secret-key-development',
+  secret: process.env.SESSION_SECRET || 'golgota-development-secret-key-2025',
   resave: false,
   saveUninitialized: false,
   cookie: { 
-    secure: false, // Set to true in production with HTTPS
+    secure: process.env.NODE_ENV === 'production', // Use HTTPS in production
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000 // 24 hours
   }
@@ -85,12 +89,10 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use PORT from environment variable (Railway) or fallback to 5000 (Replit)
+  const port = process.env.PORT || 5000;
   server.listen({
-    port,
+    port: parseInt(port.toString()),
     host: "0.0.0.0",
     reusePort: true,
   }, () => {

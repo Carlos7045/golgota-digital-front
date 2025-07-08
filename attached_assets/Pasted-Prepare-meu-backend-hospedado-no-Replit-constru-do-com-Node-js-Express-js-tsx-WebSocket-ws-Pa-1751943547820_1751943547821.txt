@@ -1,0 +1,49 @@
+Prepare meu backend hospedado no Replit, construído com Node.js, Express.js, tsx, WebSocket (ws), Passport.js, Express Session e Multer, para migração para o Railway.app, conectando ao mesmo banco de dados Neon. Siga estas etapas detalhadas:
+
+Verificação do Código:
+Confirme que o backend está funcionando corretamente no Replit, com todas as rotas, autenticação e WebSocket operacionais.
+Verifique se o servidor Express está configurado para ouvir em 0.0.0.0 e usa a variável de ambiente PORT fornecida pelo ambiente. Exemplo:
+javascript
+
+
+
+
+import express from 'express';
+const app = express();
+const port = process.env.PORT || 3000;
+app.listen(port, '0.0.0.0', () => {
+  console.log(`Server running on port ${port}`);
+});
+Se estiver usando tsx para executar TypeScript, certifique-se de que o comando de inicialização compila e executa corretamente. Exemplo no package.json:
+json
+
+
+
+"scripts": {
+  "start": "tsx src/index.ts",
+  "build": "tsc"
+}
+Confirme que o WebSocket (usando ws) está configurado para usar a mesma porta ou uma porta específica definida por variável de ambiente.
+Verifique se o Passport.js e Express Session estão funcionando, com sessões armazenadas adequadamente (ex.: em memória ou em um banco como Neon, se configurado).
+Teste o upload de arquivos com Multer para garantir que o armazenamento (ex.: disco ou serviço externo) está correto.
+Configuração do Banco de Dados Neon:
+Verifique que o backend se conecta ao banco Neon usando a variável de ambiente DATABASE_URL. Exemplo com pg para PostgreSQL:
+javascript
+
+
+
+
+import { Pool } from 'pg';
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
+Se estiver usando um ORM (como Prisma ou Sequelize), confirme que a configuração lê process.env.DATABASE_URL.
+Teste a conexão com o Neon executando queries simples para garantir que está funcionando.
+Gerenciamento de Variáveis de Ambiente:
+Liste todas as variáveis de ambiente usadas pelo backend, como:
+DATABASE_URL: String de conexão do Neon.
+SESSION_SECRET: Chave secreta para Express Session.
+Outras chaves para Passport.js (ex.: OAuth) ou serviços externos (ex.: armazenamento para Multer).
+Salve essas variáveis em um arquivo temporário (não versionado) para configurá-las no Railway posteriormente.
+Certifique-se de que o arquivo .env está presente no Replit, mas não será enviado ao GitHub.

@@ -1,5 +1,6 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer, WebSocket } from "ws";
 import { storage } from "./storage";
 import bcrypt from "bcryptjs";
 import { insertUserSchema, users, profiles, companies, company_members, events, event_registrations, generalMessages as messages } from "@shared/schema";
@@ -10,6 +11,7 @@ import { asaasService, AsaasService } from "./asaas";
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
+import os from 'os';
 
 // Extend the Express Request type to include user
 declare global {
@@ -21,7 +23,11 @@ declare global {
 }
 
 // Configure multer for avatar uploads
-const uploadDir = path.join(process.cwd(), 'public', 'avatars');
+// Use temp directory for Railway compatibility
+const uploadDir = process.env.NODE_ENV === 'production' 
+  ? path.join(os.tmpdir(), 'avatars')
+  : path.join(process.cwd(), 'public', 'avatars');
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -70,6 +76,82 @@ async function requireAuth(req: Request, res: Response, next: any) {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  const httpServer = createServer(app);
+  
+  // Health check endpoint for Railway
+  app.get('/health', (req: Request, res: Response) => {
+    res.status(200).json({ 
+      status: 'healthy', 
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime()
+    });
+  });
+
+  // Configure WebSocket server on the same HTTP server but on a distinct path
+  const wss = new WebSocketServer({ 
+    server: httpServer, 
+    path: '/ws'
+  });
+
+  // WebSocket connection handling
+  wss.on('connection', (ws: WebSocket, req) => {
+    console.log('New WebSocket connection established');
+    
+    ws.on('message', async (data: Buffer) => {
+      try {
+        const message = JSON.parse(data.toString());
+        
+        // Handle different message types
+        switch (message.type) {
+          case 'chat_message':
+            // Broadcast message to all connected clients
+            const broadcastMessage = {
+              type: 'chat_message',
+              channel: message.channel,
+              content: message.content,
+              user: message.user,
+              timestamp: new Date().toISOString()
+            };
+            
+            // Broadcast to all connected clients
+            wss.clients.forEach((client) => {
+              if (client.readyState === WebSocket.OPEN) {
+                client.send(JSON.stringify(broadcastMessage));
+              }
+            });
+            break;
+            
+          case 'user_online':
+            // Handle user online status
+            console.log('User came online:', message.user);
+            break;
+            
+          default:
+            console.log('Unknown message type:', message.type);
+        }
+      } catch (error) {
+        console.error('WebSocket message error:', error);
+        ws.send(JSON.stringify({ 
+          type: 'error', 
+          message: 'Invalid message format' 
+        }));
+      }
+    });
+
+    ws.on('close', () => {
+      console.log('WebSocket connection closed');
+    });
+
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+    });
+
+    // Send welcome message
+    ws.send(JSON.stringify({
+      type: 'welcome',
+      message: 'Connected to Comando Gólgota WebSocket'
+    }));
+  });
   // Auth routes
   app.post('/api/auth/register', async (req: Request, res: Response) => {
     try {
@@ -1133,7 +1215,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  const httpServer = createServer(app);
   // Financial routes - using direct queries for now
   app.get('/api/financial/summary', requireAuth, async (req: Request, res: Response) => {
     try {
