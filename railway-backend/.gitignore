@@ -1,0 +1,16 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.production
+*.log
+npm-debug.log*
+.DS_Store
+thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+tmp/
+temp/
+uploads/
