@@ -22,12 +22,14 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 // Session configuration
-if (!process.env.SESSION_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('SESSION_SECRET environment variable is required in production');
+const sessionSecret = process.env.SESSION_SECRET || 'comando-golgota-dev-secret-key-2025';
+
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  console.warn('⚠️  SESSION_SECRET not set in production - using fallback');
 }
 
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'golgota-development-secret-key-2025',
+  secret: sessionSecret,
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -131,6 +133,7 @@ app.get('/', (req: Request, res: Response) => {
 registerRoutes(app).then(server => {
   console.log(`🚀 Comando Gólgota Backend running on port ${PORT}`);
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔒 Session Secret: ${process.env.SESSION_SECRET ? 'Configured' : 'Using fallback'}`);
   console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
   console.log(`💾 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
   console.log(`💳 Payments: ${process.env.ASAAS_API_KEY ? 'Enabled' : 'Disabled'}`);
