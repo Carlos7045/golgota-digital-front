@@ -46,10 +46,11 @@ try {
     console.log(`📸 Copiados ${avatars.length} avatares`);
   }
 
-  // 6. Copiar arquivo de schema
+  // 6. Copiar arquivos de schema e shared
   console.log('📋 Copiando arquivos de schema...');
   if (fs.existsSync('shared/schema.ts')) {
     fs.copyFileSync('shared/schema.ts', 'dist/schema.ts');
+    fs.copyFileSync('shared/schema.ts', 'shared/schema.js');
   }
 
   console.log('✅ Build concluído com sucesso!');

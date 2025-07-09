@@ -4,8 +4,10 @@ import passport from 'passport';
 import cors from 'cors';
 import { Strategy as LocalStrategy } from 'passport-local';
 import bcrypt from 'bcryptjs';
+import { VercelStorage } from './db-vercel.js';
 
 const app = express();
+const storage = new VercelStorage();
 
 // CORS específico para comandogolgota.com.br
 app.use(cors({
@@ -42,23 +44,34 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Estratégia de login simplificada para teste
+// Estratégia de login com banco real
 passport.use(new LocalStrategy({
   usernameField: 'emailOrCpf',
   passwordField: 'password'
 }, async (emailOrCpf, password, done) => {
   try {
-    // Login de teste para admin
-    if (emailOrCpf === 'chpsalgado@hotmail.com' && password === '123456') {
-      return done(null, { 
-        id: 1, 
-        name: 'Carlos Henrique', 
-        email: 'chpsalgado@hotmail.com',
-        rank: 'admin'
-      });
+    let user = await storage.getUserByEmail(emailOrCpf);
+    
+    if (!user) {
+      const users = await storage.getUsersByRank();
+      const profileWithCpf = users.find(u => u.cpf === emailOrCpf.replace(/\D/g, ''));
+      if (profileWithCpf) {
+        user = await storage.getUser(profileWithCpf.user_id);
+      }
     }
-    return done(null, false, { message: 'Credenciais inválidas' });
+    
+    if (!user) {
+      return done(null, false, { message: 'CPF/Email ou senha inválidos' });
+    }
+    
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return done(null, false, { message: 'CPF/Email ou senha inválidos' });
+    }
+    
+    return done(null, user);
   } catch (error) {
+    console.error('Login error:', error);
     return done(error);
   }
 }));
@@ -69,12 +82,7 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
-    const user = { 
-      id: 1, 
-      name: 'Carlos Henrique', 
-      email: 'chpsalgado@hotmail.com',
-      rank: 'admin'
-    };
+    const user = await storage.getUser(id);
     done(null, user);
   } catch (error) {
     done(error);
@@ -108,13 +116,20 @@ app.post('/api/auth/login', (req, res, next) => {
   })(req, res, next);
 });
 
-app.get('/api/profile', requireAuth, (req, res) => {
-  res.json({
-    id: req.user.id,
-    name: req.user.name,
-    email: req.user.email,
-    rank: req.user.rank
-  });
+app.get('/api/profile', requireAuth, async (req, res) => {
+  try {
+    const profile = await storage.getUserProfile(req.user.id);
+    res.json({
+      id: req.user.id,
+      name: profile?.name || 'Usuário',
+      email: req.user.email,
+      rank: profile?.rank || 'membro',
+      profile: profile
+    });
+  } catch (error) {
+    console.error('Profile error:', error);
+    res.status(500).json({ error: 'Erro ao buscar perfil' });
+  }
 });
 
 app.post('/api/auth/logout', (req, res) => {
