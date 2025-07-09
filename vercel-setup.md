@@ -7,16 +7,11 @@
 - Faça login com GitHub/GitLab/Bitbucket
 
 ### 2. Banco de Dados PostgreSQL
-- **Opção 1 - Neon (Recomendado)**
-  - Acesse: https://neon.tech
-  - Crie uma conta gratuita
-  - Crie um novo projeto
-  - Copie a `DATABASE_URL`
-
-- **Opção 2 - Supabase**
-  - Acesse: https://supabase.com
-  - Crie projeto PostgreSQL
-  - Copie a connection string
+- **✅ BANCO JÁ CONFIGURADO** 
+  - Usaremos o mesmo banco do Replit para sincronização
+  - DATABASE_URL já está configurada no .env.example
+  - Todos os dados e tabelas já existem
+  - Não precisa criar novo banco
 
 ### 3. API Keys Necessárias
 - **Asaas Payment Gateway**
@@ -39,11 +34,11 @@ git push -u origin main
 No painel da Vercel, adicione essas variáveis:
 
 ```env
-# Database
-DATABASE_URL=postgresql://user:password@hostname:port/database
+# Database - Mesmo banco do Replit para sincronização
+DATABASE_URL=postgresql://neondb_owner:npg_DuS0iyRwtF7Z@ep-sparkling-snowflake-ae3u4svw.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
 
 # Session Security
-SESSION_SECRET=sua-chave-secreta-super-forte-aqui
+SESSION_SECRET=comando-golgota-super-secret-key-2024-production
 
 # Asaas Payment
 ASAAS_API_KEY=sua-chave-api-asaas-aqui
@@ -71,10 +66,11 @@ NODE_ENV=production
 3. Salve as configurações
 
 ### 3. Configurar Database Schema
-Após o primeiro deploy, execute:
-```bash
-npm run db:push
-```
+**✅ NÃO NECESSÁRIO** - O banco já está configurado com todas as tabelas e dados:
+- Usuários e perfis existentes
+- Eventos e pagamentos configurados  
+- Mensagens e avatares prontos
+- Sistema totalmente funcional
 
 ### 4. Deploy Automático
 - Cada push para `main` fará deploy automático

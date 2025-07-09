@@ -26,10 +26,10 @@
 - [ ] Repositório público ou privado conectado
 
 ### 2. Banco de Dados Produção
-- [ ] Conta Neon/Supabase criada
-- [ ] Database PostgreSQL criado
-- [ ] `DATABASE_URL` obtida
-- [ ] Conexão testada
+- [x] ✅ Banco já configurado (mesmo do Replit)
+- [x] ✅ Database PostgreSQL ativo
+- [x] ✅ `DATABASE_URL` configurada
+- [x] ✅ Conexão testada e funcionando
 
 ### 3. API Keys
 - [ ] Conta Asaas criada

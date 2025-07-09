@@ -31,8 +31,8 @@ Install Command: npm install
 
 ### Variáveis de Ambiente
 ```env
-DATABASE_URL=postgresql://user:password@host:port/db
-SESSION_SECRET=sua-chave-secreta-32-caracteres
+DATABASE_URL=postgresql://neondb_owner:npg_DuS0iyRwtF7Z@ep-sparkling-snowflake-ae3u4svw.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
+SESSION_SECRET=comando-golgota-super-secret-key-2024-production
 ASAAS_API_KEY=sua-chave-asaas
 ASAAS_SANDBOX=false
 NODE_ENV=production
@@ -78,9 +78,9 @@ git push -u origin main
 ```
 
 ### 2. Configurar Database
-- Criar conta no **Neon** (https://neon.tech)
-- Criar database PostgreSQL
-- Copiar `DATABASE_URL`
+- ✅ **BANCO JÁ CONFIGURADO**
+- Mesmo database do Replit para sincronização
+- Todos os dados já existem e funcionando
 
 ### 3. Configurar Payments
 - Acessar **Asaas** (https://asaas.com)
