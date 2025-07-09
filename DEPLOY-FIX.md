@@ -1,10 +1,12 @@
 # 🔧 CORREÇÃO DO DEPLOY VERCEL
 
-## ❌ **PROBLEMA IDENTIFICADO**
+## ❌ **PROBLEMAS IDENTIFICADOS**
 
-**Erro:** "The 'functions' property cannot be used in conjunction with the 'builds' property. Please remove one of them."
-
+### Erro 1: "The 'functions' property cannot be used in conjunction with the 'builds' property"
 **Causa:** Conflito no arquivo `vercel.json` - estava usando tanto `functions` quanto `builds` simultaneamente.
+
+### Erro 2: "Function Runtimes must have a valid version, for example `now-php@1.0.0`"
+**Causa:** Especificação incorreta do runtime Node.js - Vercel não reconhece `nodejs18.x` como runtime válido.
 
 ## ✅ **SOLUÇÃO IMPLEMENTADA**
 
@@ -13,19 +15,20 @@
 - ✅ Mantido apenas `functions` (mais moderno)
 - ✅ Configuração limpa e funcional
 
-### 2. **Configuração Final:**
+### 2. **Configuração Final (Simplificada):**
 ```json
 {
   "version": 2,
-  "framework": "vite",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/public",
-  "functions": {
-    "api/index.js": { "runtime": "nodejs18.x" },
-    "api/avatars.js": { "runtime": "nodejs18.x" }
-  }
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/index.js" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
 ```
+
+**Mudança:** Removidas especificações de `functions` e `runtime` - Vercel detecta automaticamente as funções Node.js na pasta `/api/`.
 
 ## 🚀 **PRÓXIMOS PASSOS**
 

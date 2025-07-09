@@ -1,17 +1,7 @@
 {
   "version": 2,
-  "framework": "vite",
   "buildCommand": "npm run build:vercel",
   "outputDirectory": "dist/public",
-  "installCommand": "npm install",
-  "functions": {
-    "api/index.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/avatars.js": {
-      "runtime": "nodejs18.x"
-    }
-  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -48,9 +38,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "regions": ["gru1"]
+  ]
 }
