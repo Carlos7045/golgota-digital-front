@@ -107,14 +107,48 @@ app.use((req, res, next) => {
   app.use('/avatars', express.static('public/avatars'));
 
   // Health check endpoint
-  app.get('/health', (_req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+  app.get('/health', async (_req, res) => {
+    try {
+      const healthStatus = {
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        database: process.env.DATABASE_URL ? 'Connected' : 'Not configured',
+        sessionSecret: process.env.SESSION_SECRET ? 'Configured' : 'Not configured',
+        asaas: process.env.ASAAS_API_KEY ? 'Configured' : 'Not configured',
+        port: process.env.PORT || '5000'
+      };
+
+      // Test database connection
+      if (process.env.DATABASE_URL) {
+        try {
+          const { db } = await import('./db');
+          await db.execute('SELECT 1');
+          healthStatus.database = 'Connected';
+        } catch (error) {
+          healthStatus.database = 'Error connecting';
+        }
+      }
+
+      res.json(healthStatus);
+    } catch (error) {
+      res.status(500).json({ 
+        status: 'error', 
+        message: 'Health check failed',
+        timestamp: new Date().toISOString()
+      });
+    }
   });
 
   // Get PORT from environment or default to 5000
   const port = process.env.PORT || 5000;
   server.listen(port, () => {
-    console.log(`🚀 Backend serving on port ${port}`);
-    console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🚀 Comando Gólgota Backend running on port ${port}`);
+    console.log(`📊 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🔑 Health check: http://localhost:${port}/health`);
+    console.log(`📝 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+    console.log(`🔐 Session Secret: ${process.env.SESSION_SECRET ? 'Configured' : 'Using fallback'}`);
+    console.log(`💳 ASAAS_API_KEY ${process.env.ASAAS_API_KEY ? 'configured' : 'not configured'} - payment features ${process.env.ASAAS_API_KEY ? 'will' : 'will not'} work`);
+    console.log(`🌐 WebSocket: ws://localhost:${port}/ws`);
   });
 })();
