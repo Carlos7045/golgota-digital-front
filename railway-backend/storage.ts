@@ -681,38 +681,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
-    return await db.query.eventRegistrations.findMany({
-      where: eq(eventRegistrations.user_id, userId)
-    });
-  }
-
-  async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
-    return await db.query.eventRegistrations.findMany({
-      where: eq(eventRegistrations.event_id, eventId)
-    });
-  }
-
-  async isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean> {
-    const registration = await db.query.eventRegistrations.findFirst({
-      where: and(
-        eq(eventRegistrations.event_id, eventId),
-        eq(eventRegistrations.user_id, userId)
-      )
-    });
-    return !!registration;
-  }
-
-  async updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration> {
-    const [updated] = await db.update(eventRegistrations)
-      .set({ ...data, updated_at: new Date() })
-      .where(eq(eventRegistrations.id, registrationId))
-      .returning();
-    return updated;
-  }
-
-
-
-  async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
     return await db.select()
       .from(eventRegistrations)
       .where(eq(eventRegistrations.user_id, userId))
@@ -734,6 +702,14 @@ export class DatabaseStorage implements IStorage {
         eq(eventRegistrations.user_id, userId)
       ));
     return !!registration;
+  }
+
+  async updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration> {
+    const [updated] = await db.update(eventRegistrations)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(eventRegistrations.id, registrationId))
+      .returning();
+    return updated;
   }
 
   async getFinancialCategories(): Promise<FinancialCategory[]> {
