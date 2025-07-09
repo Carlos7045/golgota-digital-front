@@ -31,17 +31,19 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Session mais simples para Vercel
+// Session super simples para Vercel
 app.use(session({
   secret: process.env.SESSION_SECRET || 'comando-golgota-secret-key-2024',
-  resave: false,
-  saveUninitialized: false,
+  resave: true,
+  saveUninitialized: true,
+  rolling: true,
   cookie: {
-    secure: true,
-    httpOnly: true,
+    secure: false,
+    httpOnly: false,
     maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'none'
-  }
+    sameSite: 'lax'
+  },
+  name: 'connect.sid'
 }));
 
 // Passport básico
@@ -94,43 +96,80 @@ passport.serializeUser((user, done) => {
 
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log('🔍 Deserializando usuário:', id);
     const user = await storage.getUser(id);
+    console.log('✅ Usuário deserializado:', user ? user.email : 'não encontrado');
     done(null, user);
   } catch (error) {
+    console.error('❌ Erro na deserialização:', error);
     done(error);
   }
 });
 
 // Middleware de autenticação
 function requireAuth(req, res, next) {
-  if (req.isAuthenticated()) {
+  console.log('🔐 Verificando autenticação...');
+  console.log('Session ID:', req.sessionID);
+  console.log('User:', req.user ? req.user.email : 'não autenticado');
+  console.log('Authenticated:', req.isAuthenticated());
+  
+  if (req.isAuthenticated() && req.user) {
+    console.log('✅ Usuário autenticado:', req.user.email);
     return next();
   }
-  res.status(401).json({ message: 'Unauthorized' });
+  
+  console.log('❌ Usuário não autenticado');
+  res.status(401).json({ 
+    message: 'Unauthorized',
+    debug: {
+      authenticated: req.isAuthenticated(),
+      hasUser: !!req.user,
+      sessionID: req.sessionID
+    }
+  });
 }
 
 // Rotas básicas para teste
 app.post('/api/auth/login', (req, res, next) => {
+  console.log('🔐 Tentativa de login recebida...');
+  
   passport.authenticate('local', (err, user, info) => {
     if (err) {
+      console.error('❌ Erro na autenticação:', err);
       return res.status(500).json({ error: 'Erro interno do servidor' });
     }
     if (!user) {
+      console.log('❌ Falha no login:', info.message);
       return res.status(401).json({ error: info.message });
     }
     
+    console.log('🔐 Fazendo login do usuário:', user.email);
+    
     req.logIn(user, (err) => {
       if (err) {
+        console.error('❌ Erro ao estabelecer sessão:', err);
         return res.status(500).json({ error: 'Erro ao fazer login' });
       }
-      return res.json({ user, message: 'Login realizado com sucesso' });
+      
+      console.log('✅ Login realizado com sucesso');
+      console.log('Session ID:', req.sessionID);
+      console.log('User em sessão:', req.user ? req.user.email : 'não definido');
+      
+      return res.json({ 
+        user: { id: user.id, email: user.email }, 
+        message: 'Login realizado com sucesso',
+        sessionId: req.sessionID
+      });
     });
   })(req, res, next);
 });
 
 app.get('/api/profile', requireAuth, async (req, res) => {
   try {
+    console.log('📋 Buscando perfil para usuário:', req.user.id);
     const profile = await storage.getUserProfile(req.user.id);
+    console.log('✅ Perfil encontrado:', profile ? profile.name : 'não encontrado');
+    
     res.json({
       id: req.user.id,
       name: profile?.name || 'Usuário',
@@ -139,7 +178,7 @@ app.get('/api/profile', requireAuth, async (req, res) => {
       profile: profile
     });
   } catch (error) {
-    console.error('Profile error:', error);
+    console.error('❌ Erro ao buscar perfil:', error);
     res.status(500).json({ error: 'Erro ao buscar perfil' });
   }
 });
