@@ -9,6 +9,10 @@ import { VercelStorage } from './db-vercel.js';
 const app = express();
 const storage = new VercelStorage();
 
+console.log('🚀 API iniciando...');
+console.log('📦 NODE_ENV:', process.env.NODE_ENV);
+console.log('🔗 DATABASE_URL:', process.env.DATABASE_URL ? 'Configurado' : 'Não configurado');
+
 // CORS específico para comandogolgota.com.br
 app.use(cors({
   origin: [
@@ -50,9 +54,12 @@ passport.use(new LocalStrategy({
   passwordField: 'password'
 }, async (emailOrCpf, password, done) => {
   try {
+    console.log('🔍 Tentativa de login:', emailOrCpf);
+    
     let user = await storage.getUserByEmail(emailOrCpf);
     
     if (!user) {
+      console.log('❌ Usuário não encontrado por email, tentando por CPF...');
       const users = await storage.getUsersByRank();
       const profileWithCpf = users.find(u => u.cpf === emailOrCpf.replace(/\D/g, ''));
       if (profileWithCpf) {
@@ -61,17 +68,22 @@ passport.use(new LocalStrategy({
     }
     
     if (!user) {
+      console.log('❌ Usuário não encontrado');
       return done(null, false, { message: 'CPF/Email ou senha inválidos' });
     }
+    
+    console.log('✅ Usuário encontrado:', user.email);
     
     const isValidPassword = await bcrypt.compare(password, user.password);
     if (!isValidPassword) {
+      console.log('❌ Senha inválida');
       return done(null, false, { message: 'CPF/Email ou senha inválidos' });
     }
     
+    console.log('✅ Login bem-sucedido');
     return done(null, user);
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('❌ Erro no login:', error);
     return done(error);
   }
 }));
@@ -139,12 +151,22 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 // Teste de conectividade
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV 
-  });
+app.get('/api/health', async (req, res) => {
+  try {
+    const testUser = await storage.getUserByEmail('chpsalgado@hotmail.com');
+    res.json({ 
+      status: 'OK', 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      database: testUser ? 'Connected' : 'No admin user found'
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      status: 'ERROR', 
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Handler para rotas não encontradas
@@ -154,8 +176,11 @@ app.use('*', (req, res) => {
 
 // Error handler
 app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
+  console.error('❌ Erro na API:', err.stack);
+  res.status(500).json({ 
+    error: 'Internal Server Error',
+    details: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong!'
+  });
 });
 
 export default app;

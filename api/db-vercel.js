@@ -1,7 +1,31 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { users, profiles } from '../shared/schema.js';
 import { eq } from 'drizzle-orm';
+import { pgTable, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
+
+// Schema inline para evitar problemas de importação
+const users = pgTable('users', {
+  id: uuid('id').primaryKey(),
+  email: text('email').unique().notNull(),
+  password: text('password').notNull(),
+  created_at: timestamp('created_at').defaultNow(),
+  force_password_change: boolean('force_password_change').default(false)
+});
+
+const profiles = pgTable('profiles', {
+  id: integer('id').primaryKey(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  name: text('name').notNull(),
+  cpf: text('cpf').unique().notNull(),
+  birth_date: text('birth_date').notNull(),
+  phone: text('phone').notNull(),
+  address: text('address').notNull(),
+  city: text('city').notNull(),
+  rank: text('rank').notNull().default('aluno'),
+  company: text('company').notNull(),
+  avatar: text('avatar'),
+  created_at: timestamp('created_at').defaultNow()
+});
 
 // Configuração do banco para Vercel
 const sql = neon(process.env.DATABASE_URL);
