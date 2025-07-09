@@ -51,8 +51,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async () => {
     try {
+      const token = localStorage.getItem('auth_token');
+      
+      if (!token) {
+        setLoading(false);
+        return;
+      }
+      
       const response = await fetch('/api/profile', {
-        credentials: 'include', // Include cookies for session
+        credentials: 'include',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        }
       });
       
       if (response.ok) {
@@ -67,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             created_at: data.profile.created_at,
           });
         }
+      } else if (response.status === 401) {
+        // Token inválido, remover
+        localStorage.removeItem('auth_token');
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -82,12 +95,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Include cookies for session
+        credentials: 'include',
         body: JSON.stringify({ emailOrCpf, password }),
       });
 
       if (response.ok) {
         const data = await response.json();
+        
+        // Salvar token JWT no localStorage
+        if (data.token) {
+          localStorage.setItem('auth_token', data.token);
+        }
+        
         setUser(data.user);
         setProfile(data.profile);
         setRoles(data.roles);
@@ -108,10 +127,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const errorData = await response.json();
         toast({
           title: "Erro no login",
-          description: errorData.message,
+          description: errorData.error || errorData.message,
           variant: "destructive"
         });
-        return { error: { message: errorData.message } };
+        return { error: { message: errorData.error || errorData.message } };
       }
     } catch (error) {
       toast({
@@ -166,10 +185,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      await fetch('/api/auth/logout', {
-        method: 'POST',
-        credentials: 'include', // Include cookies for session
-      });
+      const token = localStorage.getItem('auth_token');
+      
+      if (token) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+          }
+        });
+      }
+      
+      // Remover token do localStorage
+      localStorage.removeItem('auth_token');
       
       toast({
         title: "Logout realizado",

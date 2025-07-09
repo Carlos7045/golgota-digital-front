@@ -1,0 +1,150 @@
+[19:20:22.248] Running build in Washington, D.C., USA (East) – iad1
+[19:20:22.248] Build machine configuration: 2 cores, 8 GB
+[19:20:22.276] Cloning github.com/Carlos7045/golgota-digital-front (Branch: main, Commit: ffd15a4)
+[19:20:22.285] Skipping build cache, deployment was triggered without cache.
+[19:20:22.845] Cloning completed: 569.000ms
+[19:20:22.885] Found .vercelignore
+[19:20:22.894] Removed 20 ignored files defined in .vercelignore
+[19:20:22.894]   /.replit
+[19:20:22.894]   /attached_assets/image_1751892009150.png
+[19:20:22.894]   /attached_assets/image_1751894348467.png
+[19:20:22.894]   /attached_assets/image_1751901904801.png
+[19:20:22.894]   /attached_assets/image_1751913059589.png
+[19:20:22.894]   /attached_assets/image_1751913475886.png
+[19:20:22.894]   /attached_assets/image_1751913914240.png
+[19:20:22.894]   /attached_assets/image_1751914687734.png
+[19:20:22.895]   /attached_assets/image_1751915536396.png
+[19:20:22.895]   /attached_assets/image_1751917728859.png
+[19:20:23.182] Running "vercel build"
+[19:20:23.618] Vercel CLI 44.2.13
+[19:20:24.377] Installing dependencies...
+[19:20:29.078] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[19:20:29.094] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[19:20:33.961] 
+[19:20:33.962] added 503 packages in 9s
+[19:20:33.962] 
+[19:20:33.962] 65 packages are looking for funding
+[19:20:33.963]   run `npm fund` for details
+[19:20:34.060] 🚀 Iniciando build para Vercel...
+[19:20:34.061] 🧹 Limpando diretório de build...
+[19:20:34.061] 🔨 Compilando frontend...
+[19:20:34.366] [36mvite v5.4.14 [32mbuilding for production...[36m[39m
+[19:20:34.417] transforming...
+[19:20:34.676] Browserslist: browsers data (caniuse-lite) is 9 months old. Please run:
+[19:20:34.677]   npx update-browserslist-db@latest
+[19:20:34.677]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[19:20:42.747] [32m✓[39m 2572 modules transformed.
+[19:20:43.547] rendering chunks...
+[19:20:43.563] computing gzip size...
+[19:20:43.594] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m    0.63 kB[22m[1m[22m[2m │ gzip:   0.38 kB[22m
+[19:20:43.595] [2m../dist/public/[22m[2massets/[22m[35mindex-DMbJiJ0W.css  [39m[1m[2m   75.71 kB[22m[1m[22m[2m │ gzip:  12.94 kB[22m
+[19:20:43.595] [2m../dist/public/[22m[2massets/[22m[36mindex-D2HdQ5XX.js   [39m[1m[33m1,181.55 kB[39m[22m[2m │ gzip: 319.23 kB[22m
+[19:20:43.595] [33m
+[19:20:43.596] (!) Some chunks are larger than 500 kB after minification. Consider:
+[19:20:43.596] - Using dynamic import() to code-split the application
+[19:20:43.596] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[19:20:43.596] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[19:20:43.596] [32m✓ built in 9.21s[39m
+[19:20:43.639] 🔧 Compilando backend...
+[19:20:43.646] ▲ [WARNING] Duplicate member "getUserEventRegistrations" in class body [duplicate-class-member]
+[19:20:43.647] 
+[19:20:43.647]     server/storage.ts:715:8:
+[19:20:43.648]       715 │   async getUserEventRegistrations(userId: string): Promise<EventR...
+[19:20:43.648]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.648] 
+[19:20:43.648]   The original member "getUserEventRegistrations" is here:
+[19:20:43.648] 
+[19:20:43.648]     server/storage.ts:683:8:
+[19:20:43.649]       683 │   async getUserEventRegistrations(userId: string): Promise<EventR...
+[19:20:43.649]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.649] 
+[19:20:43.649] ▲ [WARNING] Duplicate member "getEventRegistrations" in class body [duplicate-class-member]
+[19:20:43.649] 
+[19:20:43.649]     server/storage.ts:722:8:
+[19:20:43.649]       722 │   async getEventRegistrations(eventId: string): Promise<EventRegi...
+[19:20:43.649]           ╵         ~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.650] 
+[19:20:43.650]   The original member "getEventRegistrations" is here:
+[19:20:43.650] 
+[19:20:43.650]     server/storage.ts:689:8:
+[19:20:43.650]       689 │   async getEventRegistrations(eventId: string): Promise<EventRegi...
+[19:20:43.650]           ╵         ~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.650] 
+[19:20:43.650] ▲ [WARNING] Duplicate member "isUserRegisteredForEvent" in class body [duplicate-class-member]
+[19:20:43.651] 
+[19:20:43.651]     server/storage.ts:729:8:
+[19:20:43.651]       729 │   async isUserRegisteredForEvent(eventId: string, userId: string)...
+[19:20:43.651]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.651] 
+[19:20:43.651]   The original member "isUserRegisteredForEvent" is here:
+[19:20:43.652] 
+[19:20:43.652]     server/storage.ts:695:8:
+[19:20:43.652]       695 │   async isUserRegisteredForEvent(eventId: string, userId: string)...
+[19:20:43.652]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.652] 
+[19:20:43.655] 3 warnings
+[19:20:43.655] 
+[19:20:43.655]   dist/storage.js  35.3kb
+[19:20:43.656] 
+[19:20:43.659] ⚡ Done in 9ms
+[19:20:43.670] ▲ [WARNING] Duplicate member "getUserEventRegistrations" in class body [duplicate-class-member]
+[19:20:43.670] 
+[19:20:43.671]     server/storage.ts:715:8:
+[19:20:43.671]       715 │   async getUserEventRegistrations(userId: string): Promise<EventR...
+[19:20:43.671]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.671] 
+[19:20:43.671]   The original member "getUserEventRegistrations" is here:
+[19:20:43.671] 
+[19:20:43.672]     server/storage.ts:683:8:
+[19:20:43.672]       683 │   async getUserEventRegistrations(userId: string): Promise<EventR...
+[19:20:43.672]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.672] 
+[19:20:43.672] ▲ [WARNING] Duplicate member "getEventRegistrations" in class body [duplicate-class-member]
+[19:20:43.672] 
+[19:20:43.673]     server/storage.ts:722:8:
+[19:20:43.673]       722 │   async getEventRegistrations(eventId: string): Promise<EventRegi...
+[19:20:43.674]           ╵         ~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.674] 
+[19:20:43.674]   The original member "getEventRegistrations" is here:
+[19:20:43.674] 
+[19:20:43.674]     server/storage.ts:689:8:
+[19:20:43.674]       689 │   async getEventRegistrations(eventId: string): Promise<EventRegi...
+[19:20:43.675]           ╵         ~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.675] 
+[19:20:43.675] ▲ [WARNING] Duplicate member "isUserRegisteredForEvent" in class body [duplicate-class-member]
+[19:20:43.675] 
+[19:20:43.675]     server/storage.ts:729:8:
+[19:20:43.675]       729 │   async isUserRegisteredForEvent(eventId: string, userId: string)...
+[19:20:43.676]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.676] 
+[19:20:43.676]   The original member "isUserRegisteredForEvent" is here:
+[19:20:43.676] 
+[19:20:43.676]     server/storage.ts:695:8:
+[19:20:43.676]       695 │   async isUserRegisteredForEvent(eventId: string, userId: string)...
+[19:20:43.676]           ╵         ~~~~~~~~~~~~~~~~~~~~~~~~
+[19:20:43.676] 
+[19:20:43.677] 3 warnings
+[19:20:43.677] 
+[19:20:43.677]   dist/routes.js  100.6kb
+[19:20:43.677] 
+[19:20:43.677] ⚡ Done in 15ms
+[19:20:43.685] 
+[19:20:43.686]   dist/asaas.js  8.2kb
+[19:20:43.686] 
+[19:20:43.686] ⚡ Done in 3ms
+[19:20:43.700] 
+[19:20:43.700]   dist/db.js  18.2kb
+[19:20:43.700] 
+[19:20:43.700] ⚡ Done in 7ms
+[19:20:43.701] 📁 Criando estrutura de diretórios...
+[19:20:43.704] 📸 Copiados 2 avatares
+[19:20:43.704] 📋 Copiando arquivos de schema...
+[19:20:43.709] ✅ Build concluído com sucesso!
+[19:20:43.711] 📦 Arquivos prontos para deploy na Vercel
+[19:20:46.703] Build Completed in /vercel/output [22s]
+[19:20:46.861] Deploying outputs...
+[19:20:53.777] 
+[19:20:53.916] Deployment completed
+[19:21:24.588] Uploading build cache [86.78 MB]...
+[19:21:25.606] Build cache uploaded: 1.018s
+[19:21:27.888] Exiting build container
