@@ -18,18 +18,44 @@ const Login = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simular autenticação (substituir por integração real)
-    setTimeout(() => {
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          emailOrCpf: email,
+          password: password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login falhou');
+      }
+
+      // Store user data
       localStorage.setItem('user', JSON.stringify({
-        id: '1',
-        name: 'Admin João Silva',
-        email: email,
-        rank: 'admin',
-        company: 'Alpha'
+        id: data.user.id,
+        email: data.user.email,
+        name: data.profile?.name || 'Usuário',
+        rank: data.profile?.rank || 'aluno',
+        company: data.profile?.company || '',
+        roles: data.roles || ['user']
       }));
-      setIsLoading(false);
+
+      // Navigate to community
       navigate('/comunidade');
-    }, 1500);
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      alert(error instanceof Error ? error.message : 'Erro no login');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -56,14 +82,14 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">Email</Label>
+                <Label htmlFor="email" className="text-white">Email ou CPF</Label>
                 <Input
                   id="email"
-                  type="email"
+                  type="text"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="bg-military-black border-military-gold/30 text-white"
-                  placeholder="seu@email.com"
+                  placeholder="seu@email.com ou CPF"
                   required
                 />
               </div>

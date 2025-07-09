@@ -119,22 +119,39 @@ export async function registerRoutes(app: express.Application): Promise<Server> 
 
   app.post('/api/auth/login', async (req: Request, res: Response) => {
     try {
-      const { email, password } = req.body;
-
-      const user = await storage.getUserByEmail(email);
-      if (!user) {
-        return res.status(401).json({ message: "Invalid credentials" });
+      const { emailOrCpf, password } = req.body;
+      
+      if (!emailOrCpf || !password) {
+        return res.status(400).json({ message: 'CPF/Email e senha são obrigatórios' });
       }
-
+      
+      // Try to find user by email first, then by CPF
+      let user = await storage.getUserByEmail(emailOrCpf);
+      
+      if (!user) {
+        return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
+      }
+      
       const isValidPassword = await bcrypt.compare(password, user.password);
       if (!isValidPassword) {
-        return res.status(401).json({ message: "Invalid credentials" });
+        return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
       }
-
+      
+      // Create session
       req.session!.userId = user.id;
+      
+      // Get user profile and roles
+      const profile = await storage.getProfile ? await storage.getProfile(user.id) : null;
+      const roles = await storage.getUserRoles ? await storage.getUserRoles(user.id) : [];
+      
+      // Remove password from response
+      const { password: _, ...userResponse } = user;
+      
       res.json({ 
-        message: "Login successful",
-        user: { ...user, password: undefined }
+        user: userResponse,
+        profile,
+        roles,
+        force_password_change: user.force_password_change || false
       });
     } catch (error) {
       console.error("Login error:", error);

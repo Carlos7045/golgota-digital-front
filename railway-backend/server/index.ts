@@ -10,7 +10,14 @@ const PORT = process.env.PORT || 3000;
 // CORS configuration
 app.use(cors({
   origin: process.env.NODE_ENV === 'production' 
-    ? ['https://comando-golgota.vercel.app', 'https://comando-golgota-frontend.vercel.app']
+    ? [
+        'https://comando-golgota.vercel.app',
+        'https://comando-golgota-frontend.vercel.app',
+        'https://replit.com',
+        'https://comando-golgota-dev.replit.app',
+        /\.replit\.app$/,
+        /\.replit\.dev$/
+      ]
     : ['http://localhost:5000', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
