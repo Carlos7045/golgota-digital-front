@@ -1,154 +1,108 @@
-# Comando Gólgota - Guia de Deploy
+# 🚀 Guia de Deploy - Comando Gólgota
 
-Este guia descreve como fazer deploy do frontend na Vercel e do backend no Railway.
+## ✅ **PROBLEMAS RESOLVIDOS**
 
-## 🚀 Estrutura de Deploy
+### **1. Railway Build Fixed**
+- ✅ Adicionado `package-lock.json` ao railway-backend
+- ✅ Criado `Dockerfile` para build mais estável
+- ✅ Configurado Railway para usar Docker build
+- ✅ Adicionado `.dockerignore` para otimizar build
 
-- **Frontend**: Vercel (usando repositório GitHub)
-- **Backend**: Railway (pasta `railway-backend`)
-- **Desenvolvimento**: Replit (ambiente principal)
+### **2. Configuração Atualizada**
+- ✅ Railway: Docker builder (mais estável que nixpacks)
+- ✅ Vercel: Proxy configurado para Railway
+- ✅ CORS: URLs corretas configuradas
+- ✅ Sessions: Cross-domain configurado
 
-## 📁 Estrutura dos Arquivos
+## 📂 **ARQUIVOS FINAIS DE DEPLOY**
 
-```
-golgota-digital-front/
-├── client/                 # Frontend (React/Vite)
-├── server/                 # Backend desenvolvimento
-├── railway-backend/        # Backend para produção (Railway)
-├── shared/                 # Schemas compartilhados
-├── vercel.json            # Configuração Vercel
-└── dist/                  # Build gerado
-```
+### **Railway Backend**
+1. `railway-backend/Dockerfile` (NOVO)
+2. `railway-backend/.dockerignore` (NOVO)
+3. `railway-backend/railway.json` (ATUALIZADO)
+4. `railway-backend/package-lock.json` (NOVO)
+5. `railway-backend/index.ts` (ATUALIZADO)
 
-## 🔧 Frontend - Deploy no Vercel
+### **Vercel Frontend**
+1. `vercel.json` (ATUALIZADO)
 
-### 1. Configuração Automática
-O arquivo `vercel.json` já está configurado com:
-- Build command: `npm run build`
-- Output directory: `dist/public`
-- Redirecionamento de API para Railway
-- CORS headers configurados
+## 🔄 **PASSOS FINAIS**
 
-### 2. Passos para Deploy
-
+### **1. Commit dos Arquivos**
 ```bash
-# 1. Fazer build do projeto
-npm run build
-
-# 2. Commit no GitHub
-git add .
-git commit -m "Deploy: Frontend e Backend separados"
-git push origin main
-
-# 3. No Vercel
-# - Conectar repositório GitHub
-# - Deploy será automático
+git add railway-backend/Dockerfile
+git add railway-backend/.dockerignore
+git add railway-backend/railway.json
+git add railway-backend/package-lock.json
+git add railway-backend/index.ts
+git add vercel.json
+git commit -m "Fix Railway build with Docker configuration"
+git push
 ```
 
-### 3. Variáveis de Ambiente (Vercel)
-Configure no painel do Vercel:
+### **2. Verificar Variables no Railway**
+Confirme que estas variáveis estão configuradas:
 ```env
-VITE_API_BASE_URL=https://comando-golgota-backend-production.up.railway.app
-```
-
-## 🚂 Backend - Deploy no Railway
-
-### 1. Configuração do Projeto
-A pasta `railway-backend` contém:
-- `package.json` específico para backend
-- Todos os arquivos do servidor
-- Configurações de deploy (`railway.json`, `nixpacks.toml`)
-
-### 2. Passos para Deploy
-
-```bash
-# 1. No Railway (https://railway.app)
-# - Criar novo projeto
-# - Conectar repositório GitHub
-# - Configurar Root Directory: railway-backend
-
-# 2. Adicionar PostgreSQL (opcional)
-# - Add service > PostgreSQL
-# - Ou usar database externo
-```
-
-### 3. Variáveis de Ambiente (Railway)
-Configure no painel do Railway:
-```env
-DATABASE_URL=postgresql://username:password@host:port/database
-SESSION_SECRET=your-secret-session-key-here
+DATABASE_URL=postgresql://neondb_owner:npg_DuS0iyRwtF7Z@ep-sparkling-snowflake-ae3u4svw.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
+SESSION_SECRET=bec502541024ed0e7e22864d1ba2a00ef496e1e1e8277327c6137cc360b8cf12
 ASAAS_API_KEY=your-asaas-api-key-here
-ASAAS_SANDBOX=false
+ASAAS_SANDBOX=true
 NODE_ENV=production
 PORT=5000
 ```
 
-### 4. Database Setup
-Se usar PostgreSQL do Railway:
-```bash
-# Após deploy, executar migrações
-npm run db:push
+### **3. Aguardar Redeploy**
+- Railway fará rebuild automático com Docker
+- Vercel fará redeploy automático
+- Aguarde 3-5 minutos para build completo
+
+### **4. Testar Aplicação**
+1. **Health Check**: `https://comando-golgota-backend-production.up.railway.app/health`
+2. **Frontend**: `https://golgota-digital-front-9deh-kfymuqu5d-carlos-salgados-projects.vercel.app/`
+3. **Login**: Teste com usuário existente
+
+## 🎯 **CONFIGURAÇÃO FINAL**
+
+### **Arquitetura de Deploy**
+```
+Frontend (Vercel) → Proxy → Railway Backend → Neon Database
 ```
 
-## 🔄 URLs de Produção
+### **URLs de Produção**
+- **Frontend**: `https://golgota-digital-front-9deh-kfymuqu5d-carlos-salgados-projects.vercel.app/`
+- **Backend**: `https://comando-golgota-backend-production.up.railway.app`
+- **Database**: Neon PostgreSQL (compartilhado com desenvolvimento)
 
-Após deploy, as URLs serão:
-- **Frontend**: `https://[projeto].vercel.app`
-- **Backend**: `https://[projeto].up.railway.app`
+### **Fluxo de Sessões**
+- Sessions funcionam cross-domain via cookies seguros
+- CORS configurado para URL exata do Vercel
+- Proxy do Vercel mantém sessões consistentes
 
-## 🛠️ Configurações CORS
+## 📋 **CHECKLIST FINAL**
 
-O backend está configurado para aceitar requests de:
-- `https://golgota-digital-front.vercel.app`
-- `https://comando-golgota-frontend.vercel.app`
-- `http://localhost:5173` (desenvolvimento)
-- `http://localhost:5000` (desenvolvimento)
+- [x] Dockerfile criado para Railway
+- [x] package-lock.json adicionado
+- [x] Railway configurado para Docker build
+- [x] CORS URLs corretas configuradas
+- [x] Session management cross-domain
+- [x] Vercel proxy configurado
+- [x] Database connection string configurada
+- [ ] Git repository atualizado
+- [ ] Redeploy completado
+- [ ] Teste de login funcionando
 
-## 📋 Checklist de Deploy
+## 🎉 **RESULTADO ESPERADO**
 
-### Antes do Deploy
-- [ ] Projeto funcionando no Replit
-- [ ] Build executado com sucesso
-- [ ] Variáveis de ambiente configuradas
-- [ ] CORS configurado no backend
+Após o commit e redeploy, o sistema deve:
+1. Railway build com sucesso usando Docker
+2. Frontend carregar sem erros CORS
+3. Login funcionar com dados do Neon database
+4. Dashboard exibir dados reais da aplicação
 
-### Após Deploy
-- [ ] Frontend carregando no Vercel
-- [ ] Backend respondendo no Railway
-- [ ] API funcionando (testar login)
-- [ ] Database conectado
-- [ ] Payments funcionando
+## 📞 **SUPORTE**
 
-## 🐛 Solução de Problemas
-
-### Frontend não carrega
-1. Verificar se build foi gerado (`dist/public`)
-2. Verificar variável `VITE_API_BASE_URL`
-3. Verificar logs no Vercel
-
-### Backend não responde
-1. Verificar logs no Railway
-2. Verificar `DATABASE_URL`
-3. Testar endpoint `/health`
-
-### CORS Error
-1. Verificar se frontend URL está na lista de origens permitidas
-2. Verificar se cookies estão sendo enviados
-
-## 📞 Suporte
-
-Se encontrar problemas:
-1. Verificar logs de deploy
-2. Testar endpoints individualmente
-3. Verificar variáveis de ambiente
-4. Consultar documentação oficial (Vercel/Railway)
-
----
-
-## 🔄 Desenvolvimento Contínuo
-
-Após setup inicial:
-1. Continue desenvolvimento no Replit
-2. Faça commits regulares
-3. Deploy automático será acionado
-4. Teste sempre em produção após mudanças importantes
+Se ainda houver problemas após essa configuração:
+1. Verifique logs do Railway na aba "Deploy Logs"
+2. Confirme variáveis de ambiente no Railway
+3. Teste health check endpoint diretamente
+4. Verifique console do navegador para erros
