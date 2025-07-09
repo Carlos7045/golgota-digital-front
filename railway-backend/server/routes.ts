@@ -125,8 +125,17 @@ export async function registerRoutes(app: express.Application): Promise<Server> 
         return res.status(400).json({ message: 'CPF/Email e senha são obrigatórios' });
       }
       
-      // Try to find user by email first, then by CPF
+      // Try to find user by email or CPF
       let user = await storage.getUserByEmail(emailOrCpf);
+      
+      // If not found by email, try by CPF 
+      if (!user) {
+        try {
+          user = await storage.getUserByCpf ? await storage.getUserByCpf(emailOrCpf) : null;
+        } catch (error) {
+          console.log('CPF search not available or failed');
+        }
+      }
       
       if (!user) {
         return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
@@ -146,6 +155,8 @@ export async function registerRoutes(app: express.Application): Promise<Server> 
       
       // Remove password from response
       const { password: _, ...userResponse } = user;
+      
+      console.log(`✅ Login successful for user: ${user.email} (ID: ${user.id})`);
       
       res.json({ 
         user: userResponse,

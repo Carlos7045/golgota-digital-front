@@ -12,9 +12,12 @@ export interface IStorage {
   // User management
   getUser(id: number): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByCpf?(cpf: string): Promise<User | undefined>;
   createUser(user: NewUser): Promise<User>;
   updateUser(id: number, data: Partial<User>): Promise<User | undefined>;
   deleteUser(id: number): Promise<void>;
+  getProfile?(userId: number): Promise<any>;
+  getUserRoles?(userId: number): Promise<string[]>;
   
   // Company management
   getCompanies(): Promise<Company[]>;
@@ -64,6 +67,47 @@ export class DatabaseStorage implements IStorage {
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
+  }
+
+  async getUserByCpf(cpf: string): Promise<User | undefined> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.cpf, cpf));
+      return user;
+    } catch (error) {
+      console.log('CPF search failed:', error);
+      return undefined;
+    }
+  }
+
+  async getProfile(userId: number): Promise<any> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) return null;
+      
+      // Return user data as profile
+      const { password, ...profile } = user;
+      return profile;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      return null;
+    }
+  }
+
+  async getUserRoles(userId: number): Promise<string[]> {
+    try {
+      const [user] = await db.select().from(users).where(eq(users.id, userId));
+      if (!user) return [];
+      
+      // Return role from user.role field, or default roles
+      const roles = [user.role || 'aluno'];
+      if (user.role === 'admin' || user.role === 'comandante') {
+        roles.push('admin');
+      }
+      return roles;
+    } catch (error) {
+      console.error('Error fetching user roles:', error);
+      return [];
+    }
   }
 
   async createUser(user: NewUser): Promise<User> {
