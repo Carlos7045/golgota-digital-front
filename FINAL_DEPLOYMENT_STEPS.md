@@ -1,10 +1,11 @@
 # 🚀 Passos Finais para Deploy - Comando Gólgota
 
 ## ✅ STATUS ATUAL
-- ✅ Database PostgreSQL criado no Railway
-- ✅ DATABASE_URL obtida
+- ✅ Usando banco Neon existente (mesmo do Replit)
+- ✅ DATABASE_URL obtida do ambiente atual
 - ✅ SESSION_SECRET gerada
 - ✅ CORS configurado no backend
+- ✅ Todos os dados já estão disponíveis
 
 ## 🔧 CONFIGURAÇÃO FINAL NO RAILWAY
 
@@ -12,7 +13,7 @@
 No Railway Dashboard → Variables, configure:
 
 ```env
-DATABASE_URL=postgresql://postgres:BVfpKSumSMziFHxCVRUoFOmOPkYHacxL@postgres.railway.internal:5432/railway
+DATABASE_URL=postgresql://neondb_owner:npg_DuS0iyRwtF7Z@ep-sparkling-snowflake-ae3u4svw.c-2.us-east-2.aws.neon.tech/neondb?sslmode=require
 SESSION_SECRET=bec502541024ed0e7e22864d1ba2a00ef496e1e1e8277327c6137cc360b8cf12
 ASAAS_API_KEY=your-asaas-api-key-here
 ASAAS_SANDBOX=true
@@ -34,11 +35,10 @@ PORT=5000
 2. Aguarde alguns minutos
 3. Teste o backend: `https://comando-golgota-backend-production.up.railway.app/health`
 
-### **4. Executar Migrações do Database**
-Após o deploy, você pode precisar executar:
-```bash
-npm run db:push
-```
+### **4. Não precisa migrar dados**
+✅ Usando o mesmo banco Neon do Replit
+✅ Todos os usuários, eventos e dados já estão disponíveis
+✅ Não precisa executar migrações
 
 ## 🌐 VERIFICAÇÃO NO VERCEL
 
