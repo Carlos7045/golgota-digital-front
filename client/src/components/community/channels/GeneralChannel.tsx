@@ -91,8 +91,13 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
 
   const fetchOnlineUsers = async () => {
     try {
-      const data = await apiGet('/api/users/online');
-      setOnlineUsers(data.users || []);
+      const response = await fetch('/api/users/online', {
+        credentials: 'include'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setOnlineUsers(data.users || []);
+      }
     } catch (error) {
       console.error('Error fetching online users:', error);
     }

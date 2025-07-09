@@ -1,5 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://comando-golgota-backend-production.up.railway.app';
-console.log('🔍 API_BASE_URL =>', API_BASE_URL);
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 // Generic API request function
 export async function apiRequest(
