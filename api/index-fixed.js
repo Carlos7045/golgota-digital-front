@@ -42,13 +42,13 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Estratégia de login simplificada para teste
+// Estratégia de login simplificada
 passport.use(new LocalStrategy({
   usernameField: 'emailOrCpf',
   passwordField: 'password'
 }, async (emailOrCpf, password, done) => {
   try {
-    // Login de teste para admin
+    // Simulação de login para teste
     if (emailOrCpf === 'chpsalgado@hotmail.com' && password === '123456') {
       return done(null, { 
         id: 1, 
