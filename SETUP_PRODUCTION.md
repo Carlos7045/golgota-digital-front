@@ -36,10 +36,10 @@ Exemplo gerado: `a7f4b2c8d1e9f3a6b5c2d8e1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2e5f8a
 ## 📝 **VARIÁVEIS CORRETAS PARA RAILWAY**
 
 ```env
-DATABASE_URL=postgresql://postgres:seu_password@junction.proxy.rlwy.net:5432/railway
-SESSION_SECRET=a7f4b2c8d1e9f3a6b5c2d8e1f4a7b0c3d6e9f2a5b8c1d4e7f0a3b6c9d2e5f8a1b4c7d0e3f6a9b2c5d8e1f4a7b0c3
+DATABASE_URL=postgresql://postgres:BVfpKSumSMziFHxCVRUoFOmOPkYHacxL@postgres.railway.internal:5432/railway
+SESSION_SECRET=bec502541024ed0e7e22864d1ba2a00ef496e1e1e8277327c6137cc360b8cf12
 ASAAS_API_KEY=sua_api_key_real_do_asaas
-ASAAS_SANDBOX=false
+ASAAS_SANDBOX=true
 NODE_ENV=production
 PORT=5000
 ```
