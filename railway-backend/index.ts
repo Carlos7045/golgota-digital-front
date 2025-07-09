@@ -8,10 +8,12 @@ const app = express();
 // CORS middleware for cross-origin requests
 app.use((req, res, next) => {
   const allowedOrigins = [
+    'https://golgota-digital-front-9k4h.vercel.app',
     'https://golgota-digital-front.vercel.app',
     'http://localhost:5173',
     'http://localhost:5000',
-    'https://comando-golgota-frontend.vercel.app'
+    'https://comando-golgota-frontend.vercel.app',
+    'https://comandogolgota.com.br'
   ];
   
   const origin = req.headers.origin;
