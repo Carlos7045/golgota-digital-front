@@ -136,4 +136,74 @@ export class VercelStorage {
       return ['user']; // Role padrão em caso de erro
     }
   }
+
+  // Método para buscar todos os perfis com detalhes dos usuários
+  async getAllProfiles() {
+    try {
+      console.log('🔍 Buscando todos os perfis...');
+      
+      const result = await db
+        .select({
+          id: profiles.id,
+          user_id: profiles.user_id,
+          name: profiles.name,
+          cpf: profiles.cpf,
+          birth_date: profiles.birth_date,
+          phone: profiles.phone,
+          address: profiles.address,
+          city: profiles.city,
+          rank: profiles.rank,
+          company: profiles.company,
+          avatar_url: profiles.avatar_url,
+          email: profiles.email,
+          bio: profiles.bio,
+          specialties: profiles.specialties,
+          joined_at: profiles.joined_at,
+          created_at: profiles.created_at,
+          updated_at: profiles.updated_at
+        })
+        .from(profiles);
+      
+      console.log(`✅ Encontrados ${result.length} perfis`);
+      return result;
+    } catch (error) {
+      console.error('Error getting all profiles:', error);
+      return [];
+    }
+  }
+
+  // Método para buscar usuários com perfis (join)
+  async getUsersWithProfiles() {
+    try {
+      console.log('🔍 Buscando usuários com perfis...');
+      
+      // Primeiro buscar todos os usuários
+      const usersResult = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          created_at: users.created_at,
+          force_password_change: users.force_password_change
+        })
+        .from(users);
+      
+      // Depois buscar perfis para cada usuário
+      const usersWithProfiles = [];
+      for (const user of usersResult) {
+        const profile = await this.getUserProfile(user.id);
+        if (profile) {
+          usersWithProfiles.push({
+            ...user,
+            profile: profile
+          });
+        }
+      }
+      
+      console.log(`✅ Encontrados ${usersWithProfiles.length} usuários com perfis`);
+      return usersWithProfiles;
+    } catch (error) {
+      console.error('Error getting users with profiles:', error);
+      return [];
+    }
+  }
 }

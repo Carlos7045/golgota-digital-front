@@ -189,6 +189,36 @@ app.post('/api/auth/logout', (req, res) => {
   res.json({ message: 'Logout realizado com sucesso' });
 });
 
+// Endpoint para buscar todos os perfis (admin)
+app.get('/api/profiles', requireAuth, async (req, res) => {
+  try {
+    console.log('📄 Buscando todos os perfis...');
+    
+    const profiles = await storage.getAllProfiles();
+    console.log(`✅ Retornando ${profiles.length} perfis`);
+    
+    res.json({ profiles });
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfis:', error);
+    res.status(500).json({ error: 'Erro ao buscar perfis' });
+  }
+});
+
+// Endpoint para buscar usuários com perfis (admin)
+app.get('/api/users', requireAuth, async (req, res) => {
+  try {
+    console.log('📄 Buscando usuários com perfis...');
+    
+    const users = await storage.getUsersWithProfiles();
+    console.log(`✅ Retornando ${users.length} usuários`);
+    
+    res.json({ users });
+  } catch (error) {
+    console.error('❌ Erro ao buscar usuários:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuários' });
+  }
+});
+
 // Teste de conectividade
 app.get('/api/health', async (req, res) => {
   try {
