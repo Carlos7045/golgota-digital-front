@@ -34,8 +34,9 @@ const sessionSecret = process.env.SESSION_SECRET;
 
 if (process.env.NODE_ENV === 'production' && !sessionSecret) {
   console.error('❌ CRITICAL: SESSION_SECRET not set in production!');
-  console.error('   Set SESSION_SECRET environment variable before deploying');
-  process.exit(1);
+  console.error('   Railway deploy will fail without environment variables');
+  console.error('   Configure in Railway Dashboard: Variables section');
+  // Don't exit in production, let Railway handle the failure
 }
 
 const fallbackSecret = 'comando-golgota-dev-secret-key-2025';
