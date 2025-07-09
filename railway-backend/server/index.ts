@@ -16,7 +16,8 @@ app.use(cors({
         'https://replit.com',
         'https://comando-golgota-dev.replit.app',
         /\.replit\.app$/,
-        /\.replit\.dev$/
+        /\.replit\.dev$/,
+        /\.webview.*\.replit\.dev$/
       ]
     : ['http://localhost:5000', 'http://localhost:3000'],
   credentials: true,
