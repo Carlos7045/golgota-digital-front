@@ -25,7 +25,7 @@
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "value": "https://golgota-digital-front-9deh-kfymuqu5d-carlos-salgados-projects.vercel.app"
         },
         {
           "key": "Access-Control-Allow-Methods",
@@ -33,12 +33,16 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
+          "value": "Content-Type, Authorization, Cookie"
+        },
+        {
+          "key": "Access-Control-Allow-Credentials",
+          "value": "true"
         }
       ]
     }
   ],
   "env": {
-    "VITE_API_BASE_URL": "https://comando-golgota-backend-production.up.railway.app"
+    "VITE_API_BASE_URL": ""
   }
 }

@@ -8,6 +8,7 @@ const app = express();
 // CORS middleware for cross-origin requests
 app.use((req, res, next) => {
   const allowedOrigins = [
+    'https://golgota-digital-front-9deh-kfymuqu5d-carlos-salgados-projects.vercel.app',
     'https://golgota-digital-front-9k4h.vercel.app',
     'https://golgota-digital-front.vercel.app',
     'http://localhost:5173',
@@ -36,7 +37,7 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false, limit: '10mb' }));
 
-// Configure session middleware
+// Configure session middleware with proper settings for cross-domain
 app.use(session({
   secret: process.env.SESSION_SECRET || 'golgota-secret-key-production',
   resave: false,
@@ -45,7 +46,8 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 24 * 60 * 60 * 1000, // 24 hours
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined
   }
 }));
 
