@@ -30,14 +30,23 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: false }));
 
 // Session configuration
-const sessionSecret = process.env.SESSION_SECRET || 'comando-golgota-dev-secret-key-2025';
+const sessionSecret = process.env.SESSION_SECRET;
 
-if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
-  console.warn('⚠️  SESSION_SECRET not set in production - using fallback');
+if (process.env.NODE_ENV === 'production' && !sessionSecret) {
+  console.error('❌ CRITICAL: SESSION_SECRET not set in production!');
+  console.error('   Set SESSION_SECRET environment variable before deploying');
+  process.exit(1);
+}
+
+const fallbackSecret = 'comando-golgota-dev-secret-key-2025';
+const finalSecret = sessionSecret || fallbackSecret;
+
+if (!sessionSecret) {
+  console.warn('⚠️  SESSION_SECRET not set - using development fallback');
 }
 
 app.use(session({
-  secret: sessionSecret,
+  secret: finalSecret,
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -100,12 +109,27 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Health check mais detalhado (opcional)
 app.get('/health/detailed', (req: Request, res: Response) => {
+  const dbConfigured = !!process.env.DATABASE_URL;
+  const sessionConfigured = !!process.env.SESSION_SECRET;
+  const asaasConfigured = !!process.env.ASAAS_API_KEY;
+  
+  const allCriticalConfigured = dbConfigured && (process.env.NODE_ENV !== 'production' || sessionConfigured);
+  
   res.json({ 
-    status: 'ok', 
+    status: allCriticalConfigured ? 'ok' : 'warning',
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV || 'development',
-    database: process.env.DATABASE_URL ? 'Connected' : 'Not configured',
-    asaas: process.env.ASAAS_API_KEY ? 'Configured' : 'Not configured'
+    checks: {
+      database: dbConfigured ? 'Connected' : '❌ DATABASE_URL not set',
+      session: sessionConfigured ? 'Configured' : process.env.NODE_ENV === 'production' ? '❌ SESSION_SECRET not set' : 'Using fallback',
+      asaas: asaasConfigured ? 'Configured' : 'Not configured (optional)'
+    },
+    critical_missing: process.env.NODE_ENV === 'production' 
+      ? [
+          ...(dbConfigured ? [] : ['DATABASE_URL']),
+          ...(sessionConfigured ? [] : ['SESSION_SECRET'])
+        ]
+      : (dbConfigured ? [] : ['DATABASE_URL'])
   });
 });
 
@@ -143,9 +167,22 @@ registerRoutes(app).then(server => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔒 Session Secret: ${process.env.SESSION_SECRET ? 'Configured' : 'Using fallback'}`);
   console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
-  console.log(`💾 Database: ${process.env.DATABASE_URL ? 'URL Configured' : 'Not configured'}`);
+  console.log(`💾 Database: ${process.env.DATABASE_URL ? 'URL Configured' : '❌ NOT CONFIGURED'}`);
   console.log(`💳 Payments: ${process.env.ASAAS_API_KEY ? 'Enabled' : 'Disabled'}`);
   console.log(`🔌 WebSocket: ws://0.0.0.0:${PORT}/ws`);
+  
+  // Critical warnings
+  if (!process.env.DATABASE_URL) {
+    console.error('\n❌ CRITICAL ERROR: DATABASE_URL is not set!');
+    console.error('   Login and all database operations will fail');
+    console.error('   Set this environment variable in Railway dashboard\n');
+  }
+  
+  if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+    console.error('\n❌ CRITICAL ERROR: SESSION_SECRET is not set in production!');
+    console.error('   User sessions will not work properly');
+    console.error('   Set this environment variable in Railway dashboard\n');
+  }
   
   // Log environment variables for debugging
   console.log('🔍 Environment variables:');
