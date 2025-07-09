@@ -13,17 +13,29 @@ const users = pgTable('users', {
 });
 
 const profiles = pgTable('profiles', {
-  id: integer('id').primaryKey(),
+  id: uuid('id').primaryKey(),
   user_id: uuid('user_id').references(() => users.id).notNull(),
   name: text('name').notNull(),
   cpf: text('cpf').unique().notNull(),
-  birth_date: text('birth_date').notNull(),
-  phone: text('phone').notNull(),
-  address: text('address').notNull(),
-  city: text('city').notNull(),
+  birth_date: text('birth_date'),
+  phone: text('phone'),
+  address: text('address'),
+  city: text('city'),
   rank: text('rank').notNull().default('aluno'),
-  company: text('company').notNull(),
-  avatar: text('avatar'),
+  company: text('company'),
+  avatar_url: text('avatar_url'),
+  email: text('email'),
+  bio: text('bio'),
+  specialties: text('specialties').array(),
+  joined_at: timestamp('joined_at').defaultNow(),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
+});
+
+const user_roles = pgTable('user_roles', {
+  id: uuid('id').primaryKey(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  role: text('role').notNull(),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -92,6 +104,36 @@ export class VercelStorage {
     } catch (error) {
       console.error('Error getting users by rank:', error);
       return [];
+    }
+  }
+
+  async getUserRoles(userId) {
+    try {
+      console.log('🔍 Buscando roles para usuário:', userId);
+      
+      const result = await db
+        .select({
+          role: user_roles.role
+        })
+        .from(user_roles)
+        .where(eq(user_roles.user_id, userId));
+      
+      const roles = result.map(r => r.role);
+      console.log('✅ Roles encontrados:', roles);
+      
+      // Se não tem roles definidos, usar roles padrão baseado no rank
+      if (roles.length === 0) {
+        const profile = await this.getUserProfile(userId);
+        if (profile?.rank === 'comandante' || profile?.rank === 'major' || profile?.rank === 'coronel') {
+          roles.push('admin');
+        }
+        roles.push('user');
+      }
+      
+      return roles;
+    } catch (error) {
+      console.error('Error getting user roles:', error);
+      return ['user']; // Role padrão em caso de erro
     }
   }
 }
