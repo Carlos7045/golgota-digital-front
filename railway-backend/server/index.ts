@@ -135,9 +135,16 @@ registerRoutes(app).then(server => {
   console.log(`📍 Environment: ${process.env.NODE_ENV || 'development'}`);
   console.log(`🔒 Session Secret: ${process.env.SESSION_SECRET ? 'Configured' : 'Using fallback'}`);
   console.log(`🔗 Health check: http://0.0.0.0:${PORT}/health`);
-  console.log(`💾 Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not configured'}`);
+  console.log(`💾 Database: ${process.env.DATABASE_URL ? 'URL Configured' : 'Not configured'}`);
   console.log(`💳 Payments: ${process.env.ASAAS_API_KEY ? 'Enabled' : 'Disabled'}`);
   console.log(`🔌 WebSocket: ws://0.0.0.0:${PORT}/ws`);
+  
+  // Log environment variables for debugging
+  console.log('🔍 Environment variables:');
+  console.log(`  - NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`  - PORT: ${process.env.PORT}`);
+  console.log(`  - DATABASE_URL: ${process.env.DATABASE_URL ? 'Set' : 'Not set'}`);
+  console.log(`  - SESSION_SECRET: ${process.env.SESSION_SECRET ? 'Set' : 'Not set'}`);
   
   // Test health endpoint
   setTimeout(() => {

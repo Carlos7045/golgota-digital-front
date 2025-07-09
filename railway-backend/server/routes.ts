@@ -84,7 +84,8 @@ export async function registerRoutes(app: express.Application): Promise<Server> 
     res.json({ 
       status: 'ok', 
       timestamp: new Date().toISOString(),
-      environment: process.env.NODE_ENV || 'development'
+      environment: process.env.NODE_ENV || 'development',
+      database: process.env.DATABASE_URL ? 'configured' : 'not configured'
     });
   });
 
