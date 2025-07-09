@@ -2,6 +2,7 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 import { VercelStorage } from './db-vercel.js';
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(cors({
 // Middleware essencial
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'comando-golgota-jwt-secret-2024';
@@ -35,13 +37,17 @@ const JWT_SECRET = process.env.JWT_SECRET || 'comando-golgota-jwt-secret-2024';
 // Middleware de autenticação JWT
 function requireAuth(req, res, next) {
   console.log('🔐 Verificando autenticação JWT...');
+  console.log('🍪 Cookies recebidos:', req.cookies);
+  console.log('🔑 Headers authorization:', req.headers.authorization);
   
   const token = req.headers.authorization?.replace('Bearer ', '') || req.cookies?.token;
   
   if (!token) {
-    console.log('❌ Token não encontrado');
+    console.log('❌ Token não encontrado nos cookies nem headers');
     return res.status(401).json({ message: 'Token não fornecido' });
   }
+  
+  console.log('🔑 Token encontrado:', token.substring(0, 50) + '...');
   
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
@@ -108,6 +114,10 @@ app.post('/api/auth/login', async (req, res) => {
       return res.status(401).json({ error: 'CPF/Email ou senha inválidos' });
     }
     
+    // Buscar perfil do usuário
+    const profile = await storage.getUserProfile(user.id);
+    const roles = await storage.getUserRoles(user.id);
+    
     // Criar token JWT
     const token = jwt.sign(
       { id: user.id, email: user.email },
@@ -116,8 +126,28 @@ app.post('/api/auth/login', async (req, res) => {
     );
     
     console.log('✅ Login realizado com sucesso, token gerado');
+    console.log('🔑 Token gerado:', token);
+    console.log('🔑 Token length:', token.length);
+    console.log('🔑 Token type:', typeof token);
     
-    // Enviar token no cookie e no response
+    // Criar objeto de resposta simples
+    const responseData = {
+      user: { 
+        id: user.id, 
+        email: user.email,
+        force_password_change: user.force_password_change || false,
+        created_at: user.created_at 
+      },
+      profile,
+      roles,
+      token: token, // Explícito
+      message: 'Login realizado com sucesso'
+    };
+    
+    console.log('📤 Objeto de resposta criado com token:', responseData.token ? 'SIM' : 'NÃO');
+    console.log('📤 Todas as chaves do objeto:', Object.keys(responseData));
+    
+    // Enviar token no cookie também
     res.cookie('token', token, {
       httpOnly: false,
       secure: false,
@@ -125,11 +155,8 @@ app.post('/api/auth/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000
     });
     
-    res.json({
-      user: { id: user.id, email: user.email },
-      token,
-      message: 'Login realizado com sucesso'
-    });
+    console.log('🚀 Enviando resposta JSON...');
+    res.json(responseData);
     
   } catch (error) {
     console.error('❌ Erro no login:', error);
@@ -139,17 +166,15 @@ app.post('/api/auth/login', async (req, res) => {
 
 app.get('/api/profile', requireAuth, async (req, res) => {
   try {
-    console.log('📋 Buscando perfil para usuário:', req.user.id);
-    const profile = await storage.getUserProfile(req.user.id);
-    console.log('✅ Perfil encontrado:', profile ? profile.name : 'não encontrado');
+    console.log('📄 Buscando perfil do usuário:', req.user.id);
     
-    res.json({
-      id: req.user.id,
-      name: profile?.name || 'Usuário',
-      email: req.user.email,
-      rank: profile?.rank || 'membro',
-      profile: profile
-    });
+    const profile = await storage.getUserProfile(req.user.id);
+    const roles = await storage.getUserRoles(req.user.id);
+    
+    console.log('✅ Perfil encontrado:', profile?.name || 'Perfil não encontrado');
+    console.log('✅ Roles:', roles);
+    
+    res.json({ profile, roles });
   } catch (error) {
     console.error('❌ Erro ao buscar perfil:', error);
     res.status(500).json({ error: 'Erro ao buscar perfil' });

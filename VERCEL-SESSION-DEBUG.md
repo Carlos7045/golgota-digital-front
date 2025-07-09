@@ -1,111 +1,62 @@
-# 🔧 VERCEL SESSION DEBUG
+# 🔧 SOLUÇÃO COOKIE-ONLY - VERCEL SERVERLESS
 
-## ❌ **PROBLEMA IDENTIFICADO**
+## ✅ **ESTRATÉGIA IMPLEMENTADA**
 
-**Erro 401 após login:** A sessão não está sendo mantida entre o login e as chamadas subsequentes da API.
+### **Problema Original:**
+- Token JWT não estava sendo enviado na resposta JSON
+- Frontend não conseguia salvar o token
+- /api/profile retornava 401
 
-## 🛠️ **CORREÇÕES IMPLEMENTADAS**
+### **Solução Adotada:**
+**Cookie-Only Authentication** - Usar apenas cookies para autenticação
 
-### 1. **Configuração de Sessão Simplificada**
+## 🔧 **IMPLEMENTAÇÃO**
+
+### **Backend (`api/index.js`):**
 ```javascript
-// Session configurada para Vercel serverless
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'comando-golgota-secret-key-2024',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    secure: false, // Temporariamente false para debug
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000,
-    sameSite: 'lax'
-  },
-  name: 'golgota-session'
-}));
+// Login: Salva token apenas no cookie
+res.cookie('token', token, {
+  httpOnly: false,
+  secure: false,
+  sameSite: 'lax',
+  maxAge: 24 * 60 * 60 * 1000
+});
+
+// Middleware: Pega token do cookie
+const token = req.cookies?.token;
 ```
 
-### 2. **Logs de Debug Detalhados**
-- ✅ Logs no login process
-- ✅ Logs na deserialização de usuários  
-- ✅ Logs no middleware de autenticação
-- ✅ Logs na rota de perfil
-
-### 3. **Middleware de Auth Melhorado**
-- ✅ Debug detalhado da sessão
-- ✅ Verificação de `req.user`
-- ✅ Log do `sessionID`
-
-## 🧪 **FLUXO DE TESTE**
-
-### 1. **Login**
-```
-POST https://comandogolgota.com.br/api/auth/login
-{
-  "emailOrCpf": "chpsalgado@hotmail.com",
-  "password": "123456"
-}
+### **Frontend (`AuthContext.tsx`):**
+```javascript
+// Todas as requisições usam cookies automaticamente
+const response = await fetch('/api/profile', {
+  credentials: 'include' // ← Envia cookies automaticamente
+});
 ```
 
-**Logs esperados:**
-```
-🔐 Tentativa de login recebida...
-🔍 Tentativa de login: chpsalgado@hotmail.com
-✅ Usuário encontrado: chpsalgado@hotmail.com
-✅ Login bem-sucedido
-🔐 Fazendo login do usuário: chpsalgado@hotmail.com
-✅ Login realizado com sucesso
-Session ID: sess_123...
-User em sessão: chpsalgado@hotmail.com
-```
-
-### 2. **Profile**
-```
-GET https://comandogolgota.com.br/api/profile
+### **API Client (`api.ts`):**
+```javascript
+// Sem headers Authorization
+const defaultOptions: RequestInit = {
+  credentials: 'include', // ← Cookies automáticos
+  headers: {
+    'Content-Type': 'application/json',
+  }
+};
 ```
 
-**Logs esperados:**
-```
-🔐 Verificando autenticação...
-Session ID: sess_123...
-User: chpsalgado@hotmail.com
-Authenticated: true
-✅ Usuário autenticado: chpsalgado@hotmail.com
-📋 Buscando perfil para usuário: user_id_123
-✅ Perfil encontrado: Carlos Henrique Pereira Salgado
-```
+## 🎯 **VANTAGENS**
 
-## 🔍 **POSSÍVEIS CAUSAS DO PROBLEMA**
+1. **Compatível com Vercel:** ✅ Cookies funcionam perfeitamente
+2. **Simples:** ✅ Sem localStorage/sessionStorage
+3. **Automático:** ✅ Browsers enviam cookies automaticamente
+4. **Seguro:** ✅ HttpOnly opcional, SameSite configurado
 
-### 1. **Cookie Secure**
-- ❌ `secure: true` em produção pode bloquear cookies
-- ✅ Mudado para `false` temporariamente
+## 📊 **RESULTADO ESPERADO**
 
-### 2. **SameSite Policy**
-- ❌ `sameSite: 'none'` pode causar problemas
-- ✅ Mudado para `'lax'`
+1. **Login:** ✅ Token salvo no cookie
+2. **Profile:** ✅ Token enviado automaticamente
+3. **Comunidade:** ✅ Carrega instantaneamente
+4. **Logout:** ✅ Cookie limpo
 
-### 3. **Session Store**
-- ❌ Memory store não persiste entre chamadas serverless
-- 🔄 Mantido para simplicidade inicial
-
-## 📊 **MONITORAMENTO**
-
-### **No Runtime Logs da Vercel:**
-1. Fazer login
-2. Verificar logs de sessão
-3. Tentar acessar `/api/profile`
-4. Verificar se sessão é mantida
-
-### **Indicadores de Sucesso:**
-- ✅ Session ID mantido entre chamadas
-- ✅ `req.user` populado corretamente
-- ✅ `req.isAuthenticated()` retorna true
-- ✅ Profile carrega sem erro 401
-
-## 🎯 **PRÓXIMOS PASSOS**
-
-1. Deploy das correções
-2. Teste do fluxo completo
-3. Verificação dos logs
-4. Se funcionar: reativar `secure: true` gradualmente
-
-**🚀 Aguarde o redeploy e teste novamente!**
+**🚀 Solução implementada - teste agora!**

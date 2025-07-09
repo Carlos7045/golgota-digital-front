@@ -4,32 +4,31 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import { Eye, EyeOff } from 'lucide-react';
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [loginData, setLoginData] = useState({ emailOrCpf: '', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useAuth();
+
+  const from = location.state?.from?.pathname || '/comunidade';
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    // Simular autenticação (substituir por integração real)
-    setTimeout(() => {
-      localStorage.setItem('user', JSON.stringify({
-        id: '1',
-        name: 'Admin João Silva',
-        email: email,
-        rank: 'admin',
-        company: 'Alpha'
-      }));
-      setIsLoading(false);
-      navigate('/comunidade');
-    }, 1500);
+    const { error } = await signIn(loginData.emailOrCpf, loginData.password);
+    
+    if (!error) {
+      navigate(from, { replace: true });
+    }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -56,14 +55,13 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-white">Email</Label>
+                <Label htmlFor="emailOrCpf" className="text-white">CPF ou Email</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  id="emailOrCpf"
+                  value={loginData.emailOrCpf}
+                  onChange={(e) => setLoginData(prev => ({ ...prev, emailOrCpf: e.target.value }))}
                   className="bg-military-black border-military-gold/30 text-white"
-                  placeholder="seu@email.com"
+                  placeholder="000.000.000-00 ou seu@email.com"
                   required
                 />
               </div>
@@ -74,8 +72,8 @@ const Login = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={loginData.password}
+                    onChange={(e) => setLoginData(prev => ({ ...prev, password: e.target.value }))}
                     className="bg-military-black border-military-gold/30 text-white pr-10"
                     placeholder="••••••••"
                     required

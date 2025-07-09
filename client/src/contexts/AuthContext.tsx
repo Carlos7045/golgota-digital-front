@@ -51,18 +51,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      
-      if (!token) {
-        setLoading(false);
-        return;
-      }
-      
       const response = await fetch('/api/profile', {
-        credentials: 'include',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        }
+        credentials: 'include', // Usar cookies automaticamente
       });
       
       if (response.ok) {
@@ -78,8 +68,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           });
         }
       } else if (response.status === 401) {
-        // Token inválido, remover
-        localStorage.removeItem('auth_token');
+        // Token inválido no cookie
+        console.log('Token inválido ou expirado');
       }
     } catch (error) {
       console.error('Failed to fetch profile:', error);
@@ -102,10 +92,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.ok) {
         const data = await response.json();
         
-        // Salvar token JWT no localStorage
-        if (data.token) {
-          localStorage.setItem('auth_token', data.token);
-        }
+        // Token será pego do cookie automaticamente
+        // Não precisa salvar no localStorage
         
         setUser(data.user);
         setProfile(data.profile);
@@ -185,20 +173,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     try {
-      const token = localStorage.getItem('auth_token');
-      
-      if (token) {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          credentials: 'include',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          }
-        });
-      }
-      
-      // Remover token do localStorage
-      localStorage.removeItem('auth_token');
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        credentials: 'include', // Usar cookies automaticamente
+      });
       
       toast({
         title: "Logout realizado",
