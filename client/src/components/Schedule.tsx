@@ -103,7 +103,7 @@ const Schedule = () => {
           <Button 
             variant="outline" 
             className="border-military-gold text-military-gold hover:bg-military-gold hover:text-black font-bold"
-            onClick={() => window.open('https://www.instagram.com/comandogolgota,')}
+            onClick={() => window.open('https://www.instagram.com/comandogolgota', '_blank')}
           >
             Seguir no Instagram
           </Button>
