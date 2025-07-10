@@ -34,6 +34,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   updatePassword: (newPassword: string) => Promise<{ error: any }>;
+  refreshProfile: () => Promise<void>;
+  updateProfile: (updates: Partial<Profile>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -227,6 +229,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const refreshProfile = async () => {
+    await fetchProfile();
+  };
+
+  const updateProfile = (updates: Partial<Profile>) => {
+    if (profile) {
+      const updatedProfile = { ...profile, ...updates };
+      setProfile(updatedProfile);
+      
+      // Update user object if needed
+      if (updates.email && user) {
+        setUser({ ...user, email: updates.email });
+      }
+    }
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -237,7 +255,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       signIn,
       signUp,
       signOut,
-      updatePassword
+      updatePassword,
+      refreshProfile,
+      updateProfile
     }}>
       {children}
     </AuthContext.Provider>

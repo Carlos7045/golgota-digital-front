@@ -1092,20 +1092,34 @@ export class VercelStorage {
 
   async updateProfile(userId, data) {
     try {
-      console.log(`🔍 Atualizando perfil do usuário: ${userId}`);
+      console.log('📝 Atualizando perfil no DB:', { userId, data });
       
-      // Por enquanto retornar dados simulados
-      const profile = {
-        id: `profile_${userId}`,
-        user_id: userId,
-        ...data,
-        updated_at: new Date().toISOString()
-      };
+      // Convert data properties to match database columns
+      const updateData = { ...data };
+      if (data.birth_date) {
+        updateData.birth_date = data.birth_date;
+      }
       
-      console.log('✅ Perfil atualizado (simulado)');
-      return profile;
+      // Update the profile record in database
+      const result = await db.update(profiles)
+        .set({
+          ...updateData,
+          updated_at: new Date()
+        })
+        .where(eq(profiles.user_id, userId))
+        .returning();
+        
+      if (result.length === 0) {
+        throw new Error('Perfil não encontrado para atualização');
+      }
+      
+      // Get the updated profile with user data for consistency
+      const updatedProfile = await this.getUserProfile(userId);
+      
+      console.log('✅ Perfil atualizado no banco:', updatedProfile?.name);
+      return updatedProfile;
     } catch (error) {
-      console.error('Error updating profile:', error);
+      console.error('❌ Erro ao atualizar perfil:', error);
       throw error;
     }
   }

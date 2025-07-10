@@ -32,7 +32,7 @@ const Profile = () => {
     return dateString;
   };
   const navigate = useNavigate();
-  const { user, profile, signOut } = useAuth();
+  const { user, profile, signOut, refreshProfile, updateProfile } = useAuth();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
@@ -126,8 +126,11 @@ const Profile = () => {
         const data = await response.json();
         console.log('Perfil atualizado:', data);
         
-        // Atualizar dados locais
-        Object.assign(profile, editForm);
+        // Atualizar dados locais usando a função do AuthContext
+        updateProfile(editForm);
+        
+        // Recarregar perfil completo do servidor
+        await refreshProfile();
         
         toast({
           title: "Perfil atualizado",
@@ -211,20 +214,16 @@ const Profile = () => {
           if (response.ok) {
             const data = await response.json();
             
-            // Atualizar perfil local com novo avatar
-            if (profile) {
-              profile.avatar_url = base64Data;
-            }
+            // Atualizar perfil usando as funções do AuthContext
+            updateProfile({ avatar_url: data.avatar_url || base64Data });
+            
+            // Recarregar perfil completo do servidor para garantir sincronização
+            await refreshProfile();
             
             toast({
               title: "Avatar atualizado",
               description: "Sua foto de perfil foi atualizada com sucesso!",
             });
-            
-            // Forçar re-render do componente
-            setUploadingAvatar(false);
-            setUploadingAvatar(true);
-            setTimeout(() => setUploadingAvatar(false), 100);
           } else {
             const error = await response.json();
             throw new Error(error.error || 'Erro ao fazer upload');
