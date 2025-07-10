@@ -331,54 +331,46 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             return (
               <div 
                 key={message.id} 
-                className={`group hover:bg-military-black-light/30 rounded-lg transition-all duration-200 ${
-                  isReply ? 'ml-8 mt-2 p-2' : 'p-3'
+                className={`group hover:bg-military-black-light/20 transition-all duration-200 ${
+                  isReply ? 'ml-12 py-2' : 'p-3 border-b border-military-gold/10'
                 }`}
               >
-                {isReply && originalMessage && (
-                  <div className="mb-2 p-2 bg-military-black/40 border-l-4 border-blue-400/40 rounded-r text-xs">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <Reply size={12} className="text-blue-400" />
-                      <span className="text-blue-400">Respondendo para</span>
-                      <span className="text-military-gold font-medium">
-                        {originalMessage.author_name}
-                      </span>
-                    </div>
-                    <p className="text-gray-500 italic truncate">
-                      "{originalMessage.content}"
-                    </p>
-                  </div>
-                )}
-
                 <div className="flex items-start space-x-3">
-                  <Avatar className={`border-2 border-military-gold/30 shrink-0 ${isReply ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                  <Avatar className={`border-2 border-military-gold/30 shrink-0 ${isReply ? 'w-7 h-7' : 'w-10 h-10'}`}>
                     <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
-                    <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold">
+                    <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
                       {(message.author_name || 'U').substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center space-x-2 mb-1">
-                      <span className="text-military-gold font-medium hover:underline cursor-pointer">
+                      <span className={`font-medium hover:underline cursor-pointer ${
+                        isReply ? 'text-gray-300 text-sm' : 'text-military-gold'
+                      }`}>
                         {message.author_name || 'Usuário'}
                       </span>
-                      <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-2 py-0.5`}>
-                        {message.author_rank?.toUpperCase() || 'ALUNO'}
-                      </Badge>
-                      <span className="text-xs text-gray-400">
+                      {isReply && originalMessage && (
+                        <span className="text-gray-500 text-xs">
+                          respondendo para <span className="text-military-gold">@{originalMessage.author_name}</span>
+                        </span>
+                      )}
+                      {!isReply && (
+                        <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-2 py-0.5`}>
+                          {message.author_rank?.toUpperCase() || 'ALUNO'}
+                        </Badge>
+                      )}
+                      <span className="text-xs text-gray-500">
                         {formatTime(new Date(message.created_at))}
                         {!isReply && (
                           <span className="ml-2">
-                            {formatDate(new Date(message.created_at))}
+                            • {formatDate(new Date(message.created_at))}
                           </span>
                         )}
                       </span>
                     </div>
                     
-                    <div className={`bg-military-black-light/80 border border-military-gold/20 rounded-lg mb-2 ${
-                      isReply ? 'p-2' : 'p-3'
-                    }`}>
+                    <div className={`mb-2 ${isReply ? '' : 'bg-military-black-light/60 border border-military-gold/20 rounded-lg p-3'}`}>
                       <p className={`text-gray-300 leading-relaxed ${isReply ? 'text-sm' : ''}`}>
                         {message.content}
                       </p>
@@ -388,28 +380,26 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto"
+                        className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
                       >
-                        <Heart size={isReply ? 12 : 16} className="mr-1" />
-                        <span className="text-sm">0</span>
+                        <Heart size={12} className="mr-1" />
+                        <span>0</span>
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto"
+                        className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
                         title="Responder mensagem"
                         onClick={() => handleReply(message)}
                       >
-                        <Reply size={isReply ? 12 : 16} className="mr-1" />
-                        <span className="text-sm">Responder</span>
+                        <Reply size={12} className="mr-1" />
+                        <span>Responder</span>
                       </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-400 hover:text-gray-300 hover:bg-gray-400/10 p-1 h-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <MoreHorizontal size={isReply ? 12 : 16} />
-                      </Button>
+                      {!isReply && (
+                        <span className="text-xs text-gray-600">
+                          {formatDate(new Date(message.created_at))}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
