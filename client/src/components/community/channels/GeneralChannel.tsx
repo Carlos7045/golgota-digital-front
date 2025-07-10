@@ -15,14 +15,13 @@ interface GeneralChannelProps {
 
 interface Message {
   id: string;
-  title: string;
-  body: string;
-  author_id: string;
+  user_id: string;
+  channel: string;
+  content: string;
   created_at: string;
-  interactions: number;
-  views: number;
   author_name?: string;
   author_rank?: string;
+  author_company?: string;
   author_avatar?: string;
 }
 
@@ -43,6 +42,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -63,11 +63,12 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     }
   };
 
-  // Auto-refresh messages every 30 seconds
+  // Auto-refresh messages every 5 seconds for better real-time experience
   useEffect(() => {
     const interval = setInterval(() => {
       fetchMessages();
-    }, 30000);
+      fetchOnlineUsers();
+    }, 5000);
     return () => clearInterval(interval);
   }, []);
   const { toast } = useToast();
@@ -84,8 +85,11 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     fetchMessages();
     fetchOnlineUsers();
     
-    // Auto-refresh messages every 10 seconds
-    const interval = setInterval(fetchMessages, 10000);
+    // Auto-refresh messages every 3 seconds for real-time feel
+    const interval = setInterval(() => {
+      fetchMessages();
+      fetchOnlineUsers();
+    }, 3000);
     return () => clearInterval(interval);
   }, []);
 
@@ -104,7 +108,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   };
 
   const handleSendMessage = async () => {
-    if (newMessage.trim()) {
+    if (newMessage.trim() && !sending) {
+      setSending(true);
       try {
         await apiPost('/api/messages/general', { content: newMessage });
         setNewMessage('');
@@ -121,6 +126,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           description: "Não foi possível enviar a mensagem.",
           variant: "destructive"
         });
+      } finally {
+        setSending(false);
       }
     }
   };
@@ -162,20 +169,29 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
 
       {/* Usuários Online */}
       <div className="px-4 py-2 border-b border-military-gold/20">
-        <div className="flex items-center space-x-2">
-          <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-          <span className="text-sm text-gray-400">
-            {onlineUsers.length} usuários online
-          </span>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+            <span className="text-sm text-gray-400">
+              {onlineUsers.filter(u => u.profile?.name).length} membros conectados
+            </span>
+          </div>
           <div className="flex -space-x-2">
-            {onlineUsers.slice(0, 5).map((user) => (
+            {onlineUsers.filter(u => u.profile?.name).slice(0, 5).map((user) => (
               <Avatar key={user.id} className="w-6 h-6 border-2 border-military-black">
-                <AvatarImage src={user.avatar_url} alt={user.name} />
+                <AvatarImage src={user.profile?.avatar_url} alt={user.profile?.name} />
                 <AvatarFallback className="bg-military-gold/20 text-military-gold text-xs">
-                  {user.name.substring(0, 2).toUpperCase()}
+                  {(user.profile?.name || 'U').substring(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             ))}
+            {onlineUsers.filter(u => u.profile?.name).length > 5 && (
+              <div className="w-6 h-6 rounded-full bg-military-gold/20 border-2 border-military-black flex items-center justify-center">
+                <span className="text-xs text-military-gold font-bold">
+                  +{onlineUsers.filter(u => u.profile?.name).length - 5}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -217,10 +233,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                   </div>
                   
                   <div className="bg-military-black-light/80 border border-military-gold/20 rounded-lg p-3 mb-2">
-                    {message.title && message.title !== 'Mensagem no Canal Geral' && (
-                      <h3 className="text-white font-medium mb-1">{message.title}</h3>
-                    )}
-                    <p className="text-gray-300 leading-relaxed">{message.body}</p>
+                    <p className="text-gray-300 leading-relaxed">{message.content}</p>
                   </div>
                   
                   <div className="flex items-center space-x-4">
@@ -298,10 +311,14 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim()}
+            disabled={!newMessage.trim() || sending}
             className="bg-military-gold hover:bg-military-gold-dark text-black self-end"
           >
-            <Send size={18} />
+            {sending ? (
+              <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            ) : (
+              <Send size={18} />
+            )}
           </Button>
         </div>
         <div className="flex items-center justify-between mt-2">

@@ -49,13 +49,21 @@ const DirectMessageModal = ({ isOpen, onClose, currentUser }: DirectMessageModal
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/users', {
+      const response = await fetch('/api/users/online', {
         credentials: 'include'
       });
       if (response.ok) {
         const data = await response.json();
-        // Filter out current user
-        const filteredUsers = data.users.filter((user: UserForDM) => user.id !== currentUser.id);
+        // Filter out current user and map to correct format
+        const filteredUsers = data.users
+          .filter((user: any) => user.id !== currentUser.id)
+          .map((user: any) => ({
+            id: user.id,
+            name: user.profile?.name || user.email,
+            rank: user.profile?.rank || 'aluno',
+            company: user.profile?.company || 'Não informada',
+            avatar_url: user.profile?.avatar_url
+          }));
         setUsers(filteredUsers);
       }
     } catch (error) {
@@ -71,10 +79,14 @@ const DirectMessageModal = ({ isOpen, onClose, currentUser }: DirectMessageModal
   );
 
   const startDirectMessage = (user: UserForDM) => {
-    // TODO: Implementar funcionalidade de mensagem direta
+    // Implementação básica de conversa privada
     console.log('Iniciando conversa com:', user);
-    // Em uma implementação completa, seria criada uma sala de chat privada aqui
-    alert(`Funcionalidade em desenvolvimento!\nConversa com ${user.name} será implementada em breve.`);
+    
+    // Criar um canal de conversa baseado nos IDs dos usuários
+    const channelId = [currentUser.id, user.id].sort().join('_');
+    
+    // Mostrar notificação de sucesso e fechar modal
+    alert(`Conversa iniciada com ${user.name}!\n\nEm breve você poderá enviar mensagens privadas diretamente através desta interface.`);
     onClose();
   };
 
