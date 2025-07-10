@@ -1,0 +1,18 @@
+Jul 10 20:19:22.35
+GET
+500
+www.comandogolgota.com.br
+/api/profile
+🚀 API iniciando... 📦 NODE_ENV: production 🔗 DATABASE_URL: Configurado ReferenceError: EMERGENCY_DEPLOY_1752188221 is not defined at file:///var/task/api/index.js:1984:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:18:49.17
+GET
+500
+golgota-digital-front-qqw2120pf-carlos-salgados-projects.vercel.app
+/api/profile
+🚀 API iniciando... 📦 NODE_ENV: production 🔗 DATABASE_URL: Configurado ReferenceError: EMERGENCY_DEPLOY_1752188221 is not defined at file:///var/task/api/index.js:1984:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue. 🚀 API iniciando... 📦 NODE_ENV: production 🔗 DATABASE_URL: Configurado ReferenceError: EMERGENCY_DEPLOY_1752188221 is not defined at file:///var/task/api/index.js:1984:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:18:49.15
+GET
+500
+golgota-digital-front-qqw2120pf-carlos-salgados-projects.vercel.app
+/api/profile
+🚀 API iniciando... 📦 NODE_ENV: production 🔗 DATABASE_URL: Configurado ReferenceError: EMERGENCY_DEPLOY_1752188221 is not defined at file:///var/task/api/index.js:1984:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
