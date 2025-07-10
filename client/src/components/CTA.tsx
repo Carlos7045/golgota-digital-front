@@ -54,9 +54,7 @@ const CTA = () => {
                   contato@comandogolgota.com
                 </a>
                 <span className="hidden sm:block text-gray-600">|</span>
-                <a href="tel:+5511999999999" className="hover:text-military-gold-light transition-colors">
-                  (11) 99999-9999
-                </a>
+                <a href="tel:+5511999999999" className="hover:text-military-gold-light transition-colors">(99) 98433-9294</a>
                 <span className="hidden sm:block text-gray-600">|</span>
                 <a href="https://instagram.com/comandogolgota" className="hover:text-military-gold-light transition-colors">
                   @comandogolgota
