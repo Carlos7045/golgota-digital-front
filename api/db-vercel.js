@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and } from 'drizzle-orm';
 import { pgTable, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
 
 // Schema inline para evitar problemas de importação
@@ -97,6 +97,15 @@ const asaas_payments = pgTable('asaas_payments', {
   pix_code: text('pix_code'),
   created_at: timestamp('created_at').defaultNow(),
   updated_at: timestamp('updated_at').defaultNow()
+});
+
+const company_members = pgTable('company_members', {
+  id: uuid('id').primaryKey(),
+  company_id: uuid('company_id').references(() => companies.id).notNull(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  role: text('role').default('Membro'),
+  joined_at: timestamp('joined_at').defaultNow(),
+  created_at: timestamp('created_at').defaultNow()
 });
 
 // Configuração do banco para Vercel
@@ -522,16 +531,44 @@ export class VercelStorage {
     }
   }
 
-  async addCompanyMember(companyId, userId, role) {
+  async addCompanyMember(companyId, userId, role = 'Membro') {
     try {
-      console.log(`🔍 Adicionando membro ${userId} à empresa ${companyId}`);
+      console.log(`🔍 Adicionando membro ${userId} à empresa ${companyId} com role ${role}`);
       
-      // Por enquanto simular adição
-      console.log('✅ Membro adicionado (simulado)');
+      // Verificar se já é membro
+      const existingMember = await db
+        .select()
+        .from(company_members)
+        .where(
+          and(
+            eq(company_members.company_id, companyId),
+            eq(company_members.user_id, userId)
+          )
+        )
+        .limit(1);
+      
+      if (existingMember.length > 0) {
+        console.log('⚠️ Usuário já é membro desta companhia');
+        return true;
+      }
+      
+      // Adicionar membro
+      await db
+        .insert(company_members)
+        .values({
+          id: `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          company_id: companyId,
+          user_id: userId,
+          role: role,
+          joined_at: new Date(),
+          created_at: new Date()
+        });
+      
+      console.log('✅ Membro adicionado à companhia');
       return true;
     } catch (error) {
-      console.error('Error adding company member:', error);
-      throw error;
+      console.error('❌ Error adding company member:', error);
+      return false; // Não falhar o cadastro se não conseguir adicionar à companhia
     }
   }
 
@@ -777,6 +814,14 @@ export class VercelStorage {
   async createUser(userData) {
     try {
       console.log('🔍 Criando usuário na base de dados...');
+      console.log('📋 Dados do usuário:', {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        cpf: userData.cpf ? 'Informado' : 'Não informado',
+        company: userData.company,
+        rank: userData.rank
+      });
       
       // Inserir usuário real na tabela users
       const result = await db
@@ -786,29 +831,64 @@ export class VercelStorage {
           email: userData.email,
           password: userData.password,
           created_at: new Date(),
-          updated_at: new Date()
+          force_password_change: false
         })
         .returning();
       
-      // Criar perfil associado
+      console.log('✅ Usuário inserido na tabela users');
+      
+      // Criar perfil associado com todos os dados
+      const profileData = {
+        id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        user_id: userData.id,
+        name: userData.name || userData.email.split('@')[0],
+        cpf: userData.cpf || '',
+        phone: userData.phone || '',
+        address: userData.address || '',
+        city: userData.city || '',
+        birth_date: userData.birth_date || null,
+        rank: userData.rank || 'aluno',
+        company: userData.company || '',
+        email: userData.email,
+        bio: null,
+        avatar_url: null,
+        specialties: null,
+        joined_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      
+      console.log('📋 Dados do perfil:', profileData);
+      
       await db
         .insert(profiles)
-        .values({
-          id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-          user_id: userData.id,
-          name: userData.name || userData.email.split('@')[0],
-          cpf: userData.cpf,
-          phone: userData.phone,
-          rank: userData.rank || 'aluno',
-          company: userData.company,
-          created_at: new Date(),
-          updated_at: new Date()
-        });
+        .values(profileData);
       
-      console.log('✅ Usuário criado na base de dados');
+      console.log('✅ Perfil criado na base de dados');
+      
+      // Adicionar à companhia se especificada
+      if (userData.company) {
+        try {
+          const companies = await this.getCompanies();
+          const company = companies.find(c => c.name.toLowerCase() === userData.company.toLowerCase());
+          
+          if (company) {
+            console.log(`🏢 Adicionando usuário à companhia: ${company.name}`);
+            await this.addCompanyMember(company.id, userData.id, 'Membro');
+            console.log('✅ Usuário adicionado à companhia');
+          } else {
+            console.log(`⚠️ Companhia "${userData.company}" não encontrada`);
+          }
+        } catch (companyError) {
+          console.log('⚠️ Erro ao adicionar à companhia (não crítico):', companyError.message);
+        }
+      }
+      
+      console.log('✅ Usuário completo criado na base de dados');
       return result[0];
     } catch (error) {
-      console.error('Error creating user:', error);
+      console.error('❌ Error creating user:', error);
+      console.error('❌ Stack trace:', error.stack);
       throw error;
     }
   }

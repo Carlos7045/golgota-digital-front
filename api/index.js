@@ -97,6 +97,76 @@ async function authenticateUser(emailOrCpf, password) {
   }
 }
 
+// === ROTA DE REGISTRO ===
+app.post('/api/auth/register', async (req, res) => {
+  console.log('👤 Tentativa de cadastro recebida...');
+  
+  try {
+    const { email, password, fullName, cpf, phone, city, address, birthYear, company, rank } = req.body;
+    
+    console.log('📝 Dados recebidos:', { 
+      email, 
+      fullName, 
+      cpf: cpf ? 'Informado' : 'Não informado',
+      company,
+      rank: rank || 'aluno'
+    });
+    
+    // Validação básica
+    if (!email || !password || !fullName) {
+      console.log('❌ Dados obrigatórios faltando');
+      return res.status(400).json({ message: 'Email, senha e nome completo são obrigatórios' });
+    }
+    
+    // Verificar se usuário já existe
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      console.log('❌ Usuário já existe');
+      return res.status(400).json({ message: 'E-mail já está cadastrado no sistema' });
+    }
+    
+    // Hash da senha
+    const hashedPassword = await bcrypt.hash(password, 10);
+    console.log('🔐 Senha hasheada com sucesso');
+    
+    // Gerar UUID para o usuário
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Dados do usuário
+    const userData = {
+      id: userId,
+      email,
+      password: hashedPassword,
+      name: fullName,
+      cpf: cpf?.replace(/\D/g, '') || '',
+      phone: phone || '',
+      city: city || '',
+      address: address || '',
+      birth_date: birthYear ? `${birthYear}-01-01` : null,
+      company: company || '',
+      rank: rank || 'aluno'
+    };
+    
+    // Criar usuário
+    const user = await storage.createUser(userData);
+    console.log('✅ Usuário criado com sucesso:', user.id);
+    
+    // Resposta sem senha
+    const { password: _, ...userResponse } = user;
+    res.status(201).json({ 
+      user: userResponse,
+      message: 'Cadastro realizado com sucesso!'
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro no cadastro:', error);
+    res.status(500).json({ 
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+});
+
 // Rota de login JWT
 app.post('/api/auth/login', async (req, res) => {
   console.log('🔐 Tentativa de login recebida...');
@@ -401,8 +471,8 @@ app.post('/api/messages/:channel', requireAuth, async (req, res) => {
 
 // === ENDPOINTS DE EMPRESAS ===
 
-// Buscar empresas
-app.get('/api/companies', requireAuth, async (req, res) => {
+// Buscar empresas (sem autenticação para permitir acesso na página de registro)
+app.get('/api/companies', async (req, res) => {
   try {
     console.log('🏢 Buscando empresas...');
     
