@@ -45,6 +45,10 @@ const general_messages = pgTable('general_messages', {
   user_id: uuid('user_id').references(() => users.id).notNull(),
   channel: text('channel').notNull(),
   content: text('content').notNull(),
+  parent_message_id: uuid('parent_message_id'),
+  thread_id: uuid('thread_id'),
+  reply_count: integer('reply_count').default(0),
+  is_thread_starter: boolean('is_thread_starter').default(false),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -303,13 +307,17 @@ export class VercelStorage {
     try {
       console.log(`🔍 Buscando mensagens do canal: ${channel}`);
       
-      // Buscar mensagens reais da tabela general_messages usando schema básico (sem threading temporariamente)
+      // Buscar mensagens reais da tabela general_messages com threading
       const result = await db
         .select({
           id: general_messages.id,
           user_id: general_messages.user_id,
           channel: general_messages.channel,
           content: general_messages.content,
+          parent_message_id: general_messages.parent_message_id,
+          thread_id: general_messages.thread_id,
+          reply_count: general_messages.reply_count,
+          is_thread_starter: general_messages.is_thread_starter,
           created_at: general_messages.created_at
         })
         .from(general_messages)
@@ -342,12 +350,43 @@ export class VercelStorage {
     try {
       console.log(`🔍 Criando mensagem no canal: ${channel}`);
       
-      // Inserir mensagem real na tabela general_messages usando schema básico (sem threading temporariamente)
+      // If this is a reply, determine thread_id and update parent reply count
+      let finalThreadId = threadId;
+      let isThreadStarter = false;
+      
+      if (parentMessageId) {
+        // This is a reply
+        const parentMessage = await db
+          .select()
+          .from(general_messages)
+          .where(eq(general_messages.id, parentMessageId))
+          .limit(1);
+          
+        if (parentMessage[0]) {
+          // Use parent's thread_id if it exists, otherwise use parent's id as thread_id
+          finalThreadId = parentMessage[0].thread_id || parentMessage[0].id;
+          
+          // Update parent message reply count
+          await db
+            .update(general_messages)
+            .set({ 
+              reply_count: sql`${general_messages.reply_count} + 1`,
+              is_thread_starter: true // Mark parent as thread starter
+            })
+            .where(eq(general_messages.id, parentMessageId));
+        }
+      }
+      
+      // Inserir mensagem real na tabela general_messages com threading
       const messageData = {
         id: crypto.randomUUID(),
         user_id: userId,
         channel: channel,
         content: messageContent,
+        parent_message_id: parentMessageId,
+        thread_id: finalThreadId,
+        reply_count: 0,
+        is_thread_starter: isThreadStarter,
         created_at: new Date()
       };
       
