@@ -231,40 +231,46 @@ export class VercelStorage {
 
   async getUserRoles(userId) {
     try {
-      console.log('🔍 PRODUCTION ADMIN FIX - Buscando roles para usuário:', userId);
+      console.log('🚨 FORCED ADMIN DEBUG - UserID:', userId);
+      
+      // FORCE ADMIN para Carlos Henrique - HARDCODED FIX
+      if (userId === '068b3ef8-ceb9-41df-81c3-aceec25a5ffc') {
+        console.log('🚨 HARDCODED ADMIN FIX - Carlos Henrique detectado pelo ID');
+        return ['admin'];
+      }
       
       // Buscar o usuário para verificar o email
       const user = await this.getUser(userId);
-      console.log('👤 Usuário encontrado:', user?.email);
-      console.log('🔍 Dados completos do usuário:', JSON.stringify(user, null, 2));
+      console.log('🚨 USER DEBUG - Email:', user?.email);
+      console.log('🚨 USER DEBUG - Full data:', JSON.stringify(user, null, 2));
       
       // Buscar o perfil também para redundância 
       const profile = await this.getUserProfile(userId);
-      console.log('👤 Profile encontrado - email:', profile?.email);
-      console.log('👤 Profile encontrado - cpf:', profile?.cpf);
-      console.log('🔍 Dados completos do perfil:', JSON.stringify(profile, null, 2));
+      console.log('🚨 PROFILE DEBUG - Email:', profile?.email);
+      console.log('🚨 PROFILE DEBUG - CPF:', profile?.cpf);
+      console.log('🚨 PROFILE DEBUG - Full data:', JSON.stringify(profile, null, 2));
       
       // CRITICAL ADMIN FIX: Carlos Henrique é admin - verificar tanto user quanto profile
       const isAdminByEmail = user?.email === 'chpsalgado@hotmail.com';
       const isAdminByProfileEmail = profile?.email === 'chpsalgado@hotmail.com';
       const isAdminByCpf = profile?.cpf === '05018022310';
       
-      console.log('🔍 Verificações de admin:');
-      console.log('  - Por email do user:', isAdminByEmail);
-      console.log('  - Por email do profile:', isAdminByProfileEmail);
-      console.log('  - Por CPF do profile:', isAdminByCpf);
+      console.log('🚨 ADMIN CHECKS:');
+      console.log('🚨   Email user:', isAdminByEmail);
+      console.log('🚨   Email profile:', isAdminByProfileEmail);
+      console.log('🚨   CPF profile:', isAdminByCpf);
       
       if (isAdminByEmail || isAdminByProfileEmail || isAdminByCpf) {
-        console.log('✅ ADMIN AUTORIZADO: Carlos Henrique - ROLES: [ admin ]');
+        console.log('🚨 ADMIN CONFIRMED - Returning admin role');
         return ['admin'];
       }
       
       // Todos os outros usuários são apenas 'user'
-      console.log('✅ Usuário padrão (sem permissões de admin) - ROLES: [ user ]');
+      console.log('🚨 USER ROLE - No admin privileges found');
       return ['user'];
       
     } catch (error) {
-      console.error('Error getting user roles:', error);
+      console.error('🚨 ERROR in getUserRoles:', error);
       return ['user']; // Role padrão em caso de erro
     }
   }
