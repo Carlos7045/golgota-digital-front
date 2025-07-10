@@ -291,7 +291,19 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
         ) : (
           organizedMessages.map((message) => {
+            // Debug para entender o problema
             const isMyMessage = String(message.user_id) === String(user?.id);
+            if (messages.length > 0) {
+              console.log('Debug user comparison:', {
+                messageUserId: message.user_id,
+                messageUserIdType: typeof message.user_id,
+                currentUserId: user?.id,
+                currentUserIdType: typeof user?.id,
+                userObject: user,
+                isMyMessage: isMyMessage,
+                stringComparison: `"${String(message.user_id)}" === "${String(user?.id)}"`
+              });
+            }
             const originalMessage = message.parent_message_id 
               ? messages.find(m => m.id === message.parent_message_id)
               : null;
