@@ -236,15 +236,25 @@ export class VercelStorage {
       // Buscar o usuário para verificar o email
       const user = await this.getUser(userId);
       console.log('👤 Usuário encontrado:', user?.email);
+      console.log('🔍 Dados completos do usuário:', JSON.stringify(user, null, 2));
       
       // Buscar o perfil também para redundância 
       const profile = await this.getUserProfile(userId);
-      console.log('👤 Profile encontrado:', profile?.email);
+      console.log('👤 Profile encontrado - email:', profile?.email);
+      console.log('👤 Profile encontrado - cpf:', profile?.cpf);
+      console.log('🔍 Dados completos do perfil:', JSON.stringify(profile, null, 2));
       
       // CRITICAL ADMIN FIX: Carlos Henrique é admin - verificar tanto user quanto profile
-      if ((user?.email === 'chpsalgado@hotmail.com') || 
-          (profile?.email === 'chpsalgado@hotmail.com') ||
-          (profile?.cpf === '05018022310')) {
+      const isAdminByEmail = user?.email === 'chpsalgado@hotmail.com';
+      const isAdminByProfileEmail = profile?.email === 'chpsalgado@hotmail.com';
+      const isAdminByCpf = profile?.cpf === '05018022310';
+      
+      console.log('🔍 Verificações de admin:');
+      console.log('  - Por email do user:', isAdminByEmail);
+      console.log('  - Por email do profile:', isAdminByProfileEmail);
+      console.log('  - Por CPF do profile:', isAdminByCpf);
+      
+      if (isAdminByEmail || isAdminByProfileEmail || isAdminByCpf) {
         console.log('✅ ADMIN AUTORIZADO: Carlos Henrique - ROLES: [ admin ]');
         return ['admin'];
       }
