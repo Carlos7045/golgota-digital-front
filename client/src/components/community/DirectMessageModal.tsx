@@ -80,7 +80,7 @@ const DirectMessageModal = ({ isOpen, onClose, currentUser }: DirectMessageModal
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-military-black border-military-gold/20 text-white max-w-md">
+      <DialogContent className="bg-military-black-light border-military-gold/20 text-white max-w-md sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center text-military-gold">
             <MessageSquare className="mr-2" size={20} />

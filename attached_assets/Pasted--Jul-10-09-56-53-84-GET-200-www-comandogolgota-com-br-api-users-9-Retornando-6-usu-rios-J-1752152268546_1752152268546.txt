@@ -1,0 +1,71 @@
+
+Jul 10 09:56:53.84
+GET
+200
+www.comandogolgota.com.br
+/api/users
+9
+✅ Retornando 6 usuários
+Jul 10 09:56:50.94
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: TypeError: Cannot convert undefined or null to object at Function.entries (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:17) at file:///var/task/node_modules/drizzle-orm/utils.js:63:22 at Array.reduce (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:33) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:684:26 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14) at PgSelectBase._prepare (file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:683:19) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:19 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14)
+Jul 10 09:56:46.09
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 09:56:41.06
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: TypeError: Cannot convert undefined or null to object at Function.entries (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:17) at file:///var/task/node_modules/drizzle-orm/utils.js:63:22 at Array.reduce (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:33) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:684:26 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14) at PgSelectBase._prepare (file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:683:19) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:19 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14)
+Jul 10 09:56:35.08
+POST
+500
+www.comandogolgota.com.br
+/api/messages/general
+9
+❌ Erro ao enviar mensagem: NeonDbError: column "title" of relation "general_messages" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.createMessage (file:///var/task/api/db-vercel.js:359:22) at async file:///var/task/api/index.js:612:21 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '39', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_target.c', line: '1066', routine: 'checkInsertTargets', sourceError: undefined }
+Jul 10 09:56:30.93
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: TypeError: Cannot convert undefined or null to object at Function.entries (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:17) at file:///var/task/node_modules/drizzle-orm/utils.js:63:22 at Array.reduce (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:33) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:684:26 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14) at PgSelectBase._prepare (file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:683:19) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:19 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14)
+Jul 10 09:56:30.93
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 09:56:16.49
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 09:56:16.08
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: TypeError: Cannot convert undefined or null to object at Function.entries (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:17) at file:///var/task/node_modules/drizzle-orm/utils.js:63:22 at Array.reduce (<anonymous>) at orderSelectedFields (file:///var/task/node_modules/drizzle-orm/utils.js:53:33) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:684:26 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14) at PgSelectBase._prepare (file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:683:19) at file:///var/task/node_modules/drizzle-orm/pg-core/query-builders/select.js:708:19 at Object.startActiveSpan (file:///var/task/node_modules/drizzle-orm/tracing.js:8:14)
+Jul 10 09:56:16.08
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online

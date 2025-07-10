@@ -42,14 +42,9 @@ const user_roles = pgTable('user_roles', {
 
 const general_messages = pgTable('general_messages', {
   id: uuid('id').primaryKey(),
-  title: text('title').notNull(),
-  body: text('body').notNull(),
-  author_id: uuid('author_id').references(() => users.id).notNull(),
-  author_name: text('author_name').notNull(),
-  author_rank: text('author_rank').notNull(),
-  author_company: text('author_company').notNull(),
-  views: integer('views').default(0),
-  interactions: integer('interactions').default(0),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  channel: text('channel').notNull(),
+  content: text('content').notNull(),
   created_at: timestamp('created_at').defaultNow()
 });
 
