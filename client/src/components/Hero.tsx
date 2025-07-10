@@ -9,7 +9,6 @@ const Hero = () => {
     <section className="relative min-h-screen flex items-center justify-center bg-hero-gradient hero-pattern">
       {/* Background Overlay */}
       <div className="absolute inset-0 bg-black/50"></div>
-      
       {/* Content */}
       <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
         <div className="animate-fade-in">
@@ -53,7 +52,7 @@ const Hero = () => {
           {/* Stats */}
           <div className="flex flex-col sm:flex-row justify-center items-center gap-8 mt-12 pt-8 border-t border-military-gold/20">
             <div className="text-center">
-              <div className="text-3xl font-bold text-military-gold">15+</div>
+              <div className="text-3xl font-bold text-military-gold">19+</div>
               <div className="text-gray-400">Anos de Experiência</div>
             </div>
             <div className="text-center">
@@ -67,7 +66,6 @@ const Hero = () => {
           </div>
         </div>
       </div>
-
       {/* Scroll Indicator */}
       <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 animate-bounce">
         <div className="w-6 h-10 border-2 border-military-gold rounded-full flex justify-center">
