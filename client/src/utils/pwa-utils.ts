@@ -139,8 +139,8 @@ export const showNotification = (title: string, options?: NotificationOptions): 
   }
 
   const defaultOptions: NotificationOptions = {
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
+    icon: '/favicon.ico',
+    badge: '/favicon.ico',
     vibrate: [200, 100, 200],
     tag: 'comando-golgota-notification',
     requireInteraction: false,

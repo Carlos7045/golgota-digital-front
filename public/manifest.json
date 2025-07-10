@@ -61,7 +61,13 @@
     },
     {
       "src": "/favicon.ico",
-      "sizes": "48x48",
+      "sizes": "16x16 32x32 48x48",
+      "type": "image/x-icon",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon.ico",
+      "sizes": "16x16 32x32 48x48",
       "type": "image/x-icon",
       "purpose": "any"
     }
@@ -86,21 +92,21 @@
       "short_name": "Chat",
       "description": "Acesso direto ao chat da comunidade",
       "url": "/comunidade",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.ico", "sizes": "48x48" }]
     },
     {
       "name": "Perfil",
       "short_name": "Profile",
       "description": "Visualizar e editar perfil",
       "url": "/perfil",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.ico", "sizes": "48x48" }]
     },
     {
       "name": "Pagamentos",
       "short_name": "Payments",
       "description": "Gerenciar pagamentos e mensalidades",
       "url": "/pagamentos",
-      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/favicon.ico", "sizes": "48x48" }]
     }
   ],
   "prefer_related_applications": false,

@@ -35,7 +35,7 @@ const PWAUpdateNotification = () => {
 
   return (
     <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
-      <div className="bg-military-black border border-military-gold rounded-lg p-4 shadow-lg">
+      <div className="bg-military-black border border-military-gold rounded-lg p-4 shadow-lg backdrop-blur-sm bg-opacity-95">
         <div className="flex items-start justify-between mb-3">
           <div className="flex items-center space-x-2">
             <RefreshCw className="h-5 w-5 text-military-gold" />
