@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
+import crypto from 'crypto';
 import { VercelStorage } from './db-vercel.js';
 
 const app = express();
@@ -204,8 +205,8 @@ app.post('/api/auth/register', async (req, res) => {
       console.log('✅ ETAPA 4: Hash da senha OK');
       
       // ETAPA 5: Preparar dados para inserção
-      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      console.log('🆔 ETAPA 5: ID gerado:', userId);
+      const userId = crypto.randomUUID();
+      console.log('🆔 ETAPA 5: ID UUID gerado:', userId);
       
       const userData = {
         id: userId,

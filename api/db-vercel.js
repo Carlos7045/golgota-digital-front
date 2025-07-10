@@ -2,6 +2,7 @@ import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 import { eq, desc, and } from 'drizzle-orm';
 import { pgTable, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
+import crypto from 'crypto';
 
 // Schema inline para evitar problemas de importação
 const users = pgTable('users', {
@@ -320,7 +321,7 @@ export class VercelStorage {
       
       // Inserir mensagem real na tabela general_messages
       const messageData = {
-        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         title: 'Mensagem no Canal Geral',
         body: messageContent,
         author_id: userId,
@@ -390,7 +391,7 @@ export class VercelStorage {
       
       // Por enquanto simular criação
       const subscription = {
-        id: Date.now().toString(),
+        id: crypto.randomUUID(),
         ...data,
         status: 'ACTIVE',
         created_at: new Date().toISOString()
@@ -452,7 +453,7 @@ export class VercelStorage {
     try {
       console.log('🔍 Criando empresa...');
       
-      const companyId = `comp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const companyId = crypto.randomUUID();
       
       // Inserir empresa real na tabela companies
       const result = await db
@@ -556,7 +557,7 @@ export class VercelStorage {
       await db
         .insert(company_members)
         .values({
-          id: `member_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          id: crypto.randomUUID(),
           company_id: companyId,
           user_id: userId,
           role: role,
@@ -617,7 +618,7 @@ export class VercelStorage {
       
       // Por enquanto simular criação
       const event = {
-        id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         ...eventData,
         created_at: new Date().toISOString()
       };
@@ -668,7 +669,7 @@ export class VercelStorage {
       
       // Por enquanto simular registro
       const registration = {
-        id: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         event_id: eventId,
         user_id: userId,
         payment_data: paymentData,
@@ -763,7 +764,7 @@ export class VercelStorage {
       console.log('🔍 Criando transação financeira...');
       
       const transaction = {
-        id: `trans_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         ...transactionData,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -863,7 +864,7 @@ export class VercelStorage {
       console.log('📝 Criando perfil para usuário:', userId);
       
       const profile = {
-        id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: crypto.randomUUID(),
         user_id: userId,
         name: profileData.name || '',
         cpf: profileData.cpf || '',
