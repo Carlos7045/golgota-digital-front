@@ -53,12 +53,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchProfile = async () => {
     try {
+      console.log('🔍 AuthContext - Fetching profile...');
       const response = await fetch('/api/profile', {
         credentials: 'include', // Usar cookies automaticamente
       });
       
+      console.log('🔍 AuthContext - Profile response:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 AuthContext - Profile data:', data);
         setProfile(data.profile);
         setRoles(data.roles);
         // For backwards compatibility, create user object from profile
@@ -71,10 +75,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       } else if (response.status === 401) {
         // Token inválido no cookie
-        console.log('Token inválido ou expirado');
+        console.log('🔍 AuthContext - Token inválido ou expirado');
+        const errorText = await response.text();
+        console.log('🔍 AuthContext - Error response:', errorText);
       }
     } catch (error) {
-      console.error('Failed to fetch profile:', error);
+      console.error('🔍 AuthContext - Failed to fetch profile:', error);
     } finally {
       setLoading(false);
     }
@@ -82,6 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (emailOrCpf: string, password: string) => {
     try {
+      console.log('🔍 AuthContext - Attempting login...');
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
@@ -91,8 +98,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         body: JSON.stringify({ emailOrCpf, password }),
       });
 
+      console.log('🔍 AuthContext - Login response:', response.status);
+
       if (response.ok) {
         const data = await response.json();
+        console.log('🔍 AuthContext - Login successful:', data);
         
         // Token será pego do cookie automaticamente
         // Não precisa salvar no localStorage

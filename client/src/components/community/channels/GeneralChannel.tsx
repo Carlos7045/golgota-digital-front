@@ -61,15 +61,29 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     queryKey: ['api', '/api/messages/general'],
     refetchInterval: 30000, // Atualiza a cada 30 segundos
     retry: 1,
+    enabled: !!user?.id, // Só executa se user estiver definido
   });
 
   const messages = messagesData?.messages || [];
   
   // Debug: Log dos dados recebidos
+  console.log('🔍 Debug - User:', user);
   console.log('🔍 Debug - Messages data:', messagesData);
   console.log('🔍 Debug - Messages array:', messages);
   console.log('🔍 Debug - Loading:', loading);
   console.log('🔍 Debug - Error:', error);
+  
+  // Add manual test button for debugging
+  const testAuth = async () => {
+    try {
+      const response = await fetch('/api/profile', {
+        credentials: 'include'
+      });
+      console.log('🔍 Auth test response:', response.status, await response.text());
+    } catch (err) {
+      console.log('🔍 Auth test error:', err);
+    }
+  };
 
   // Use TanStack Query para buscar usuários online
   const { data: onlineUsersData } = useQuery({
@@ -217,9 +231,27 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
               Espaço para conversas gerais e informações importantes
             </p>
           </div>
-          <Badge className="bg-green-600 text-white">
-            {messages.length} mensagens
-          </Badge>
+          <div className="flex items-center space-x-2">
+            <Badge className="bg-green-600 text-white">
+              {messages.length} mensagens
+            </Badge>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs border-military-gold/30 text-military-gold hover:bg-military-gold/10"
+              onClick={testAuth}
+            >
+              Test Auth
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              className="text-xs border-military-gold/30 text-military-gold hover:bg-military-gold/10"
+              onClick={() => refetch()}
+            >
+              Reload
+            </Button>
+          </div>
         </div>
       </div>
 
