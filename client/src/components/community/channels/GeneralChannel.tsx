@@ -204,42 +204,10 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     setExpandedThreads(newExpandedThreads);
   };
 
-  // Organize messages in Instagram-style flow
-  const organizeMessagesInFlow = (messages: Message[]): Message[] => {
-    // Sort all messages by creation time (oldest first for natural flow)
-    const sortedMessages = [...messages].sort((a, b) => 
-      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-    );
-    
-    const messageMap = new Map<string, Message>();
-    const flowMessages: Message[] = [];
-    
-    // Create map for quick lookups
-    sortedMessages.forEach(msg => {
-      messageMap.set(msg.id, { ...msg });
-    });
-    
-    // Build flow: original messages followed by their replies
-    sortedMessages.forEach(msg => {
-      if (!msg.parent_message_id) {
-        // This is an original message
-        flowMessages.push(messageMap.get(msg.id)!);
-        
-        // Add all replies to this message immediately after
-        const replies = sortedMessages
-          .filter(reply => reply.parent_message_id === msg.id)
-          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-        
-        replies.forEach(reply => {
-          flowMessages.push({ ...messageMap.get(reply.id)!, isReply: true });
-        });
-      }
-    });
-    
-    return flowMessages;
-  };
-
-  const organizedMessages = organizeMessagesInFlow(messages);
+  // Simple chronological order (WhatsApp style)
+  const organizedMessages = [...messages].sort((a, b) => 
+    new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+  );
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', { 
@@ -323,83 +291,102 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
         ) : (
           organizedMessages.map((message) => {
-            const isReply = message.isReply;
-            const originalMessage = isReply && message.parent_message_id 
+            const isMyMessage = message.user_id === user?.id;
+            const originalMessage = message.parent_message_id 
               ? messages.find(m => m.id === message.parent_message_id)
               : null;
 
             return (
               <div 
                 key={message.id} 
-                className={`group hover:bg-military-black-light/20 transition-all duration-200 ${
-                  isReply ? 'ml-12 py-2' : 'p-3 border-b border-military-gold/10'
-                }`}
+                className={`mb-4 flex group ${isMyMessage ? 'justify-end' : 'justify-start'}`}
               >
-                <div className="flex items-start space-x-3">
-                  <Avatar className={`border-2 border-military-gold/30 shrink-0 ${isReply ? 'w-7 h-7' : 'w-10 h-10'}`}>
-                    <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
-                    <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
-                      {(message.author_name || 'U').substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
+                <div className={`max-w-[70%] ${isMyMessage ? 'order-2' : 'order-1'}`}>
                   
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-1">
-                      <span className={`font-medium hover:underline cursor-pointer ${
-                        isReply ? 'text-gray-300 text-sm' : 'text-military-gold'
-                      }`}>
-                        {message.author_name || 'Usuário'}
-                      </span>
-                      {isReply && originalMessage && (
-                        <span className="text-gray-500 text-xs">
-                          respondendo para <span className="text-military-gold">@{originalMessage.author_name}</span>
-                        </span>
-                      )}
-                      {!isReply && (
-                        <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-2 py-0.5`}>
-                          {message.author_rank?.toUpperCase() || 'ALUNO'}
-                        </Badge>
-                      )}
-                      <span className="text-xs text-gray-500">
-                        {formatTime(new Date(message.created_at))}
-                        {!isReply && (
-                          <span className="ml-2">
-                            • {formatDate(new Date(message.created_at))}
+                  {/* Avatar para mensagens de outros (lado esquerdo) */}
+                  <div className="flex items-start space-x-3">
+                    {!isMyMessage && (
+                      <Avatar className="w-8 h-8 border-2 border-military-gold/30 shrink-0 mt-1">
+                        <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
+                        <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
+                          {(message.author_name || 'U').substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                    )}
+                    
+                    <div className="flex-1">
+                      {/* Nome do usuário (apenas para mensagens de outros) */}
+                      {!isMyMessage && (
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="text-military-gold font-medium text-sm">
+                            {message.author_name || 'Usuário'}
                           </span>
-                        )}
-                      </span>
-                    </div>
-                    
-                    <div className={`mb-2 ${isReply ? '' : 'bg-military-black-light/60 border border-military-gold/20 rounded-lg p-3'}`}>
-                      <p className={`text-gray-300 leading-relaxed ${isReply ? 'text-sm' : ''}`}>
-                        {message.content}
-                      </p>
-                    </div>
-                    
-                    <div className="flex items-center space-x-4">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
-                      >
-                        <Heart size={12} className="mr-1" />
-                        <span>0</span>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
-                        title="Responder mensagem"
-                        onClick={() => handleReply(message)}
-                      >
-                        <Reply size={12} className="mr-1" />
-                        <span>Responder</span>
-                      </Button>
-                      {!isReply && (
-                        <span className="text-xs text-gray-600">
-                          {formatDate(new Date(message.created_at))}
-                        </span>
+                          <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-1.5 py-0.5`}>
+                            {message.author_rank?.toUpperCase() || 'ALUNO'}
+                          </Badge>
+                        </div>
                       )}
+                      
+                      {/* Mensagem citada (quando é resposta) */}
+                      {originalMessage && (
+                        <div className={`mb-2 p-2 rounded-lg border-l-4 text-xs ${
+                          isMyMessage 
+                            ? 'bg-military-gold/10 border-military-gold/50 text-gray-300' 
+                            : 'bg-military-black/60 border-blue-400/50 text-gray-400'
+                        }`}>
+                          <div className="flex items-center space-x-1 mb-1">
+                            <span className={`font-medium ${
+                              isMyMessage ? 'text-military-gold' : 'text-blue-400'
+                            }`}>
+                              {originalMessage.author_name}
+                            </span>
+                          </div>
+                          <p className="italic truncate">
+                            "{originalMessage.content}"
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Balão da mensagem */}
+                      <div className={`rounded-lg p-3 shadow-lg ${
+                        isMyMessage 
+                          ? 'bg-military-gold text-black rounded-br-sm' 
+                          : 'bg-military-black-light border border-military-gold/20 text-gray-300 rounded-bl-sm'
+                      }`}>
+                        <p className="leading-relaxed text-sm">
+                          {message.content}
+                        </p>
+                        <div className={`text-xs mt-2 ${
+                          isMyMessage ? 'text-black/70' : 'text-gray-500'
+                        }`}>
+                          {formatTime(new Date(message.created_at))}
+                          {isMyMessage && (
+                            <span className="ml-2">✓✓</span>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Botões de ação (aparece no hover) */}
+                      <div className={`mt-2 flex space-x-2 ${isMyMessage ? 'justify-end' : 'justify-start'} opacity-0 group-hover:opacity-100 transition-opacity`}>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
+                        >
+                          <Heart size={12} className="mr-1" />
+                          <span>0</span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
+                          title="Responder mensagem"
+                          onClick={() => handleReply(message)}
+                        >
+                          <Reply size={12} className="mr-1" />
+                          <span>Responder</span>
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
