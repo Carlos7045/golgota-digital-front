@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq } from 'drizzle-orm';
+import { eq, desc } from 'drizzle-orm';
 import { pgTable, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
 
 // Schema inline para evitar problemas de importação
@@ -37,6 +37,66 @@ const user_roles = pgTable('user_roles', {
   user_id: uuid('user_id').references(() => users.id).notNull(),
   role: text('role').notNull(),
   created_at: timestamp('created_at').defaultNow()
+});
+
+const general_messages = pgTable('general_messages', {
+  id: uuid('id').primaryKey(),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  author_id: uuid('author_id').references(() => users.id).notNull(),
+  author_name: text('author_name').notNull(),
+  author_rank: text('author_rank').notNull(),
+  author_company: text('author_company').notNull(),
+  views: integer('views').default(0),
+  interactions: integer('interactions').default(0),
+  created_at: timestamp('created_at').defaultNow()
+});
+
+const companies = pgTable('companies', {
+  id: uuid('id').primaryKey(),
+  name: text('name').notNull(),
+  commander_id: uuid('commander_id').references(() => users.id),
+  sub_commander_id: uuid('sub_commander_id').references(() => users.id),
+  status: text('status').default('Planejamento'),
+  description: text('description'),
+  city: text('city'),
+  state: text('state'),
+  founded_date: timestamp('founded_date'),
+  color: text('color'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
+});
+
+const asaas_subscriptions = pgTable('asaas_subscriptions', {
+  id: uuid('id').primaryKey(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  asaas_subscription_id: text('asaas_subscription_id').unique().notNull(),
+  asaas_customer_id: text('asaas_customer_id').notNull(),
+  status: text('status').notNull(),
+  value: text('value').notNull(),
+  cycle: text('cycle').notNull(),
+  next_due_date: timestamp('next_due_date'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
+});
+
+const asaas_payments = pgTable('asaas_payments', {
+  id: uuid('id').primaryKey(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  asaas_payment_id: text('asaas_payment_id').unique().notNull(),
+  subscription_id: uuid('subscription_id').references(() => asaas_subscriptions.id),
+  value: text('value').notNull(),
+  net_value: text('net_value'),
+  status: text('status').notNull(),
+  billing_type: text('billing_type').notNull(),
+  due_date: timestamp('due_date'),
+  payment_date: timestamp('payment_date'),
+  description: text('description'),
+  invoice_url: text('invoice_url'),
+  bank_slip_url: text('bank_slip_url'),
+  pix_code: text('pix_code'),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
 });
 
 // Configuração do banco para Vercel
@@ -212,14 +272,29 @@ export class VercelStorage {
     try {
       console.log(`🔍 Buscando mensagens do canal: ${channel}`);
       
-      // Por enquanto retornar array vazio, pois a tabela de mensagens pode não existir
-      // Em um sistema real, faria join com a tabela de mensagens
-      const messages = [];
+      // Buscar mensagens reais da tabela general_messages
+      const result = await db
+        .select({
+          id: general_messages.id,
+          title: general_messages.title,
+          body: general_messages.body,
+          author_id: general_messages.author_id,
+          created_at: general_messages.created_at,
+          views: general_messages.views,
+          interactions: general_messages.interactions,
+          author_name: general_messages.author_name,
+          author_rank: general_messages.author_rank,
+          author_company: general_messages.author_company
+        })
+        .from(general_messages)
+        .orderBy(desc(general_messages.created_at))
+        .limit(50);
       
-      console.log(`✅ Encontradas ${messages.length} mensagens`);
-      return messages;
+      console.log(`✅ Encontradas ${result.length} mensagens reais`);
+      return result;
     } catch (error) {
       console.error('Error getting channel messages:', error);
+      // Se tabela não existir, retornar array vazio
       return [];
     }
   }
@@ -228,18 +303,33 @@ export class VercelStorage {
     try {
       console.log(`🔍 Criando mensagem no canal: ${channel}`);
       
-      // Por enquanto simular criação de mensagem
-      // Em um sistema real, inseriria na tabela de mensagens
-      const message = {
-        id: Date.now().toString(),
-        user_id: userId,
-        channel: channel,
-        content: messageContent,
-        created_at: new Date().toISOString()
+      // Buscar dados do autor
+      const authorProfile = await this.getUserProfile(userId);
+      if (!authorProfile) {
+        throw new Error('Perfil do autor não encontrado');
+      }
+      
+      // Inserir mensagem real na tabela general_messages
+      const messageData = {
+        id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        title: 'Mensagem no Canal Geral',
+        body: messageContent,
+        author_id: userId,
+        author_name: authorProfile.name,
+        author_rank: authorProfile.rank || 'aluno',
+        author_company: authorProfile.company || 'N/A',
+        views: 0,
+        interactions: 0,
+        created_at: new Date()
       };
       
-      console.log('✅ Mensagem criada (simulada)');
-      return message;
+      const result = await db
+        .insert(general_messages)
+        .values(messageData)
+        .returning();
+      
+      console.log('✅ Mensagem criada com sucesso na base de dados');
+      return result[0];
     } catch (error) {
       console.error('Error creating message:', error);
       throw error;
@@ -251,8 +341,15 @@ export class VercelStorage {
     try {
       console.log(`🔍 Buscando assinatura Asaas para usuário: ${userId}`);
       
-      // Por enquanto retornar null, implementar quando tabela existir
-      return null;
+      // Buscar assinatura real na tabela asaas_subscriptions
+      const result = await db
+        .select()
+        .from(asaas_subscriptions)
+        .where(eq(asaas_subscriptions.user_id, userId))
+        .limit(1);
+      
+      console.log('✅ Assinatura encontrada:', result[0] ? 'Sim' : 'Não');
+      return result[0] || null;
     } catch (error) {
       console.error('Error getting asaas subscription:', error);
       return null;
@@ -263,8 +360,15 @@ export class VercelStorage {
     try {
       console.log(`🔍 Buscando pagamentos Asaas para usuário: ${userId}`);
       
-      // Por enquanto retornar array vazio
-      return [];
+      // Buscar pagamentos reais na tabela asaas_payments
+      const result = await db
+        .select()
+        .from(asaas_payments)
+        .where(eq(asaas_payments.user_id, userId))
+        .orderBy(desc(asaas_payments.created_at));
+      
+      console.log(`✅ Encontrados ${result.length} pagamentos reais`);
+      return result;
     } catch (error) {
       console.error('Error getting asaas payments:', error);
       return [];
@@ -309,16 +413,26 @@ export class VercelStorage {
     try {
       console.log('🔍 Buscando empresas...');
       
-      // Por enquanto retornar empresas fixas baseadas nos dados existentes
-      const companies = [
-        { id: '1', name: 'Quemuel', description: 'Companhia Alpha' },
-        { id: '2', name: 'Beta', description: 'Companhia Beta' },
-        { id: '3', name: 'Gamma', description: 'Companhia Gamma' },
-        { id: '4', name: 'Delta', description: 'Companhia Delta' }
-      ];
+      // Buscar empresas reais da tabela companies
+      const result = await db
+        .select({
+          id: companies.id,
+          name: companies.name,
+          commander_id: companies.commander_id,
+          sub_commander_id: companies.sub_commander_id,
+          status: companies.status,
+          description: companies.description,
+          city: companies.city,
+          state: companies.state,
+          founded_date: companies.founded_date,
+          color: companies.color,
+          created_at: companies.created_at,
+          updated_at: companies.updated_at
+        })
+        .from(companies);
       
-      console.log(`✅ Encontradas ${companies.length} empresas`);
-      return companies;
+      console.log(`✅ Encontradas ${result.length} empresas reais`);
+      return result;
     } catch (error) {
       console.error('Error getting companies:', error);
       return [];
