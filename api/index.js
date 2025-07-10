@@ -100,16 +100,20 @@ async function authenticateUser(emailOrCpf, password) {
 // === ROTA DE REGISTRO ===
 app.post('/api/auth/register', async (req, res) => {
   console.log('👤 Tentativa de cadastro recebida...');
+  console.log('📦 Body completo recebido:', JSON.stringify(req.body, null, 2));
   
   try {
     const { email, password, fullName, cpf, phone, city, address, birthYear, company, rank } = req.body;
     
-    console.log('📝 Dados recebidos:', { 
+    console.log('📝 Dados extraídos:', { 
       email, 
       fullName, 
       cpf: cpf ? 'Informado' : 'Não informado',
       company,
-      rank: rank || 'aluno'
+      rank: rank || 'aluno',
+      birthYear,
+      city,
+      phone
     });
     
     // Validação básica
@@ -118,19 +122,25 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ message: 'Email, senha e nome completo são obrigatórios' });
     }
     
+    console.log('🔍 Verificando se usuário já existe...');
+    
     // Verificar se usuário já existe
     const existingUser = await storage.getUserByEmail(email);
     if (existingUser) {
-      console.log('❌ Usuário já existe');
+      console.log('❌ Usuário já existe:', existingUser.email);
       return res.status(400).json({ message: 'E-mail já está cadastrado no sistema' });
     }
     
+    console.log('✅ Email disponível, prosseguindo...');
+    
     // Hash da senha
+    console.log('🔐 Iniciando hash da senha...');
     const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('🔐 Senha hasheada com sucesso');
+    console.log('✅ Senha hasheada com sucesso');
     
     // Gerar UUID para o usuário
     const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 ID gerado:', userId);
     
     // Dados do usuário
     const userData = {
@@ -147,9 +157,20 @@ app.post('/api/auth/register', async (req, res) => {
       rank: rank || 'aluno'
     };
     
+    console.log('📋 Dados finais do usuário preparados:', {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      cpf: userData.cpf ? 'Sim' : 'Não',
+      company: userData.company,
+      rank: userData.rank
+    });
+    
+    console.log('💾 Iniciando criação do usuário na base de dados...');
+    
     // Criar usuário
     const user = await storage.createUser(userData);
-    console.log('✅ Usuário criado com sucesso:', user.id);
+    console.log('✅ Usuário criado com sucesso na base:', user.id);
     
     // Resposta sem senha
     const { password: _, ...userResponse } = user;
@@ -159,10 +180,15 @@ app.post('/api/auth/register', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Erro no cadastro:', error);
+    console.error('❌ Erro detalhado no cadastro:');
+    console.error('❌ Mensagem:', error.message);
+    console.error('❌ Stack:', error.stack);
+    console.error('❌ Tipo:', error.constructor.name);
+    
     res.status(500).json({ 
       message: 'Erro interno do servidor',
-      error: error.message
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });
