@@ -85,7 +85,14 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    // Só rola automaticamente se o usuário estiver próximo do final da página
+    const container = messagesEndRef.current?.parentElement;
+    if (container) {
+      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
+      if (isNearBottom) {
+        scrollToBottom();
+      }
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -130,8 +137,18 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
         
         await apiPost('/api/messages/general', messageData);
         setNewMessage('');
+        
+        // Automatically expand the thread when replying
+        if (replyingTo) {
+          const threadId = replyingTo.thread_id || replyingTo.id;
+          setExpandedThreads(prev => new Set([...prev, threadId]));
+        }
+        
         setReplyingTo(null); // Clear reply state
         await fetchMessages();
+        
+        // Force scroll after sending a message
+        setTimeout(() => scrollToBottom(), 100);
         
         toast({
           title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
@@ -350,7 +367,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       >
                         <MessageSquare size={16} className="mr-1" />
                         <span className="text-sm">
-                          {message.replies.length} {message.replies.length === 1 ? 'resposta' : 'respostas'}
+                          {expandedThreads.has(message.id) ? 'Ocultar' : 'Ver'} {message.replies.length} {message.replies.length === 1 ? 'resposta' : 'respostas'}
                         </span>
                       </Button>
                     )}
@@ -387,6 +404,20 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                                 <span className="text-xs text-gray-500">
                                   {formatTime(new Date(reply.created_at))}
                                 </span>
+                              </div>
+                              
+                              {/* Contexto da Mensagem Original */}
+                              <div className="mb-2 p-2 bg-military-black/60 border-l-4 border-blue-400/30 rounded-r">
+                                <div className="flex items-center space-x-2 mb-1">
+                                  <Reply size={12} className="text-blue-400" />
+                                  <span className="text-xs text-blue-400">Respondendo para</span>
+                                  <span className="text-xs text-military-gold font-medium">
+                                    {message.author_name}
+                                  </span>
+                                </div>
+                                <p className="text-xs text-gray-500 italic truncate">
+                                  "{message.content}"
+                                </p>
                               </div>
                               
                               <div className="bg-military-black-light/60 border border-military-gold/10 rounded-lg p-2 mb-1">
