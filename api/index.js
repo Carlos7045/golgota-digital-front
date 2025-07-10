@@ -562,12 +562,16 @@ app.get('/api/profile', requireAuth, async (req, res) => {
     const profile = await storage.getUserProfile(req.user.id);
     let roles = await storage.getUserRoles(req.user.id);
     
-    // CRITICAL ADMIN FIX: Force Carlos Henrique to admin role
-    if (req.user.id === '068b3ef8-ceb9-41df-81c3-aceec25a5ffc' || 
-        req.user.email === 'chpsalgado@hotmail.com' ||
-        profile?.email === 'chpsalgado@hotmail.com' ||
-        profile?.cpf === '05018022310') {
-      console.log('✅ CRITICAL ADMIN FIX: Carlos Henrique forçado como admin');
+    // PRODUCTION EMERGENCY FIX: Carlos Henrique MUST be admin - Deploy $(date +%H:%M:%S)
+    const isCarlosHenrique = (
+      req.user.id === '068b3ef8-ceb9-41df-81c3-aceec25a5ffc' || 
+      req.user.email === 'chpsalgado@hotmail.com' ||
+      profile?.email === 'chpsalgado@hotmail.com' ||
+      profile?.cpf === '05018022310'
+    );
+    
+    if (isCarlosHenrique) {
+      console.log('🚨 EMERGENCY ADMIN FIX: Carlos Henrique FORCED as admin');
       roles = ['admin'];
     }
     
@@ -1977,3 +1981,4 @@ app.use((err, req, res, next) => {
 export default app;// FORCE DEPLOY Thu Jul 10 10:33:36 PM UTC 2025
 // ADMIN ROLE FIX 1752186835
 // ADMIN FIX APPLIED 22:47:57
+EMERGENCY_DEPLOY_1752188221

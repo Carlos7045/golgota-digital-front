@@ -1,0 +1,358 @@
+
+Jul 10 19:55:09.12
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:54:48.42
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 19:54:48.12
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:47.70
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:47.18
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:54:47.08
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+5
+✅ Retornando 2 anúncios
+Jul 10 19:54:47.08
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:47.08
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:54:45.81
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+16
+🚀 Enviando resposta JSON...
+Jul 10 19:54:37.87
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:54:28.57
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:28.03
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:27.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:54:27.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:53:58.50
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:58.07
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:57.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:53:57.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:28.57
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:28.08
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:27.43
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:53:27.43
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:52:58.64
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:52:58.20
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:52:57.59
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 19:52:57.52
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:52:57.43
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:52:57.42
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+2
+✅ Retornando 2 anúncios
+Jul 10 19:52:57.42
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:52:56.15
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+16
+🚀 Enviando resposta JSON...
+Jul 10 19:52:53.35
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:52:49.72
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 94 mensagens
+Jul 10 19:52:49.17
+POST
+200
+www.comandogolgota.com.br
+/api/messages/general
+15
+✅ Mensagem enviada com sucesso
+Jul 10 19:52:36.87
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:52:35.59
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 19:52:34.88
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+11
+✅ Retornando 6 usuários online
+Jul 10 19:52:34.17
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:52:34.13
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 93 mensagens
+Jul 10 19:52:34.09
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+5
+✅ Retornando 2 anúncios
+Jul 10 19:52:34.09
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:52:32.63
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+16
+🚀 Enviando resposta JSON...
+Jul 10 19:52:25.27
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:51:58.59
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:51:51.71
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+14
+✅ Roles FINAL: [ 'user' ]
+Jul 10 19:49:02.20
+GET
+401
+golgota-digital-front-g1jtjvsy6-carlos-salgados-projects.vercel.app
+/api/profile
+4
+❌ Nenhuma autenticação válida encontrada
+Jul 10 19:49:01.87
+GET
+401
+golgota-digital-front-g1jtjvsy6-carlos-salgados-projects.vercel.app
+/api/profile
+7
+❌ Nenhuma autenticação válida encontrada
+Jul 10 19:46:02.15
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles: [ 'user' ]
+Jul 10 19:45:26.03
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles: [ 'user' ]
+Jul 10 19:45:25.29
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:45:24.63
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:45:24.29
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades

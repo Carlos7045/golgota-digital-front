@@ -1,0 +1,77 @@
+🚀 Service Worker carregado - Comando Gólgota PWA
+index-By_sob6y.js:417 🚀 PWA Wrapper inicializado - Comando Gólgota
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 Service Worker registrado com sucesso: https://www.comandogolgota.com.br/
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+Object
+profile
+: 
+null
+roles
+: 
+['user']
+[[Prototype]]
+: 
+Object
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: 
+Object
+message
+: 
+"Login realizado com sucesso"
+profile
+: 
+{id: '78700f66-05ff-467d-85a2-cb705af3908d', user_id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', name: 'Carlos Henrique Pereira Salgado', cpf: '05018022310', birth_date: '1995-09-23', …}
+roles
+: 
+['admin']
+token
+: 
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2OGIzZWY4LWNlYjktNDFkZi04MWMzLWFjZWVjMjVhNWZmYyIsImVtYWlsIjoiY2hwc2FsZ2Fkb0Bob3RtYWlsLmNvbSIsImlhdCI6MTc1MjE4Nzk1MywiZXhwIjoxNzUyMjc0MzUzfQ.jp_FqNXGTE3_p5oU3hzuvdZ1aOS3TKuhbDSHz2SzE7k"
+user
+: 
+{id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', email: 'chpsalgado@hotmail.com', force_password_change: false, created_at: '2025-07-07T03:59:26.934Z'}
+[[Prototype]]
+: 
+Object
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+Object
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: 
+{user: {…}, profile: {…}, roles: Array(1), token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2O…zc2fQ.ox6OsXoF-c_XLOCLX03EpHs2mW2dA4OXDFWIPTYoGKQ', message: 'Login realizado com sucesso'}
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+{profile: null, roles: Array(1)}
+profile
+: 
+null
+roles
+: 
+['user']
+[[Prototype]]
+: 
+Object
+Warning: Don’t paste code into the DevTools Console that you don’t understand or haven’t reviewed yourself. This could allow attackers to steal your identity or take control of your computer. Please type ‘allow pasting’ below and press Enter to allow pasting.
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: 
+{user: {…}, profile: {…}, roles: Array(1), token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2O…Dg2fQ.wlzYSeoAOJq2PVcG4VNKk949I6UPY3EqXDkmtpjF5mo', message: 'Login realizado com sucesso'}
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+{profile: null, roles: Array(1)}
+profile
+: 
+null
+roles
+: 
+['user']
+[[Prototype]]
+: 
+Object
