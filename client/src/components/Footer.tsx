@@ -81,9 +81,7 @@ const Footer = () => {
 
         <div className="flex flex-col md:flex-row justify-between items-center text-gray-400 text-sm">
           <div>© 2025 Comando Gólgota. Todos os direitos reservados.</div>
-          <div className="mt-4 md:mt-0">
-            "Treinando para Servir" - Desenvolvido com ❤️ para o Reino
-          </div>
+          <div className="mt-4 md:mt-0">"Treinando para Servir" - Desenvolvido by TenG. Salgado</div>
         </div>
       </div>
     </footer>
