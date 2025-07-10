@@ -44,9 +44,7 @@ const Header = () => {
               alt="Comando Gólgota" 
               className="h-10 w-10 object-contain"
             />
-            <div className="text-xl font-bold text-military-gold">
-              COMANDO GÓLGOTA
-            </div>
+            <div className="text-xl font-bold text-military-gold">COMUNIDADE GÓLGOTA</div>
           </div>
 
           {/* Desktop Navigation */}
