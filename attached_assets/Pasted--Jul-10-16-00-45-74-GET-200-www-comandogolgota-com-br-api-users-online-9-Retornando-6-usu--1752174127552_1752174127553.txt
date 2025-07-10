@@ -1,0 +1,153 @@
+
+Jul 10 16:00:45.74
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:45.27
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:44.58
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 34 mensagens
+Jul 10 16:00:44.58
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:16.83
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:16.39
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:15.99
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 34 mensagens
+Jul 10 16:00:15.39
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:15.04
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:14.65
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:14.36
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 16:00:14.19
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 34 mensagens
+Jul 10 16:00:14.19
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+2
+✅ Retornando 2 anúncios
+Jul 10 16:00:14.19
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 16:00:08.22
+GET
+200
+www.comandogolgota.com.br
+/api/financial/categories
+7
+✅ Retornando 9 categorias
+Jul 10 16:00:08.22
+GET
+200
+www.comandogolgota.com.br
+/api/financial/health-metrics
+7
+✅ Métricas calculadas
+Jul 10 16:00:08.22
+GET
+404
+www.comandogolgota.com.br
+/api/financial/payments
+Jul 10 16:00:08.22
+GET
+200
+www.comandogolgota.com.br
+/api/financial/summary
+9
+✅ Resumo financeiro calculado
+Jul 10 16:00:08.22
+GET
+200
+www.comandogolgota.com.br
+/api/financial/transactions
+7
+✅ Retornando 1 transações
+Jul 10 16:00:02.62
+GET
+200
+www.comandogolgota.com.br
+/api/stats
+11
+✅ Estatísticas calculadas
+Jul 10 16:00:02.31
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles: [ 'admin', 'user' ]
+Jul 10 15:59:51.02
+GET
+200
+www.comandogolgota.com.br
+/api/company/announcements
+7
+✅ Retornando 1 anúncios

@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { apiPost } from '@/lib/api';
 
 interface Message {
   id: string;
@@ -48,20 +49,8 @@ const MobileChatBubble: React.FC = () => {
   // Mutation para enviar mensagem
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await fetch('/api/messages/general', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ content }),
-        credentials: 'include',
-      });
-      
-      if (!response.ok) {
-        throw new Error('Erro ao enviar mensagem');
-      }
-      
-      return response.json();
+      const response = await apiPost('/api/messages/general', { content });
+      return response;
     },
     onSuccess: () => {
       setNewMessage('');
@@ -69,7 +58,8 @@ const MobileChatBubble: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['/api/messages', 'general'] });
       refetchMessages();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Erro ao enviar mensagem:', error);
       setIsSending(false);
     },
   });
