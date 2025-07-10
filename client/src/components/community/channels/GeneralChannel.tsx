@@ -7,7 +7,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Heart, MessageSquare, MoreHorizontal, Reply, Smile } from 'lucide-react';
 import { User } from '@/pages/Community';
 import { useToast } from '@/hooks/use-toast';
-import { apiGet, apiPost } from '@/lib/api';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiPost } from '@/lib/api';
 
 interface GeneralChannelProps {
   user: User;
@@ -45,10 +46,6 @@ const rankColors: Record<string, string> = {
 
 const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [newMessage, setNewMessage] = useState('');
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [sending, setSending] = useState(false);
-  const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -56,38 +53,26 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [hasNewMessages, setHasNewMessages] = useState(false);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const previousMessageCount = useRef(0);
-
-  const fetchMessages = async () => {
-    try {
-      // Só mostra loading na primeira carga
-      if (messages.length === 0) {
-        setLoading(true);
-      }
-      
-      const data = await apiGet('/api/messages/general');
-      const newMessages = data.messages || [];
-      
-      // Só atualiza se realmente houver mudanças
-      if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
-        setMessages(newMessages);
-      }
-    } catch (error) {
-      console.error('Error fetching messages:', error);
-      if (messages.length === 0) { // Só mostra erro na primeira carga
-        toast({
-          title: "Erro ao carregar mensagens",
-          description: "Não foi possível carregar as mensagens.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      if (messages.length === 0) {
-        setLoading(false);
-      }
-    }
-  };
-
+  const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Use TanStack Query para buscar mensagens
+  const { data: messagesData, isLoading: loading, refetch } = useQuery({
+    queryKey: ['api', '/api/messages/general'],
+    refetchInterval: 30000, // Atualiza a cada 30 segundos
+    retry: 1,
+  });
+
+  const messages = messagesData?.messages || [];
+
+  // Use TanStack Query para buscar usuários online
+  const { data: onlineUsersData } = useQuery({
+    queryKey: ['api', '/api/users/online'],
+    refetchInterval: 60000, // Atualiza a cada 60 segundos
+    retry: 1,
+  });
+
+  const onlineUsers = onlineUsersData?.users || [];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -122,91 +107,53 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     scrollToBottom();
   };
 
-  // Carrega mensagens iniciais e configura refresh muito menos frequente
-  useEffect(() => {
-    fetchMessages();
-    fetchOnlineUsers();
-    
-    // Auto-refresh messages apenas a cada 30 segundos para evitar piscamento
-    const messagesInterval = setInterval(() => {
-      if (!isUserScrolling) {
-        fetchMessages();
-      }
-    }, 30000);
-    
-    // Usuários online atualizados apenas a cada 60 segundos
-    const usersInterval = setInterval(() => {
-      fetchOnlineUsers();
-    }, 60000);
-    
-    return () => {
-      clearInterval(messagesInterval);
-      clearInterval(usersInterval);
-    };
-  }, [isUserScrolling]);
-
-  const fetchOnlineUsers = async () => {
-    try {
-      const response = await fetch('/api/users/online', {
-        credentials: 'include'
+  // Mutation para enviar mensagem
+  const sendMessageMutation = useMutation({
+    mutationFn: async (messageData: any) => {
+      return apiPost('/api/messages/general', messageData);
+    },
+    onSuccess: () => {
+      setNewMessage('');
+      setReplyingTo(null);
+      // Invalida e refetch as mensagens
+      queryClient.invalidateQueries({ queryKey: ['api', '/api/messages/general'] });
+      refetch();
+      
+      // Force scroll after sending a message
+      setIsUserScrolling(false);
+      scrollToBottom();
+      
+      toast({
+        title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
+        description: replyingTo 
+          ? "Sua resposta foi publicada com sucesso!" 
+          : "Sua mensagem foi publicada com sucesso!",
       });
-      if (response.ok) {
-        const data = await response.json();
-        const newUsers = data.users || [];
-        
-        // Só atualiza se realmente houver mudanças
-        if (JSON.stringify(newUsers) !== JSON.stringify(onlineUsers)) {
-          setOnlineUsers(newUsers);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching online users:', error);
-    }
-  };
+    },
+    onError: (error) => {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Erro ao enviar mensagem",
+        description: "Não foi possível enviar a mensagem.",
+        variant: "destructive"
+      });
+    },
+  });
 
-  const handleSendMessage = async () => {
-    if (newMessage.trim() && !sending) {
-      setSending(true);
-      try {
-        const messageData: any = { 
-          content: newMessage 
-        };
-        
-        // If replying to a message, include thread information
-        if (replyingTo) {
-          messageData.parent_message_id = replyingTo.id;
-          messageData.thread_id = replyingTo.thread_id || replyingTo.id;
-        }
-        
-        await apiPost('/api/messages/general', messageData);
-        setNewMessage('');
-        
-        // No need to expand threads in linear flow
-        
-        setReplyingTo(null); // Clear reply state
-        await fetchMessages();
-        
-        // Force scroll after sending a message
-        setIsUserScrolling(false);
-        scrollToBottom();
-        
-        toast({
-          title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
-          description: replyingTo 
-            ? "Sua resposta foi publicada com sucesso!" 
-            : "Sua mensagem foi publicada com sucesso!",
-        });
-      } catch (error) {
-        console.error('Error sending message:', error);
-        toast({
-          title: "Erro ao enviar mensagem",
-          description: "Não foi possível enviar a mensagem.",
-          variant: "destructive"
-        });
-      } finally {
-        setSending(false);
-      }
+  const handleSendMessage = () => {
+    if (!newMessage.trim() || sendMessageMutation.isPending) return;
+
+    const messageData: any = { 
+      content: newMessage.trim() 
+    };
+    
+    // If replying to a message, include thread information
+    if (replyingTo) {
+      messageData.parent_message_id = replyingTo.id;
+      messageData.thread_id = replyingTo.thread_id || replyingTo.id;
     }
+    
+    sendMessageMutation.mutate(messageData);
   };
 
   const handleReply = (message: Message) => {
@@ -538,10 +485,10 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
           <Button
             onClick={handleSendMessage}
-            disabled={!newMessage.trim() || sending}
+            disabled={!newMessage.trim() || sendMessageMutation.isPending}
             className="bg-military-gold hover:bg-military-gold-dark text-black self-end"
           >
-            {sending ? (
+            {sendMessageMutation.isPending ? (
               <div className="w-4 h-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
             ) : (
               <Send size={18} />

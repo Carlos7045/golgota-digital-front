@@ -191,10 +191,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       if (!user) {
         // Try to find by CPF in profile
-        const users = await storage.getUsersByRank();
-        const profileWithCpf = users.find(u => u.cpf === emailOrCpf.replace(/\D/g, ''));
-        if (profileWithCpf) {
-          user = await storage.getUser(profileWithCpf.user_id);
+        try {
+          const userByCpf = await storage.getUserByCpf(emailOrCpf.replace(/\D/g, ''));
+          if (userByCpf) {
+            user = userByCpf;
+          }
+        } catch (error) {
+          console.error('Error searching by CPF:', error);
         }
       }
       

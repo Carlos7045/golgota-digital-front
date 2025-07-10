@@ -7,6 +7,7 @@ export interface IStorage {
   // User management
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByCpf(cpf: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   
   // Profile management
@@ -97,6 +98,16 @@ export class DatabaseStorage implements IStorage {
 
   async getUserByEmail(email: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async getUserByCpf(cpf: string): Promise<User | undefined> {
+    // First find the profile with this CPF
+    const [profile] = await db.select().from(profiles).where(eq(profiles.cpf, cpf));
+    if (!profile) return undefined;
+    
+    // Then get the user data
+    const [user] = await db.select().from(users).where(eq(users.id, profile.user_id));
     return user;
   }
 
