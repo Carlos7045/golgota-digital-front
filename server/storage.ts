@@ -1,5 +1,5 @@
 import { db } from "./db";
-import { users, profiles, userRoles, companies, companyMembers, events, eventRegistrations, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, type User, type InsertUser, type Profile, type Company, type Event, type EventRegistration, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
+import { users, profiles, userRoles, companies, companyMembers, events, eventRegistrations, content, trainings, courses, enrollments, userActivities, achievements, financialCategories, monthlyPayments, financialTransactions, asaasCustomers, asaasSubscriptions, asaasPayments, asaasWebhooks, generalMessages, type User, type InsertUser, type Profile, type Company, type Event, type EventRegistration, type Training, type Course, type UserActivity, type Achievement, type FinancialCategory, type MonthlyPayment, type FinancialTransaction, type AsaasCustomer, type AsaasSubscription, type AsaasPayment, type AsaasWebhook } from "@shared/schema";
 import { eq, and, desc, inArray, isNotNull, gte, lte, sum, count, ilike } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 
@@ -407,24 +407,25 @@ export class DatabaseStorage implements IStorage {
     try {
       const messages = await db
         .select({
-          id: content.id,
-          title: content.title,
-          body: content.body,
-          author_id: content.author_id,
-          created_at: content.created_at,
-          views: content.views,
-          interactions: content.interactions,
+          id: generalMessages.id,
+          user_id: generalMessages.user_id,
+          channel: generalMessages.channel,
+          content: generalMessages.content,
+          created_at: generalMessages.created_at,
+          parent_message_id: generalMessages.parent_message_id,
+          thread_id: generalMessages.thread_id,
+          reply_count: generalMessages.reply_count,
+          is_thread_starter: generalMessages.is_thread_starter,
           author_name: profiles.name,
           author_rank: profiles.rank,
           author_company: profiles.company,
+          author_avatar: profiles.avatar_url,
         })
-        .from(content)
-        .leftJoin(profiles, eq(content.author_id, profiles.user_id))
-        .where(and(
-          eq(content.channel, channel),
-          eq(content.status, 'published')
-        ))
-        .orderBy(desc(content.created_at));
+        .from(generalMessages)
+        .leftJoin(profiles, eq(generalMessages.user_id, profiles.user_id))
+        .where(eq(generalMessages.channel, channel))
+        .orderBy(desc(generalMessages.created_at))
+        .limit(50);
       
       return messages;
     } catch (error) {
@@ -433,19 +434,23 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
-  async createMessage(userId: string, channel: string, messageContent: string): Promise<any> {
+  async createMessage(userId: string, channel: string, messageContent: string, parentMessageId?: string, threadId?: string): Promise<any> {
     try {
+      const messageData = {
+        id: crypto.randomUUID(),
+        user_id: userId,
+        channel: channel,
+        content: messageContent,
+        parent_message_id: parentMessageId || null,
+        thread_id: threadId || null,
+        reply_count: 0,
+        is_thread_starter: false,
+        created_at: new Date(),
+      };
+
       const [newMessage] = await db
-        .insert(content)
-        .values({
-          title: 'Mensagem no Canal Geral',
-          body: messageContent,
-          type: 'announcement',
-          channel: channel,
-          author_id: userId,
-          status: 'published',
-          published_at: new Date(),
-        })
+        .insert(generalMessages)
+        .values(messageData)
         .returning();
       
       return newMessage;

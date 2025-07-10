@@ -1660,24 +1660,8 @@ app.get('/api/conversations', requireAuth, async (req, res) => {
   try {
     console.log(`💬 Buscando conversas do usuário: ${req.user.id}`);
     
-    // Por enquanto retornar conversas simuladas
-    const conversations = [
-      {
-        id: 'conv_1',
-        other_user: {
-          id: 'other_user_1',
-          name: 'João Silva',
-          avatar_url: null,
-          rank: 'soldado'
-        },
-        last_message: {
-          content: 'Oi, tudo bem?',
-          created_at: new Date(Date.now() - 3600000).toISOString(),
-          user_id: 'other_user_1'
-        },
-        unread_count: 2
-      }
-    ];
+    // Retornar array vazio - sem conversas fictícias
+    const conversations = [];
     
     console.log(`✅ Retornando ${conversations.length} conversas`);
     res.json({ conversations });
@@ -1693,27 +1677,8 @@ app.get('/api/conversations/:conversationId/messages', requireAuth, async (req, 
     const { conversationId } = req.params;
     console.log(`💬 Buscando mensagens da conversa: ${conversationId}`);
     
-    // Por enquanto retornar mensagens simuladas
-    const messages = [
-      {
-        id: 'msg_1',
-        content: 'Oi, tudo bem?',
-        user_id: 'other_user_1',
-        conversation_id: conversationId,
-        created_at: new Date(Date.now() - 3600000).toISOString(),
-        user_name: 'João Silva',
-        avatar_url: null
-      },
-      {
-        id: 'msg_2',
-        content: 'Tudo sim! E você?',
-        user_id: req.user.id,
-        conversation_id: conversationId,
-        created_at: new Date(Date.now() - 3000000).toISOString(),
-        user_name: req.user.name,
-        avatar_url: null
-      }
-    ];
+    // Retornar array vazio - sem mensagens fictícias
+    const messages = [];
     
     console.log(`✅ Retornando ${messages.length} mensagens`);
     res.json({ messages });

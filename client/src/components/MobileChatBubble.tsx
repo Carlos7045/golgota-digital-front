@@ -35,7 +35,7 @@ const MobileChatBubble: React.FC = () => {
 
   // Buscar mensagens do canal geral
   const { data: messages = [], refetch: refetchMessages } = useQuery({
-    queryKey: ['/api/messages', 'geral'],
+    queryKey: ['/api/messages', 'general'],
     refetchInterval: isExpanded ? 3000 : 15000, // Mais frequente quando expandido
   });
 
@@ -48,7 +48,7 @@ const MobileChatBubble: React.FC = () => {
   // Mutation para enviar mensagem
   const sendMessageMutation = useMutation({
     mutationFn: async (content: string) => {
-      const response = await fetch('/api/messages/geral', {
+      const response = await fetch('/api/messages/general', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +66,7 @@ const MobileChatBubble: React.FC = () => {
     onSuccess: () => {
       setNewMessage('');
       setIsSending(false);
-      queryClient.invalidateQueries({ queryKey: ['/api/messages', 'geral'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/messages', 'general'] });
       refetchMessages();
     },
     onError: () => {
