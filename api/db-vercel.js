@@ -812,32 +812,41 @@ export class VercelStorage {
 
   // === MÉTODOS DE GESTÃO DE USUÁRIOS ===
   async createUser(userData) {
+    console.log('🔍 INICIANDO criação de usuário na base de dados...');
+    console.log('📋 Dados recebidos:', {
+      id: userData.id,
+      email: userData.email,
+      name: userData.name,
+      cpf: userData.cpf ? 'Informado' : 'Não informado',
+      company: userData.company,
+      rank: userData.rank
+    });
+    
     try {
-      console.log('🔍 Criando usuário na base de dados...');
-      console.log('📋 Dados do usuário:', {
+      // ETAPA 1: Inserir usuário básico na tabela users
+      console.log('📝 ETAPA 1: Inserindo usuário na tabela users...');
+      
+      const userInsertData = {
         id: userData.id,
         email: userData.email,
-        name: userData.name,
-        cpf: userData.cpf ? 'Informado' : 'Não informado',
-        company: userData.company,
-        rank: userData.rank
-      });
+        password: userData.password,
+        created_at: new Date(),
+        force_password_change: false
+      };
       
-      // Inserir usuário real na tabela users
-      const result = await db
+      console.log('📝 Dados para inserção do usuário:', userInsertData);
+      
+      const userResult = await db
         .insert(users)
-        .values({
-          id: userData.id,
-          email: userData.email,
-          password: userData.password,
-          created_at: new Date(),
-          force_password_change: false
-        })
+        .values(userInsertData)
         .returning();
       
-      console.log('✅ Usuário inserido na tabela users');
+      console.log('✅ ETAPA 1 CONCLUÍDA: Usuário inserido na tabela users');
+      console.log('👤 Usuário criado:', userResult[0]);
       
-      // Criar perfil associado com todos os dados
+      // ETAPA 2: Criar perfil básico
+      console.log('📝 ETAPA 2: Criando perfil básico...');
+      
       const profileData = {
         id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         user_id: userData.id,
@@ -858,38 +867,57 @@ export class VercelStorage {
         updated_at: new Date()
       };
       
-      console.log('📋 Dados do perfil:', profileData);
+      console.log('📝 Dados do perfil para inserção:', profileData);
       
       await db
         .insert(profiles)
         .values(profileData);
       
-      console.log('✅ Perfil criado na base de dados');
+      console.log('✅ ETAPA 2 CONCLUÍDA: Perfil criado na base de dados');
       
-      // Adicionar à companhia se especificada
+      // ETAPA 3: Operações opcionais (não críticas)
+      console.log('📝 ETAPA 3: Operações opcionais...');
+      
       if (userData.company) {
         try {
+          console.log('🏢 Tentando adicionar à companhia...');
           const companies = await this.getCompanies();
-          const company = companies.find(c => c.name.toLowerCase() === userData.company.toLowerCase());
+          const company = companies.find(c => c.name.toLowerCase().includes(userData.company.toLowerCase()));
           
           if (company) {
-            console.log(`🏢 Adicionando usuário à companhia: ${company.name}`);
+            console.log(`🏢 Companhia encontrada: ${company.name}`);
             await this.addCompanyMember(company.id, userData.id, 'Membro');
-            console.log('✅ Usuário adicionado à companhia');
+            console.log('✅ Usuário adicionado à companhia com sucesso');
           } else {
-            console.log(`⚠️ Companhia "${userData.company}" não encontrada`);
+            console.log(`⚠️ Companhia "${userData.company}" não encontrada, mas não é crítico`);
           }
         } catch (companyError) {
           console.log('⚠️ Erro ao adicionar à companhia (não crítico):', companyError.message);
         }
       }
       
-      console.log('✅ Usuário completo criado na base de dados');
-      return result[0];
+      console.log('✅ PROCESSO COMPLETO: Usuário criado com sucesso!');
+      console.log('🎉 Retornando usuário:', userResult[0]);
+      
+      return userResult[0];
+      
     } catch (error) {
-      console.error('❌ Error creating user:', error);
-      console.error('❌ Stack trace:', error.stack);
-      throw error;
+      console.error('❌ ERRO CRÍTICO na criação do usuário:');
+      console.error('❌ Tipo do erro:', error.constructor.name);
+      console.error('❌ Mensagem:', error.message);
+      console.error('❌ Código:', error.code);
+      console.error('❌ Stack completo:', error.stack);
+      
+      // Tentar identificar qual etapa falhou
+      if (error.message.includes('users')) {
+        console.error('❌ FALHA NA ETAPA 1: Problema ao inserir usuário');
+      } else if (error.message.includes('profiles')) {
+        console.error('❌ FALHA NA ETAPA 2: Problema ao criar perfil');
+      } else {
+        console.error('❌ FALHA GERAL: Erro não identificado');
+      }
+      
+      throw new Error(`Erro ao criar usuário: ${error.message}`);
     }
   }
 

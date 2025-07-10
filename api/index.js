@@ -34,6 +34,27 @@ app.use(cookieParser());
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'comando-golgota-jwt-secret-2024';
 
+// Rota de teste para verificar se API está funcionando
+app.get('/api/test', (req, res) => {
+  console.log('🧪 Rota de teste acessada');
+  res.json({ 
+    message: 'API funcionando!', 
+    timestamp: new Date().toISOString(),
+    database: process.env.DATABASE_URL ? 'Conectado' : 'Não conectado'
+  });
+});
+
+// Rota específica para testar cadastro
+app.post('/api/test/register', (req, res) => {
+  console.log('🧪 Teste de cadastro acessado');
+  console.log('📦 Body recebido:', req.body);
+  res.json({ 
+    message: 'Rota de cadastro acessível!', 
+    body: req.body,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Middleware de autenticação JWT
 function requireAuth(req, res, next) {
   console.log('🔐 Verificando autenticação JWT...');
