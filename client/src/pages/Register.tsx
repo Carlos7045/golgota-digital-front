@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { apiPost } from '@/lib/api';
+import { apiPost, apiGet } from '@/lib/api';
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -26,10 +26,10 @@ const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [companies, setCompanies] = useState<any[]>([]);
+  const [loadingCompanies, setLoadingCompanies] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-
-  const companies = ['Alpha', 'Beta', 'Gamma', 'Delta', 'Echo', 'Foxtrot'];
   const ranks = [
     { value: 'aluno', label: 'Aluno' },
     { value: 'soldado', label: 'Soldado' },
@@ -41,6 +41,27 @@ const Register = () => {
     { value: 'coronel', label: 'Coronel' },
     { value: 'comandante', label: 'Comandante' }
   ];
+
+  // Buscar companhias do banco de dados
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        setLoadingCompanies(true);
+        const response = await apiGet('/api/companies');
+        setCompanies(response.companies || []);
+      } catch (error) {
+        console.error('Erro ao buscar companhias:', error);
+        // Fallback para companhias padrão se não conseguir buscar
+        setCompanies([
+          { id: 1, name: 'Quemuel', description: 'Companhia Principal' }
+        ]);
+      } finally {
+        setLoadingCompanies(false);
+      }
+    };
+
+    fetchCompanies();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,14 +115,14 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen bg-hero-gradient hero-pattern flex items-center justify-center px-4 py-8">
+    <div className="min-h-screen bg-military-black bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-military-gold/10 via-military-black to-military-black flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-2xl">
         {/* Header */}
         <div className="text-center mb-8">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="absolute top-4 left-4 text-primary hover:text-accent"
+            className="absolute top-4 left-4 text-military-gold hover:text-military-gold-light"
           >
             <ArrowLeft className="mr-2 h-4 w-4" />
             Voltar
@@ -113,13 +134,13 @@ const Register = () => {
             className="h-16 w-16 mx-auto mb-4"
           />
           <h1 className="text-2xl font-bold text-military-gold">COMANDO GÓLGOTA</h1>
-          <p className="text-foreground/70">Cadastro de Novo Membro</p>
+          <p className="text-gray-300">Cadastro de Novo Membro</p>
         </div>
 
-        <Card className="bg-card border-border">
+        <Card className="bg-military-black-light border-military-gold/20 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle className="text-foreground text-center">Inscreva-se</CardTitle>
-            <CardDescription className="text-muted-foreground text-center">
+            <CardTitle className="text-military-gold text-center text-xl">Inscreva-se</CardTitle>
+            <CardDescription className="text-gray-300 text-center">
               Preencha todos os dados para solicitar acesso à comunidade
             </CardDescription>
           </CardHeader>
@@ -127,13 +148,13 @@ const Register = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Nome Completo */}
               <div className="space-y-2">
-                <Label htmlFor="fullName" className="text-foreground">Nome Completo *</Label>
+                <Label htmlFor="fullName" className="text-white">Nome Completo *</Label>
                 <Input
                   id="fullName"
                   type="text"
                   value={formData.fullName}
                   onChange={(e) => handleInputChange('fullName', e.target.value)}
-                  className="bg-background border-border text-foreground"
+                  className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                   placeholder="Seu nome completo"
                   required
                 />
@@ -142,25 +163,25 @@ const Register = () => {
               {/* Email e Telefone */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-foreground">Email *</Label>
+                  <Label htmlFor="email" className="text-white">Email *</Label>
                   <Input
                     id="email"
                     type="email"
                     value={formData.email}
                     onChange={(e) => handleInputChange('email', e.target.value)}
-                    className="bg-background border-border text-foreground"
+                    className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                     placeholder="seu@email.com"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-foreground">Telefone</Label>
+                  <Label htmlFor="phone" className="text-white">Telefone</Label>
                   <Input
                     id="phone"
                     type="tel"
                     value={formData.phone}
                     onChange={(e) => handleInputChange('phone', e.target.value)}
-                    className="bg-background border-border text-foreground"
+                    className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                     placeholder="(11) 99999-9999"
                   />
                 </div>
@@ -169,42 +190,42 @@ const Register = () => {
               {/* Senha */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="text-foreground">Senha *</Label>
+                  <Label htmlFor="password" className="text-white">Senha *</Label>
                   <div className="relative">
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
                       value={formData.password}
                       onChange={(e) => handleInputChange('password', e.target.value)}
-                      className="bg-background border-border text-foreground pr-10"
+                      className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold pr-10"
                       placeholder="••••••••"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-military-gold"
                     >
                       {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword" className="text-foreground">Confirmar Senha *</Label>
+                  <Label htmlFor="confirmPassword" className="text-white">Confirmar Senha *</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       value={formData.confirmPassword}
                       onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                      className="bg-background border-border text-foreground pr-10"
+                      className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold pr-10"
                       placeholder="••••••••"
                       required
                     />
                     <button
                       type="button"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-military-gold"
                     >
                       {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                     </button>
@@ -215,27 +236,27 @@ const Register = () => {
               {/* Cidade e CIA */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="city" className="text-foreground">Cidade *</Label>
+                  <Label htmlFor="city" className="text-white">Cidade *</Label>
                   <Input
                     id="city"
                     type="text"
                     value={formData.city}
                     onChange={(e) => handleInputChange('city', e.target.value)}
-                    className="bg-background border-border text-foreground"
+                    className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                     placeholder="Sua cidade"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">CIA (Companhia) *</Label>
+                  <Label className="text-white">CIA (Companhia) *</Label>
                   <Select value={formData.company} onValueChange={(value) => handleInputChange('company', value)} required>
-                    <SelectTrigger className="bg-background border-border text-foreground">
-                      <SelectValue placeholder="Selecione sua CIA" />
+                    <SelectTrigger className="bg-military-black border-military-gold/30 text-white focus:border-military-gold">
+                      <SelectValue placeholder={loadingCompanies ? "Carregando..." : "Selecione sua CIA"} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-military-black border-military-gold/30">
                       {companies.map((company) => (
-                        <SelectItem key={company} value={company}>
-                          CIA {company}
+                        <SelectItem key={company.id || company.name} value={company.name} className="text-white hover:bg-military-gold/10">
+                          CIA {company.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -246,25 +267,25 @@ const Register = () => {
               {/* Dados Pessoais Adicionais */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="cpf" className="text-foreground">CPF *</Label>
+                  <Label htmlFor="cpf" className="text-white">CPF *</Label>
                   <Input
                     id="cpf"
                     type="text"
                     value={formData.cpf}
                     onChange={(e) => handleInputChange('cpf', e.target.value)}
-                    className="bg-background border-border text-foreground"
+                    className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                     placeholder="000.000.000-00"
                     required
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="birthYear" className="text-foreground">Ano de Nascimento *</Label>
+                  <Label htmlFor="birthYear" className="text-white">Ano de Nascimento *</Label>
                   <Input
                     id="birthYear"
                     type="number"
                     value={formData.birthYear}
                     onChange={(e) => handleInputChange('birthYear', e.target.value)}
-                    className="bg-background border-border text-foreground"
+                    className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                     placeholder="1990"
                     min="1940"
                     max={new Date().getFullYear() - 16}
@@ -272,14 +293,14 @@ const Register = () => {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label className="text-foreground">Patente Atual *</Label>
+                  <Label className="text-white">Patente Atual *</Label>
                   <Select value={formData.currentRank} onValueChange={(value) => handleInputChange('currentRank', value)} required>
-                    <SelectTrigger className="bg-background border-border text-foreground">
+                    <SelectTrigger className="bg-military-black border-military-gold/30 text-white focus:border-military-gold">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-military-black border-military-gold/30">
                       {ranks.map((rank) => (
-                        <SelectItem key={rank.value} value={rank.value}>
+                        <SelectItem key={rank.value} value={rank.value} className="text-white hover:bg-military-gold/10">
                           {rank.label}
                         </SelectItem>
                       ))}
@@ -290,13 +311,13 @@ const Register = () => {
 
               {/* Endereço */}
               <div className="space-y-2">
-                <Label htmlFor="address" className="text-foreground">Endereço Completo *</Label>
+                <Label htmlFor="address" className="text-white">Endereço Completo *</Label>
                 <Input
                   id="address"
                   type="text"
                   value={formData.address}
                   onChange={(e) => handleInputChange('address', e.target.value)}
-                  className="bg-background border-border text-foreground"
+                  className="bg-military-black border-military-gold/30 text-white placeholder:text-gray-400 focus:border-military-gold"
                   placeholder="Rua, número, bairro, CEP"
                   required
                 />
@@ -312,11 +333,11 @@ const Register = () => {
             </form>
 
             <div className="mt-6 text-center">
-              <p className="text-muted-foreground text-sm">
+              <p className="text-gray-300 text-sm">
                 Já tem uma conta? 
                 <button 
                   onClick={() => navigate('/login')}
-                  className="text-military-gold hover:text-accent ml-1 underline"
+                  className="text-military-gold hover:text-military-gold-light ml-1 underline"
                 >
                   Faça login aqui
                 </button>
