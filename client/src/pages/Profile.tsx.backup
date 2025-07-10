@@ -196,6 +196,7 @@ const Profile = () => {
               title: "Avatar atualizado",
               description: "Sua foto de perfil foi atualizada com sucesso!",
             });
+            // Refresh the page to show new avatar
             window.location.reload();
           } else {
             const error = await response.json();
@@ -212,18 +213,7 @@ const Profile = () => {
           setUploadingAvatar(false);
         }
       };
-    } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast({
-        title: "Erro no upload",
-        description: "Não foi possível fazer upload da imagem.",
-        variant: "destructive"
-      });
-      setUploadingAvatar(false);
-    }
   };
-
-
 
   const getAvatarFallback = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);

@@ -444,6 +444,28 @@ export class VercelStorage {
     }
   }
 
+  async createAsaasPayment(data) {
+    console.log('💳 Criando pagamento Asaas:', data);
+    
+    try {
+      const payment = await db.insert(asaas_payments).values({
+        user_id: data.user_id,
+        asaas_payment_id: data.asaas_payment_id,
+        value: data.value,
+        status: data.status || 'PENDING',
+        billing_type: data.billing_type,
+        due_date: data.due_date,
+        description: data.description
+      }).returning();
+      
+      console.log('✅ Pagamento Asaas criado:', payment[0]);
+      return payment[0];
+    } catch (error) {
+      console.error('❌ Erro ao criar pagamento Asaas:', error);
+      throw error;
+    }
+  }
+
   // === MÉTODOS PARA EMPRESAS ===
   async getCompanies() {
     try {

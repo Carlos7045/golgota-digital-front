@@ -1110,30 +1110,34 @@ app.get('/api/profiles', requireAuth, async (req, res) => {
 
 // === ROTAS DE PERFIL ADICIONAIS ===
 
-// Upload de avatar
-app.post('/api/profile/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+// Upload de avatar (usando base64 para compatibilidade serverless)
+app.post('/api/profile/avatar', requireAuth, async (req, res) => {
   try {
     console.log('📸 Upload de avatar iniciado...');
     
-    if (!req.file) {
+    const { avatar } = req.body; // Expecting base64 data
+    
+    if (!avatar) {
       return res.status(400).json({ error: 'Nenhum arquivo enviado' });
     }
     
-    console.log('📁 Arquivo recebido:', req.file.filename);
+    // Validate base64 image data
+    if (!avatar.startsWith('data:image/')) {
+      return res.status(400).json({ error: 'Formato de imagem inválido' });
+    }
     
-    // Construir URL do avatar
-    const avatarUrl = `/uploads/${req.file.filename}`;
+    console.log('📁 Avatar base64 recebido');
     
-    // Atualizar perfil com novo avatar
+    // Store base64 data directly in database
     const updatedProfile = await storage.updateProfile(req.user.id, { 
-      avatar_url: avatarUrl 
+      avatar_url: avatar 
     });
     
-    console.log('✅ Avatar atualizado:', avatarUrl);
+    console.log('✅ Avatar atualizado');
     
     res.json({ 
       message: 'Avatar atualizado com sucesso',
-      avatar_url: avatarUrl,
+      avatar_url: avatar,
       profile: updatedProfile
     });
   } catch (error) {
