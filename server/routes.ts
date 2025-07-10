@@ -53,18 +53,26 @@ const upload = multer({
 
 // Auth middleware
 async function requireAuth(req: Request, res: Response, next: any) {
+  console.log('🔍 Auth middleware - Cookies:', req.headers.cookie);
+  console.log('🔍 Auth middleware - Session:', req.session);
+  console.log('🔍 Auth middleware - Session ID:', req.session?.userId);
+  
   if (!req.session?.userId) {
+    console.log('🔍 Auth middleware - No session userId found');
     return res.status(401).json({ message: 'Unauthorized' });
   }
   
   try {
     const user = await storage.getUser(req.session.userId);
     if (!user) {
+      console.log('🔍 Auth middleware - User not found for ID:', req.session.userId);
       return res.status(401).json({ message: 'User not found' });
     }
+    console.log('🔍 Auth middleware - User authenticated:', user.email);
     req.user = user;
     next();
   } catch (error) {
+    console.log('🔍 Auth middleware - Session error:', error);
     return res.status(401).json({ message: 'Invalid session' });
   }
 }

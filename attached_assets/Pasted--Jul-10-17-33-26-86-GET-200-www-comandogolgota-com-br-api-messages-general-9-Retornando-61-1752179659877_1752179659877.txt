@@ -1,0 +1,155 @@
+
+Jul 10 17:33:26.86
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 61 mensagens
+Jul 10 17:33:26.66
+POST
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Mensagem enviada com sucesso
+Jul 10 17:33:26.29
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:25.95
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:25.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:25.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 60 mensagens
+Jul 10 17:33:20.02
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 60 mensagens
+Jul 10 17:33:19.31
+POST
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Mensagem enviada com sucesso
+Jul 10 17:33:17.09
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:16.68
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:16.32
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 17:33:16.15
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 59 mensagens
+Jul 10 17:33:16.15
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+2
+✅ Retornando 2 anúncios
+Jul 10 17:33:16.15
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:33:15.64
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+15
+🚀 Enviando resposta JSON...
+Jul 10 17:33:12.32
+GET
+401
+www.comandogolgota.com.br
+/api/profile
+4
+❌ Token não encontrado nos cookies nem headers
+Jul 10 17:33:01.48
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 59 mensagens
+Jul 10 17:33:01.26
+POST
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Mensagem enviada com sucesso
+Jul 10 17:32:55.61
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:32:55.22
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 17:32:54.75
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 17:32:54.57
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 58 mensagens
