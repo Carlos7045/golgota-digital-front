@@ -161,6 +161,25 @@ export class VercelStorage {
     }
   }
 
+  async getUserByCpf(cpf) {
+    try {
+      const result = await db.select({
+        id: users.id,
+        email: users.email,
+        password: users.password,
+        created_at: users.created_at,
+        force_password_change: users.force_password_change
+      }).from(users)
+      .innerJoin(profiles, eq(users.id, profiles.user_id))
+      .where(eq(profiles.cpf, cpf.replace(/\D/g, '')))
+      .limit(1);
+      return result[0] || null;
+    } catch (error) {
+      console.error('Error getting user by CPF:', error);
+      return null;
+    }
+  }
+
   async getUser(id) {
     try {
       const result = await db.select({

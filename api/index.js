@@ -170,11 +170,7 @@ async function authenticateUser(emailOrCpf, password) {
     
     if (!user) {
       console.log('❌ Usuário não encontrado por email, tentando por CPF...');
-      const users = await storage.getUsersByRank();
-      const profileWithCpf = users.find(u => u.cpf === emailOrCpf.replace(/\D/g, ''));
-      if (profileWithCpf) {
-        user = await storage.getUser(profileWithCpf.user_id);
-      }
+      user = await storage.getUserByCpf(emailOrCpf.replace(/\D/g, ''));
     }
     
     if (!user) {
