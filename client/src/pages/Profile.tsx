@@ -111,21 +111,39 @@ const Profile = () => {
     
     setSaving(true);
     try {
-      const updatedProfile = await apiPut('/api/profile', editForm);
+      console.log('Salvando perfil com dados:', editForm);
       
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram salvas com sucesso!",
+      const response = await fetch('/api/profile', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editForm),
+        credentials: 'include'
       });
       
-      setIsEditing(false);
-      // Refresh profile data
-      window.location.reload();
-    } catch (error) {
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Perfil atualizado:', data);
+        
+        // Atualizar dados locais
+        Object.assign(profile, editForm);
+        
+        toast({
+          title: "Perfil atualizado",
+          description: "Suas informações foram salvas com sucesso!",
+        });
+        
+        setIsEditing(false);
+      } else {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Erro ao atualizar perfil');
+      }
+    } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
         title: "Erro ao salvar perfil",
-        description: "Não foi possível salvar as alterações.",
+        description: error.message || "Não foi possível salvar as alterações.",
         variant: "destructive"
       });
     } finally {
@@ -192,11 +210,21 @@ const Profile = () => {
 
           if (response.ok) {
             const data = await response.json();
+            
+            // Atualizar perfil local com novo avatar
+            if (profile) {
+              profile.avatar_url = base64Data;
+            }
+            
             toast({
               title: "Avatar atualizado",
               description: "Sua foto de perfil foi atualizada com sucesso!",
             });
-            window.location.reload();
+            
+            // Forçar re-render do componente
+            setUploadingAvatar(false);
+            setUploadingAvatar(true);
+            setTimeout(() => setUploadingAvatar(false), 100);
           } else {
             const error = await response.json();
             throw new Error(error.error || 'Erro ao fazer upload');
