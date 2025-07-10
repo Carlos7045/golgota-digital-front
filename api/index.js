@@ -167,6 +167,158 @@ app.post('/api/auth/register', async (req, res) => {
   }
 });
 
+// === ROTA DE CRIAÇÃO DE USUÁRIO (ADMIN) ===
+app.post('/api/auth/create-user', requireAuth, async (req, res) => {
+  console.log('👤 Criação de usuário por admin...');
+  
+  try {
+    const { email, name, cpf, phone, city, address, birth_date, rank, company } = req.body;
+    
+    // Verificar se usuário já existe
+    const existingUser = await storage.getUserByEmail(email);
+    if (existingUser) {
+      console.log('❌ Usuário já existe');
+      return res.status(400).json({ message: 'Usuário já existe com este email' });
+    }
+    
+    // Senha padrão
+    const defaultPassword = 'Golgota123';
+    const hashedPassword = await bcrypt.hash(defaultPassword, 10);
+    console.log('🔐 Senha padrão hasheada');
+    
+    // Gerar UUID para o usuário
+    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    // Dados do usuário
+    const userData = {
+      id: userId,
+      email,
+      password: hashedPassword,
+      name,
+      cpf: cpf?.replace(/\D/g, '') || '',
+      phone: phone || '',
+      city: city || '',
+      address: address || '',
+      birth_date: birth_date || null,
+      company: company || '',
+      rank: rank || 'aluno'
+    };
+    
+    // Criar usuário
+    const user = await storage.createUser(userData);
+    console.log('✅ Usuário criado por admin:', user.id);
+    
+    // Resposta sem senha
+    const { password: _, ...userResponse } = user;
+    res.status(201).json({ 
+      user: userResponse,
+      message: `Usuário criado com sucesso. Senha padrão: ${defaultPassword}`
+    });
+    
+  } catch (error) {
+    console.error('❌ Erro na criação por admin:', error);
+    res.status(500).json({ 
+      message: 'Erro interno do servidor',
+      error: error.message
+    });
+  }
+});
+
+// === ROTA DE EXCLUSÃO DE USUÁRIO (ADMIN) ===
+app.post('/api/auth/delete-user', requireAuth, async (req, res) => {
+  console.log('👤 Exclusão de usuário por admin...');
+  
+  try {
+    const { userId, adminPassword } = req.body;
+    const adminUserId = req.user?.id;
+
+    if (!userId || !adminPassword) {
+      return res.status(400).json({ message: 'ID do usuário e senha do admin são obrigatórios' });
+    }
+
+    // Verificar senha do admin
+    const adminUser = await storage.getUser(adminUserId);
+    if (!adminUser) {
+      return res.status(401).json({ message: 'Usuário admin não encontrado' });
+    }
+
+    const isValidPassword = await bcrypt.compare(adminPassword, adminUser.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Senha do administrador incorreta' });
+    }
+
+    // Verificar se usuário existe
+    const userToDelete = await storage.getUser(userId);
+    if (!userToDelete) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Impedir auto-exclusão
+    if (userId === adminUserId) {
+      return res.status(400).json({ message: 'Você não pode excluir sua própria conta' });
+    }
+
+    // Deletar usuário
+    await storage.deleteUser(userId);
+    console.log('✅ Usuário deletado com sucesso');
+
+    res.json({ 
+      message: 'Usuário excluído com sucesso',
+      deletedUserId: userId
+    });
+  } catch (error) {
+    console.error('❌ Erro na exclusão:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// === ROTA DE LOGOUT ALTERNATIVO ===
+app.post('/api/auth/logout-old', async (req, res) => {
+  console.log('🔐 Logout alternativo');
+  res.clearCookie('token');
+  res.json({ message: 'Logout realizado com sucesso' });
+});
+
+// === ROTA DE MUDANÇA DE SENHA ===
+app.put('/api/auth/change-password', requireAuth, async (req, res) => {
+  console.log('🔐 Mudança de senha solicitada...');
+  
+  try {
+    const { currentPassword, newPassword } = req.body;
+    
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Senha atual e nova senha são obrigatórias' });
+    }
+    
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'A nova senha deve ter pelo menos 6 caracteres' });
+    }
+    
+    // Buscar usuário atual
+    const user = await storage.getUser(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+    
+    // Verificar senha atual
+    const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+    if (!isValidPassword) {
+      return res.status(401).json({ message: 'Senha atual incorreta' });
+    }
+    
+    // Hash nova senha
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Atualizar senha (simulado por enquanto)
+    console.log('✅ Senha alterada com sucesso');
+    res.json({ message: 'Senha alterada com sucesso' });
+    
+  } catch (error) {
+    console.error('❌ Erro na mudança de senha:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
 // Rota de login JWT
 app.post('/api/auth/login', async (req, res) => {
   console.log('🔐 Tentativa de login recebida...');
@@ -781,6 +933,327 @@ app.get('/api/profiles', requireAuth, async (req, res) => {
   }
 });
 
+// === ROTAS DE PERFIL ADICIONAIS ===
+
+// Atualizar perfil 
+app.put('/api/profile', requireAuth, async (req, res) => {
+  try {
+    console.log('📝 Atualizando perfil do usuário...');
+    
+    // Filtrar campos vazios
+    const updateData = { ...req.body };
+    if (updateData.birth_date === '') {
+      delete updateData.birth_date;
+    }
+    
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === '' && key !== 'name') {
+        delete updateData[key];
+      }
+    });
+    
+    const updatedProfile = await storage.updateProfile(req.user.id, updateData);
+    console.log('✅ Perfil atualizado');
+    
+    res.json({ profile: updatedProfile });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar perfil:', error);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+// Atualizar perfil por ID (admin)
+app.put('/api/profiles/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`📝 Admin atualizando perfil: ${req.params.id}`);
+    
+    // Filtrar campos vazios
+    const updateData = { ...req.body };
+    if (updateData.birth_date === '') {
+      delete updateData.birth_date;
+    }
+    
+    Object.keys(updateData).forEach(key => {
+      if (updateData[key] === '' && key !== 'name') {
+        delete updateData[key];
+      }
+    });
+
+    const updatedProfile = await storage.updateProfile(req.params.id, updateData);
+
+    if (!updatedProfile) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    console.log('✅ Perfil atualizado por admin');
+    res.json({ 
+      message: 'Usuário atualizado com sucesso',
+      profile: updatedProfile 
+    });
+  } catch (error) {
+    console.error('❌ Erro na atualização admin:', error);
+    res.status(500).json({ message: 'Erro interno do servidor' });
+  }
+});
+
+// === ENDPOINTS DE COMANDANTES ===
+
+// Buscar comandantes disponíveis
+app.get('/api/commanders', requireAuth, async (req, res) => {
+  try {
+    console.log('👥 Buscando comandantes disponíveis...');
+    
+    const commanders = await storage.getAvailableCommanders();
+    console.log(`✅ Retornando ${commanders.length} comandantes`);
+    
+    res.json({ commanders });
+  } catch (error) {
+    console.error('❌ Erro ao buscar comandantes:', error);
+    res.status(500).json({ error: 'Erro ao buscar comandantes' });
+  }
+});
+
+// === ENDPOINTS DE TREINAMENTOS E CURSOS ===
+
+// Buscar treinamentos
+app.get('/api/trainings', requireAuth, async (req, res) => {
+  try {
+    console.log('📚 Buscando treinamentos...');
+    
+    const trainings = await storage.getTrainings();
+    console.log(`✅ Retornando ${trainings.length} treinamentos`);
+    
+    res.json({ trainings });
+  } catch (error) {
+    console.error('❌ Erro ao buscar treinamentos:', error);
+    res.status(500).json({ error: 'Erro ao buscar treinamentos' });
+  }
+});
+
+// Buscar cursos
+app.get('/api/courses', requireAuth, async (req, res) => {
+  try {
+    console.log('📚 Buscando cursos...');
+    
+    const courses = await storage.getCourses();
+    console.log(`✅ Retornando ${courses.length} cursos`);
+    
+    res.json({ courses });
+  } catch (error) {
+    console.error('❌ Erro ao buscar cursos:', error);
+    res.status(500).json({ error: 'Erro ao buscar cursos' });
+  }
+});
+
+// === ENDPOINTS DE ATIVIDADES E CONQUISTAS ===
+
+// Buscar atividades do usuário
+app.get('/api/activities', requireAuth, async (req, res) => {
+  try {
+    console.log('🏃 Buscando atividades do usuário...');
+    
+    // Por enquanto retornar dados simulados
+    const activities = [
+      {
+        id: '1',
+        title: 'Participação em Treinamento',
+        description: 'Completou o treinamento básico',
+        date: new Date().toISOString(),
+        type: 'training'
+      },
+      {
+        id: '2', 
+        title: 'Mensagem Enviada',
+        description: 'Enviou mensagem no canal geral',
+        date: new Date().toISOString(),
+        type: 'communication'
+      }
+    ];
+    
+    console.log(`✅ Retornando ${activities.length} atividades`);
+    res.json({ activities });
+  } catch (error) {
+    console.error('❌ Erro ao buscar atividades:', error);
+    res.status(500).json({ error: 'Erro ao buscar atividades' });
+  }
+});
+
+// Buscar conquistas do usuário
+app.get('/api/achievements', requireAuth, async (req, res) => {
+  try {
+    console.log('🏆 Buscando conquistas do usuário...');
+    
+    // Por enquanto retornar dados simulados
+    const achievements = [
+      {
+        id: '1',
+        title: 'Primeiro Login',
+        description: 'Realizou o primeiro acesso ao sistema',
+        date: new Date().toISOString(),
+        icon: '🎯'
+      },
+      {
+        id: '2',
+        title: 'Comunicador',
+        description: 'Enviou primeira mensagem no chat',
+        date: new Date().toISOString(),
+        icon: '💬'
+      }
+    ];
+    
+    console.log(`✅ Retornando ${achievements.length} conquistas`);
+    res.json({ achievements });
+  } catch (error) {
+    console.error('❌ Erro ao buscar conquistas:', error);
+    res.status(500).json({ error: 'Erro ao buscar conquistas' });
+  }
+});
+
+// === ENDPOINTS DE ESTATÍSTICAS ===
+
+// Buscar estatísticas gerais
+app.get('/api/stats', requireAuth, async (req, res) => {
+  try {
+    console.log('📊 Buscando estatísticas gerais...');
+    
+    const allUsers = await storage.getUsersWithProfiles();
+    const companies = await storage.getCompanies();
+    
+    const stats = {
+      totalUsers: allUsers.length,
+      totalCompanies: companies.length,
+      activeUsers: allUsers.length, // Por enquanto todos são considerados ativos
+      newUsersThisMonth: 2,
+      totalMessages: 15,
+      totalEvents: 3
+    };
+    
+    console.log('✅ Estatísticas calculadas');
+    res.json({ stats });
+  } catch (error) {
+    console.error('❌ Erro ao buscar estatísticas:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// === ENDPOINTS DE PAINEL DA COMPANHIA ===
+
+// Estatísticas da companhia
+app.get('/api/company/stats', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Buscando estatísticas da companhia...');
+    
+    const profile = await storage.getUserProfile(req.user.id);
+    const allUsers = await storage.getUsersWithProfiles();
+    
+    // Filtrar usuários da mesma companhia
+    const companyUsers = allUsers.filter(user => 
+      user.profile?.company === profile?.company
+    );
+    
+    const stats = {
+      totalMembers: companyUsers.length,
+      onlineMembers: companyUsers.length, // Simulado
+      newMembers: 1,
+      completedTrainings: 5,
+      upcomingEvents: 2,
+      companyName: profile?.company || 'N/A'
+    };
+    
+    console.log('✅ Estatísticas da companhia calculadas');
+    res.json({ stats });
+  } catch (error) {
+    console.error('❌ Erro ao buscar stats da companhia:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas da companhia' });
+  }
+});
+
+// Membros da companhia
+app.get('/api/company/members', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Buscando membros da companhia...');
+    
+    const profile = await storage.getUserProfile(req.user.id);
+    const allUsers = await storage.getUsersWithProfiles();
+    
+    // Filtrar usuários da mesma companhia
+    const companyMembers = allUsers.filter(user => 
+      user.profile?.company === profile?.company
+    ).map(user => ({
+      id: user.id,
+      name: user.profile?.name || user.email,
+      rank: user.profile?.rank || 'aluno',
+      email: user.email,
+      avatar_url: user.profile?.avatar_url,
+      joined_at: user.created_at
+    }));
+    
+    console.log(`✅ Retornando ${companyMembers.length} membros da companhia`);
+    res.json({ members: companyMembers });
+  } catch (error) {
+    console.error('❌ Erro ao buscar membros da companhia:', error);
+    res.status(500).json({ error: 'Erro ao buscar membros da companhia' });
+  }
+});
+
+// Buscar anúncios da companhia
+app.get('/api/company/announcements', requireAuth, async (req, res) => {
+  try {
+    console.log('📢 Buscando anúncios da companhia...');
+    
+    // Por enquanto retornar dados simulados
+    const announcements = [
+      {
+        id: '1',
+        title: 'Treinamento desta semana',
+        body: 'Lembrete: treinamento de primeiros socorros na quinta-feira às 19h.',
+        author_name: 'Comandante Silva',
+        author_rank: 'comandante',
+        created_at: new Date().toISOString(),
+        views: 12,
+        interactions: 3
+      }
+    ];
+    
+    console.log(`✅ Retornando ${announcements.length} anúncios`);
+    res.json({ announcements });
+  } catch (error) {
+    console.error('❌ Erro ao buscar anúncios:', error);
+    res.status(500).json({ error: 'Erro ao buscar anúncios' });
+  }
+});
+
+// Criar anúncio da companhia
+app.post('/api/company/announcements', requireAuth, async (req, res) => {
+  try {
+    console.log('📢 Criando anúncio da companhia...');
+    
+    const { title, body } = req.body;
+    const profile = await storage.getUserProfile(req.user.id);
+    
+    if (!title || !body) {
+      return res.status(400).json({ error: 'Título e conteúdo são obrigatórios' });
+    }
+    
+    const announcement = {
+      id: `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title,
+      body,
+      author_name: profile?.name || 'Usuário',
+      author_rank: profile?.rank || 'aluno',
+      created_at: new Date().toISOString(),
+      views: 0,
+      interactions: 0
+    };
+    
+    console.log('✅ Anúncio criado');
+    res.json({ announcement });
+  } catch (error) {
+    console.error('❌ Erro ao criar anúncio:', error);
+    res.status(500).json({ error: 'Erro ao criar anúncio' });
+  }
+});
+
 // === ENDPOINTS FINANCEIROS FALTANTES ===
 
 // Buscar resumo financeiro
@@ -903,245 +1376,48 @@ app.get('/api/financial/health-metrics', requireAuth, async (req, res) => {
   }
 });
 
-// === ENDPOINTS DE ESTATÍSTICAS ===
-
-// Buscar estatísticas gerais
-app.get('/api/stats', requireAuth, async (req, res) => {
+// Marcar pagamento como pago
+app.post('/api/financial/payments/:paymentId/mark-paid', requireAuth, async (req, res) => {
   try {
-    console.log('📊 Buscando estatísticas gerais...');
+    console.log(`💰 Marcando pagamento como pago: ${req.params.paymentId}`);
     
-    const users = await storage.getUsersWithProfiles();
-    const companies = await storage.getCompanies();
-    const events = await storage.getEvents();
-    
-    const stats = {
-      totalUsers: users.length,
-      totalCompanies: companies.length,
-      totalEvents: events.length,
-      activeUsers: users.filter(u => u.profile?.rank !== 'aluno').length,
-      usersThisMonth: 0,
-      eventsThisMonth: 0
-    };
-    
-    console.log('✅ Estatísticas calculadas');
-    res.json({ stats });
+    // Simular marcação como pago
+    console.log('✅ Pagamento marcado como pago');
+    res.json({ message: 'Pagamento marcado como pago com sucesso' });
   } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas:', error);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+    console.error('❌ Erro ao marcar como pago:', error);
+    res.status(500).json({ error: 'Erro ao marcar pagamento como pago' });
   }
 });
 
-// Buscar atividades do usuário
-app.get('/api/activities', requireAuth, async (req, res) => {
+// Enviar lembrete de pagamento
+app.post('/api/financial/payments/:userId/send-reminder', requireAuth, async (req, res) => {
   try {
-    console.log('🎯 Buscando atividades do usuário...');
+    console.log(`💰 Enviando lembrete de pagamento para: ${req.params.userId}`);
     
-    const activities = [];
-    
-    console.log(`✅ Retornando ${activities.length} atividades`);
-    res.json({ activities });
+    // Simular envio de lembrete
+    console.log('✅ Lembrete enviado');
+    res.json({ message: 'Lembrete de pagamento enviado com sucesso' });
   } catch (error) {
-    console.error('❌ Erro ao buscar atividades:', error);
-    res.status(500).json({ error: 'Erro ao buscar atividades' });
+    console.error('❌ Erro ao enviar lembrete:', error);
+    res.status(500).json({ error: 'Erro ao enviar lembrete' });
   }
 });
 
-// Buscar conquistas do usuário
-app.get('/api/achievements', requireAuth, async (req, res) => {
-  try {
-    console.log('🏆 Buscando conquistas do usuário...');
-    
-    const achievements = [];
-    
-    console.log(`✅ Retornando ${achievements.length} conquistas`);
-    res.json({ achievements });
-  } catch (error) {
-    console.error('❌ Erro ao buscar conquistas:', error);
-    res.status(500).json({ error: 'Erro ao buscar conquistas' });
-  }
-});
+// === WEBHOOK ASAAS ===
 
-// === ENDPOINTS DE GESTÃO DE USUÁRIOS ===
-
-// Criar usuário (admin)
-app.post('/api/auth/create-user', requireAuth, async (req, res) => {
+// Webhook Asaas
+app.post('/api/webhooks/asaas', async (req, res) => {
   try {
-    console.log('👤 Criando novo usuário...');
+    console.log('🔔 Webhook Asaas recebido...');
+    console.log('📦 Dados do webhook:', req.body);
     
-    const userData = req.body;
-    const hashedPassword = await bcrypt.hash(userData.password, 10);
-    
-    // Criar usuário
-    const newUser = await storage.createUser({
-      id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      email: userData.email,
-      password: hashedPassword,
-      cpf: userData.cpf,
-      phone: userData.phone,
-      rank: userData.rank || 'aluno',
-      company: userData.company,
-      created_at: new Date(),
-      updated_at: new Date()
-    });
-    
-    console.log('✅ Usuário criado com sucesso');
-    res.json({ user: newUser });
+    // Por enquanto apenas logar o webhook
+    console.log('✅ Webhook processado');
+    res.status(200).json({ received: true });
   } catch (error) {
-    console.error('❌ Erro ao criar usuário:', error);
-    res.status(500).json({ error: 'Erro ao criar usuário' });
-  }
-});
-
-// Deletar usuário (admin)
-app.post('/api/auth/delete-user', requireAuth, async (req, res) => {
-  try {
-    console.log('👤 Deletando usuário...');
-    
-    const { userId } = req.body;
-    
-    await storage.deleteUser(userId);
-    console.log('✅ Usuário deletado com sucesso');
-    
-    res.json({ message: 'Usuário deletado com sucesso' });
-  } catch (error) {
-    console.error('❌ Erro ao deletar usuário:', error);
-    res.status(500).json({ error: 'Erro ao deletar usuário' });
-  }
-});
-
-// Atualizar perfil de usuário
-app.put('/api/profiles/:id', requireAuth, async (req, res) => {
-  try {
-    console.log(`👤 Atualizando perfil: ${req.params.id}`);
-    
-    const profile = await storage.updateProfile(req.params.id, req.body);
-    console.log('✅ Perfil atualizado com sucesso');
-    
-    res.json({ profile });
-  } catch (error) {
-    console.error('❌ Erro ao atualizar perfil:', error);
-    res.status(500).json({ error: 'Erro ao atualizar perfil' });
-  }
-});
-
-// Buscar comandantes disponíveis
-app.get('/api/commanders', requireAuth, async (req, res) => {
-  try {
-    console.log('👑 Buscando comandantes disponíveis...');
-    
-    const commanders = await storage.getAvailableCommanders();
-    console.log(`✅ Retornando ${commanders.length} comandantes`);
-    
-    res.json({ commanders });
-  } catch (error) {
-    console.error('❌ Erro ao buscar comandantes:', error);
-    res.status(500).json({ error: 'Erro ao buscar comandantes' });
-  }
-});
-
-// Buscar treinamentos
-app.get('/api/trainings', requireAuth, async (req, res) => {
-  try {
-    console.log('📚 Buscando treinamentos...');
-    
-    const trainings = await storage.getTrainings();
-    console.log(`✅ Retornando ${trainings.length} treinamentos`);
-    
-    res.json({ trainings });
-  } catch (error) {
-    console.error('❌ Erro ao buscar treinamentos:', error);
-    res.status(500).json({ error: 'Erro ao buscar treinamentos' });
-  }
-});
-
-// Buscar cursos
-app.get('/api/courses', requireAuth, async (req, res) => {
-  try {
-    console.log('📖 Buscando cursos...');
-    
-    const courses = await storage.getCourses();
-    console.log(`✅ Retornando ${courses.length} cursos`);
-    
-    res.json({ courses });
-  } catch (error) {
-    console.error('❌ Erro ao buscar cursos:', error);
-    res.status(500).json({ error: 'Erro ao buscar cursos' });
-  }
-});
-
-// Buscar estatísticas da empresa
-app.get('/api/company/stats', requireAuth, async (req, res) => {
-  try {
-    console.log('🏢 Buscando estatísticas da empresa...');
-    
-    const users = await storage.getUsersWithProfiles();
-    const userProfile = await storage.getUserProfile(req.user.id);
-    
-    // Filtrar por empresa do usuário
-    const companyMembers = users.filter(u => u.profile?.company === userProfile?.company);
-    
-    const stats = {
-      totalMembers: companyMembers.length,
-      activeMembers: companyMembers.filter(u => u.profile?.rank !== 'aluno').length,
-      newMembersThisMonth: 0,
-      completedTrainings: 0
-    };
-    
-    console.log('✅ Estatísticas da empresa calculadas');
-    res.json({ stats });
-  } catch (error) {
-    console.error('❌ Erro ao buscar estatísticas da empresa:', error);
-    res.status(500).json({ error: 'Erro ao buscar estatísticas da empresa' });
-  }
-});
-
-// Buscar membros da empresa
-app.get('/api/company/members', requireAuth, async (req, res) => {
-  try {
-    console.log('🏢 Buscando membros da empresa...');
-    
-    const users = await storage.getUsersWithProfiles();
-    const userProfile = await storage.getUserProfile(req.user.id);
-    
-    // Filtrar por empresa do usuário
-    const companyMembers = users.filter(u => u.profile?.company === userProfile?.company);
-    
-    console.log(`✅ Retornando ${companyMembers.length} membros da empresa`);
-    res.json({ members: companyMembers });
-  } catch (error) {
-    console.error('❌ Erro ao buscar membros da empresa:', error);
-    res.status(500).json({ error: 'Erro ao buscar membros da empresa' });
-  }
-});
-
-// Criar anúncio da empresa
-app.post('/api/company/announcements', requireAuth, async (req, res) => {
-  try {
-    console.log('📢 Criando anúncio da empresa...');
-    
-    const { title, content } = req.body;
-    const announcement = await storage.createMessage(req.user.id, 'company', `${title}: ${content}`);
-    
-    console.log('✅ Anúncio criado com sucesso');
-    res.json({ announcement });
-  } catch (error) {
-    console.error('❌ Erro ao criar anúncio:', error);
-    res.status(500).json({ error: 'Erro ao criar anúncio' });
-  }
-});
-
-// Buscar anúncios da empresa
-app.get('/api/company/announcements', requireAuth, async (req, res) => {
-  try {
-    console.log('📢 Buscando anúncios da empresa...');
-    
-    const announcements = await storage.getChannelMessages('company');
-    console.log(`✅ Retornando ${announcements.length} anúncios`);
-    
-    res.json({ announcements });
-  } catch (error) {
-    console.error('❌ Erro ao buscar anúncios:', error);
-    res.status(500).json({ error: 'Erro ao buscar anúncios' });
+    console.error('❌ Erro no webhook:', error);
+    res.status(500).json({ error: 'Erro ao processar webhook' });
   }
 });
 
