@@ -291,7 +291,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
         ) : (
           organizedMessages.map((message) => {
-            const isMyMessage = message.user_id === user?.id;
+            const isMyMessage = String(message.user_id) === String(user?.id);
             const originalMessage = message.parent_message_id 
               ? messages.find(m => m.id === message.parent_message_id)
               : null;
@@ -301,7 +301,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                 key={message.id} 
                 className={`mb-4 flex group ${isMyMessage ? 'justify-end' : 'justify-start'}`}
               >
-                <div className={`max-w-[70%] ${isMyMessage ? 'order-2' : 'order-1'}`}>
+                <div className={`max-w-[85%] ${isMyMessage ? 'order-2' : 'order-1'}`}>
                   
                   {/* Avatar para mensagens de outros (lado esquerdo) */}
                   <div className="flex items-start space-x-3">
@@ -331,37 +331,37 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       {originalMessage && (
                         <div className={`mb-2 p-2 rounded-lg border-l-4 text-xs ${
                           isMyMessage 
-                            ? 'bg-military-gold/10 border-military-gold/50 text-gray-300' 
-                            : 'bg-military-black/60 border-blue-400/50 text-gray-400'
+                            ? 'bg-black/20 border-black/30 text-black/80' 
+                            : 'bg-gray-600/50 border-gray-500 text-gray-300'
                         }`}>
                           <div className="flex items-center space-x-1 mb-1">
                             <span className={`font-medium ${
-                              isMyMessage ? 'text-military-gold' : 'text-blue-400'
+                              isMyMessage ? 'text-black' : 'text-gray-200'
                             }`}>
                               {originalMessage.author_name}
                             </span>
                           </div>
                           <p className="italic truncate">
-                            "{originalMessage.content}"
+                            {originalMessage.content}
                           </p>
                         </div>
                       )}
                       
                       {/* Balão da mensagem */}
-                      <div className={`rounded-lg p-3 shadow-lg ${
+                      <div className={`rounded-2xl p-3 shadow-lg max-w-full break-words ${
                         isMyMessage 
-                          ? 'bg-military-gold text-black rounded-br-sm' 
-                          : 'bg-military-black-light border border-military-gold/20 text-gray-300 rounded-bl-sm'
+                          ? 'bg-military-gold text-black rounded-br-md ml-auto' 
+                          : 'bg-gray-700 text-white rounded-bl-md'
                       }`}>
                         <p className="leading-relaxed text-sm">
                           {message.content}
                         </p>
-                        <div className={`text-xs mt-2 ${
-                          isMyMessage ? 'text-black/70' : 'text-gray-500'
+                        <div className={`text-xs mt-2 flex items-center justify-end gap-1 ${
+                          isMyMessage ? 'text-black/70' : 'text-gray-400'
                         }`}>
-                          {formatTime(new Date(message.created_at))}
+                          <span>{formatTime(new Date(message.created_at))}</span>
                           {isMyMessage && (
-                            <span className="ml-2">✓✓</span>
+                            <span className="text-black/60 text-xs">✓✓</span>
                           )}
                         </div>
                       </div>
