@@ -37,9 +37,7 @@ const Footer = () => {
                 </a>
               </div>
               <div>
-                <a href="tel:+5511999999999" className="hover:text-military-gold transition-colors">
-                  (11) 99999-9999
-                </a>
+                <a href="tel:+5511999999999" className="hover:text-military-gold transition-colors">(99) 98433-9294</a>
               </div>
               <div>
                 <a href="https://instagram.com/comandogolgota" className="hover:text-military-gold transition-colors">
