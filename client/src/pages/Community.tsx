@@ -7,6 +7,7 @@ import CommunitySidebar from '@/components/community/CommunitySidebar';
 import ChannelContent from '@/components/community/ChannelContent';
 import MainContent from '@/components/community/MainContent';
 import CompactChat from '@/components/community/CompactChat';
+import MobileChatBubble from '@/components/MobileChatBubble';
 
 export type UserRank = 'aluno' | 'soldado' | 'cabo' | 'sargento' | 'tenente' | 'capitao' | 'major' | 'coronel' | 'comandante' | 'admin';
 
@@ -57,13 +58,30 @@ const Community = () => {
 
   return (
     <div className="min-h-screen bg-military-black flex">
-      <CommunitySidebar 
-        user={user}
-        activeChannel={activeChannel}
-        onChannelChange={setActiveChannel}
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-      />
+      {/* Desktop Sidebar */}
+      <div className="hidden md:block">
+        <CommunitySidebar 
+          user={user}
+          activeChannel={activeChannel}
+          onChannelChange={setActiveChannel}
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
+        />
+      </div>
+
+      {/* Mobile Sidebar - Overlay */}
+      <div className={`md:hidden fixed inset-0 z-40 ${sidebarOpen ? 'block' : 'hidden'}`}>
+        <div className="absolute inset-0 bg-black/50" onClick={() => setSidebarOpen(false)} />
+        <div className="absolute left-0 top-0 h-full w-64">
+          <CommunitySidebar 
+            user={user}
+            activeChannel={activeChannel}
+            onChannelChange={setActiveChannel}
+            isOpen={sidebarOpen}
+            onToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+        </div>
+      </div>
       
       <div className="flex-1 flex">
         {/* Área Principal - Notícias e Conteúdo */}
@@ -75,23 +93,28 @@ const Community = () => {
           />
           
           {/* Conteúdo baseado no canal ativo */}
-          {activeChannel === 'geral' ? (
-            <MainContent user={user} />
-          ) : (
-            <ChannelContent 
-              user={user}
-              channel={activeChannel}
-            />
-          )}
+          <div className="flex-1 overflow-y-auto">
+            {activeChannel === 'geral' ? (
+              <MainContent user={user} />
+            ) : (
+              <ChannelContent 
+                user={user}
+                channel={activeChannel}
+              />
+            )}
+          </div>
         </div>
         
-        {/* Chat Sidebar - Só aparece no canal geral */}
+        {/* Desktop Chat Sidebar - Só aparece no canal geral e em desktop */}
         {activeChannel === 'geral' && (
-          <div className="w-80 border-l border-military-gold/20 bg-military-black-light h-screen flex flex-col">
+          <div className="hidden lg:block w-80 border-l border-military-gold/20 bg-military-black-light h-screen flex-col">
             <CompactChat user={user} />
           </div>
         )}
       </div>
+
+      {/* Mobile Chat Bubble - Só aparece no canal geral e em mobile */}
+      {activeChannel === 'geral' && <MobileChatBubble />}
     </div>
   );
 };
