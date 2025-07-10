@@ -1,0 +1,60 @@
+Jul 10 20:14:31.54
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:14:28.60
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:14:18.13
+GET
+500
+www.comandogolgota.com.br
+/api/profile
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:13:07.92
+GET
+500
+golgota-digital-front-kx05zlh84-carlos-salgados-projects.vercel.app
+/api/profile
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:13:07.92
+GET
+500
+golgota-digital-front-kx05zlh84-carlos-salgados-projects.vercel.app
+/api/profile
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue. ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1213:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:06:15.75
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1211:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:05:56.57
+GET
+500
+www.comandogolgota.com.br
+/api/companies
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1211:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:05:41.81
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1211:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:05:37.57
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1211:1 at ModuleJob.run (node:internal/modules/esm/module_job:274:25) at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:644:26) at async d (/opt/rust/nodejs.js:16:21147) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 20:05:10.70
+POST
+500
+www.comandogolgota.com.br
+/api/auth/logout
+ReferenceError: FORCE_PRODUCTION_UPDATE_1752188222 is not defined at file:///var/task/api/db-vercel.js:1211:1 at 
