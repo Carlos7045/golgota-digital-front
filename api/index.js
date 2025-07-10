@@ -1653,6 +1653,151 @@ app.post('/api/webhooks/asaas', async (req, res) => {
   }
 });
 
+// === CONVERSAS PRIVADAS ===
+
+// Buscar conversas privadas do usuário
+app.get('/api/conversations', requireAuth, async (req, res) => {
+  try {
+    console.log(`💬 Buscando conversas do usuário: ${req.user.id}`);
+    
+    // Por enquanto retornar conversas simuladas
+    const conversations = [
+      {
+        id: 'conv_1',
+        other_user: {
+          id: 'other_user_1',
+          name: 'João Silva',
+          avatar_url: null,
+          rank: 'soldado'
+        },
+        last_message: {
+          content: 'Oi, tudo bem?',
+          created_at: new Date(Date.now() - 3600000).toISOString(),
+          user_id: 'other_user_1'
+        },
+        unread_count: 2
+      }
+    ];
+    
+    console.log(`✅ Retornando ${conversations.length} conversas`);
+    res.json({ conversations });
+  } catch (error) {
+    console.error('❌ Erro ao buscar conversas:', error);
+    res.status(500).json({ error: 'Erro ao buscar conversas' });
+  }
+});
+
+// Buscar mensagens de uma conversa privada
+app.get('/api/conversations/:conversationId/messages', requireAuth, async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    console.log(`💬 Buscando mensagens da conversa: ${conversationId}`);
+    
+    // Por enquanto retornar mensagens simuladas
+    const messages = [
+      {
+        id: 'msg_1',
+        content: 'Oi, tudo bem?',
+        user_id: 'other_user_1',
+        conversation_id: conversationId,
+        created_at: new Date(Date.now() - 3600000).toISOString(),
+        user_name: 'João Silva',
+        avatar_url: null
+      },
+      {
+        id: 'msg_2',
+        content: 'Tudo sim! E você?',
+        user_id: req.user.id,
+        conversation_id: conversationId,
+        created_at: new Date(Date.now() - 3000000).toISOString(),
+        user_name: req.user.name,
+        avatar_url: null
+      }
+    ];
+    
+    console.log(`✅ Retornando ${messages.length} mensagens`);
+    res.json({ messages });
+  } catch (error) {
+    console.error('❌ Erro ao buscar mensagens da conversa:', error);
+    res.status(500).json({ error: 'Erro ao buscar mensagens da conversa' });
+  }
+});
+
+// Criar ou buscar conversa privada entre dois usuários
+app.post('/api/conversations', requireAuth, async (req, res) => {
+  try {
+    const { other_user_id } = req.body;
+    console.log(`💬 Criando/buscando conversa entre ${req.user.id} e ${other_user_id}`);
+    
+    if (!other_user_id) {
+      return res.status(400).json({ error: 'ID do outro usuário é obrigatório' });
+    }
+    
+    if (other_user_id === req.user.id) {
+      return res.status(400).json({ error: 'Não é possível criar conversa consigo mesmo' });
+    }
+    
+    // Buscar dados do outro usuário
+    const otherUser = await storage.getUserProfile(other_user_id);
+    if (!otherUser) {
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+    }
+    
+    // Criar ID único para a conversa
+    const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    const conversation = {
+      id: conversationId,
+      participants: [req.user.id, other_user_id],
+      other_user: {
+        id: other_user_id,
+        name: otherUser.name,
+        avatar_url: otherUser.avatar_url,
+        rank: otherUser.rank
+      },
+      created_at: new Date().toISOString(),
+      last_message: null,
+      unread_count: 0
+    };
+    
+    console.log('✅ Conversa criada/encontrada');
+    res.status(201).json({ conversation });
+  } catch (error) {
+    console.error('❌ Erro ao criar conversa:', error);
+    res.status(500).json({ error: 'Erro ao criar conversa' });
+  }
+});
+
+// Enviar mensagem em conversa privada
+app.post('/api/conversations/:conversationId/messages', requireAuth, async (req, res) => {
+  try {
+    const { conversationId } = req.params;
+    const { content } = req.body;
+    
+    console.log(`💬 Enviando mensagem na conversa: ${conversationId}`);
+    
+    if (!content || !content.trim()) {
+      return res.status(400).json({ error: 'Conteúdo da mensagem é obrigatório' });
+    }
+    
+    const message = {
+      id: `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      content: content.trim(),
+      user_id: req.user.id,
+      conversation_id: conversationId,
+      created_at: new Date().toISOString(),
+      user_name: req.user.name,
+      avatar_url: req.user.avatar_url || null
+    };
+    
+    console.log('✅ Mensagem privada enviada');
+    res.status(201).json({ message });
+  } catch (error) {
+    console.error('❌ Erro ao enviar mensagem privada:', error);
+    res.status(500).json({ error: 'Erro ao enviar mensagem privada' });
+  }
+});
+
 // === ANÚNCIOS E NOTÍCIAS ===
 
 // Lista de anúncios em memória (para demonstração)

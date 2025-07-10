@@ -9,7 +9,7 @@ import EventsChannel from './channels/EventsChannel';
 import FinancialChannel from './channels/FinancialChannel';
 import OpportunitiesChannel from './channels/OpportunitiesChannel';
 import CompanyPanelChannel from './channels/CompanyPanelChannel';
-import DirectMessagesChannel from './DirectMessagesChannel';
+import DirectMessagesPanel from './DirectMessagesPanel';
 
 interface ChannelContentProps {
   user: User;
@@ -37,7 +37,7 @@ const ChannelContent = ({ user, channel }: ChannelContentProps) => {
     case 'painel-cia':
       return <CompanyPanelChannel user={user} />;
     case 'direct-messages':
-      return <DirectMessagesChannel user={user} />;
+      return <DirectMessagesPanel user={user} />;
     default:
       return <GeneralChannel user={user} />;
   }
