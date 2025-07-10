@@ -36,7 +36,7 @@ const About = () => {
           </div>
           <p className="text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed">
             Capacitamos missionários e líderes por meio de treinamentos como 
-            <span className="text-military-gold font-semibold"> Rally Missionário, Acampamento Gólgota e FEG</span>, 
+            <span className="text-military-gold font-semibold"> Rally Missionário, Acampamento Gólgota, CPLG e FEG</span>, 
             promovendo trabalho em equipe, superação e compromisso espiritual.
           </p>
         </div>
