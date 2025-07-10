@@ -187,6 +187,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post('/api/auth/login', async (req: Request, res: Response) => {
+    console.log('🔍 Login attempt - Session before:', req.session);
+    console.log('🔍 Login attempt - Session ID before:', req.sessionID);
     try {
       const { emailOrCpf, password } = req.body;
       
@@ -218,8 +220,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: 'CPF/Email ou senha inválidos' });
       }
       
-      // Create session
+      // Create session and save it explicitly
       req.session.userId = user.id;
+      
+      // Force session save
+      await new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('🔍 Session save error:', err);
+            reject(err);
+          } else {
+            console.log('🔍 Session saved successfully with userId:', user.id);
+            resolve(true);
+          }
+        });
+      });
       
       // Get user profile and roles
       const profile = await storage.getProfile(user.id);
@@ -227,6 +242,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Remove password from response
       const { password: _, ...userResponse } = user;
+      
+      console.log('🔍 Login success - Session after save:', req.session);
+      console.log('🔍 Login success - Session ID after save:', req.sessionID);
       
       res.json({ 
         user: userResponse,
