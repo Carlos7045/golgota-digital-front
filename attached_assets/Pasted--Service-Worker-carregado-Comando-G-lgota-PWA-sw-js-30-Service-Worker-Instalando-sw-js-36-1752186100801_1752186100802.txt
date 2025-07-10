@@ -1,0 +1,68 @@
+🚀 Service Worker carregado - Comando Gólgota PWA
+sw.js:30 🔧 Service Worker: Instalando...
+sw.js:36 📦 Cacheando recursos essenciais...
+sw.js:48 ✅ Service Worker: Ativando...
+3sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13Understand this error
+index-By_sob6y.js:417 🚀 PWA Wrapper inicializado - Comando Gólgota
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 Service Worker registrado com sucesso: https://www.comandogolgota.com.br/
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: Object
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13Understand this error
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: Object
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: Object
+api/messages/general:1  Failed to load resource: the server responded with a status of 500 ()Understand this error
+index-By_sob6y.js:485 Erro ao enviar mensagem: Error: HTTP error! status: 500
+    at Bh (index-By_sob6y.js:417:32973)
+    at async x (index-By_sob6y.js:485:21126)
+x @ index-By_sob6y.js:485Understand this error
+index-By_sob6y.js:417  POST https://www.comandogolgota.com.br/api/messages/general 500 (Internal Server Error)
+Bh @ index-By_sob6y.js:417
+Qt @ index-By_sob6y.js:417
+x @ index-By_sob6y.js:485
+n5 @ index-By_sob6y.js:37
+i5 @ index-By_sob6y.js:37
+o5 @ index-By_sob6y.js:37
+C_ @ index-By_sob6y.js:37
+XA @ index-By_sob6y.js:37
+(anonymous) @ index-By_sob6y.js:37
+Pj @ index-By_sob6y.js:40
+bA @ index-By_sob6y.js:37
+Sx @ index-By_sob6y.js:37
+rj @ index-By_sob6y.js:37
+j5 @ index-By_sob6y.js:37Understand this error
+index-By_sob6y.js:485 Erro ao enviar mensagem: Error: HTTP error! status: 500
+    at Bh (index-By_sob6y.js:417:32973)
+    at async x (index-By_sob6y.js:485:21126)
+x @ index-By_sob6y.js:485
+await in x
+n5 @ index-By_sob6y.js:37
+i5 @ index-By_sob6y.js:37
+o5 @ index-By_sob6y.js:37
+C_ @ index-By_sob6y.js:37
+XA @ index-By_sob6y.js:37
+(anonymous) @ index-By_sob6y.js:37
+Pj @ index-By_sob6y.js:40
+bA @ index-By_sob6y.js:37
+Sx @ index-By_sob6y.js:37
+rj @ index-By_sob6y.js:37
+j5 @ index-By_sob6y.js:37Understand this error
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13
+(anonymous) @ sw.js:185
+Promise.then
+staleWhileRevalidateStrategy @ sw.js:183
+await in staleWhileRevalidateStrategy
+(anonymous) @ sw.js:95Understand this error
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: {user: {…}, profile: {…}, roles: Array(2), token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2O…DU5fQ.WYhEHmszT6NAYYqwBcYyYpMsuUMlLqbsDlfBzyJBGCE', message: 'Login realizado com sucesso'}message: "Login realizado com sucesso"profile: {id: '78700f66-05ff-467d-85a2-cb705af3908d', user_id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', name: 'Carlos Henrique Pereira Salgado', cpf: '05018022310', birth_date: '1995-09-23', …}roles: (2) ['admin', 'user']token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2OGIzZWY4LWNlYjktNDFkZi04MWMzLWFjZWVjMjVhNWZmYyIsImVtYWlsIjoiY2hwc2FsZ2Fkb0Bob3RtYWlsLmNvbSIsImlhdCI6MTc1MjE4NjA1OSwiZXhwIjoxNzUyMjcyNDU5fQ.WYhEHmszT6NAYYqwBcYyYpMsuUMlLqbsDlfBzyJBGCE"user: {id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', email: 'chpsalgado@hotmail.com', force_password_change: false, created_at: '2025-07-07T03:59:26.934Z'}[[Prototype]]: Object
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: {profile: null, roles: Array(1)}

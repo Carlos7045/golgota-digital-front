@@ -1,0 +1,134 @@
+
+Jul 10 19:21:30.69
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+10
+✅ Roles: [ 'user' ]
+Jul 10 19:21:06.19
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+10
+✅ Roles: [ 'user' ]
+Jul 10 19:21:01.76
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:21:01.22
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:21:00.73
+GET
+200
+www.comandogolgota.com.br
+/api/activities/recent
+2
+✅ Retornando 4 atividades
+Jul 10 19:21:00.65
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+10
+✅ Roles: [ 'user' ]
+Jul 10 19:21:00.56
+GET
+200
+www.comandogolgota.com.br
+/api/announcements
+2
+✅ Retornando 2 anúncios
+Jul 10 19:21:00.56
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 77 mensagens
+Jul 10 19:21:00.56
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:20:59.29
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+15
+🚀 Enviando resposta JSON...
+Jul 10 19:20:51.89
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+10
+✅ Roles: [ 'user' ]
+Jul 10 19:20:36.92
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:20:36.49
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:20:35.98
+POST
+500
+www.comandogolgota.com.br
+/api/messages/general
+10
+❌ Erro ao enviar mensagem: NeonDbError: null value in column "user_id" of relation "general_messages" violates not-null constraint at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.createMessage (file:///var/task/api/db-vercel.js:412:22) at async file:///var/task/api/index.js:670:21 { severity: 'ERROR', code: '23502', detail: 'Failing row contains (1b9298ed-c94b-4587-a6fc-b419b0b186d1, null, general, wfdafqf , 2025-07-10 22:20:36.051+00, null, null, 0, f).', hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: 'public', table: 'general_messages', column: 'user_id', dataType: undefined, constraint: undefined, file: 'execMain.c', line: '2006', routine: 'ExecConstraints', sourceError: undefined }
+Jul 10 19:20:35.90
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:20:35.90
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+✅ Retornando 77 mensagens
+Jul 10 19:20:16.88
+POST
+500
+www.comandogolgota.com.br
+/api/messages/general
+10
+❌ Erro ao enviar mensagem: NeonDbError: null value in column "user_id" of relation "general_messages" violates not-null constraint at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.createMessage (file:///var/task/api/db-vercel.js:412:22) at async file:///var/task/api/index.js:670:21 { severity: 'ERROR', code: '23502', detail: 'Failing row contains (cbbe15a2-71be-43b0-88cd-d7f1285e2ba1, null, general, wfdaf, 2025-07-10 22:20:16.972+00, null, null, 0, f).', hint: undefined, position: undefined, internalPosition: undefined, internalQuery: undefined, where: undefined, schema: 'public', table: 'general_messages', column: 'user_id', dataType: undefined, constraint: undefined, file: 'execMain.c', line: '2006', routine: 'ExecConstraints', sourceError: undefined }
+Jul 10 19:20:06.91
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online
+Jul 10 19:20:06.48
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+8
+✅ Retornando 6 usuários online

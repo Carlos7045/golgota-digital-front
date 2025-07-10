@@ -235,14 +235,20 @@ export class VercelStorage {
       const user = await this.getUser(userId);
       console.log('👤 Usuário encontrado:', user?.email);
       
-      // Apenas Carlos Henrique pode ser admin
-      if (user?.email === 'chpsalgado@hotmail.com') {
-        console.log('✅ Admin autorizado: Carlos Henrique');
-        return ['admin', 'user'];
+      // Buscar o perfil também para redundância 
+      const profile = await this.getUserProfile(userId);
+      console.log('👤 Profile encontrado:', profile?.email);
+      
+      // Carlos Henrique é admin - verificar tanto user quanto profile
+      if ((user?.email === 'chpsalgado@hotmail.com') || 
+          (profile?.email === 'chpsalgado@hotmail.com') ||
+          (profile?.cpf === '05018022310')) {
+        console.log('✅ Admin autorizado: Carlos Henrique - ROLES: [ admin ]');
+        return ['admin'];
       }
       
       // Todos os outros usuários são apenas 'user'
-      console.log('✅ Usuário padrão (sem permissões de admin)');
+      console.log('✅ Usuário padrão (sem permissões de admin) - ROLES: [ user ]');
       return ['user'];
       
     } catch (error) {

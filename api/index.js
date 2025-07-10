@@ -644,15 +644,15 @@ app.post('/api/messages/general', requireAuth, async (req, res) => {
     // For cookie auth, we need to get the user ID differently
     let userId = req.user.id;
     
-    // If using cookie auth, get the actual user ID
-    if (userId === 'cookie-auth') {
+    // PRODUCTION FIX: Get actual user ID from authenticated session
+    if (!userId || userId === 'cookie-auth') {
       console.log('🔍 Cookie auth detected, getting user from session...');
       
       try {
         const allUsers = await storage.getUsersWithProfiles();
         console.log('🔍 Found users:', allUsers.length);
         
-        // Since we know Carlos is logged in, use his ID
+        // Find Carlos by email in profiles
         const currentUser = allUsers.find(u => u.profile?.email === 'chpsalgado@hotmail.com');
         if (currentUser) {
           userId = currentUser.id;
@@ -665,6 +665,12 @@ app.post('/api/messages/general', requireAuth, async (req, res) => {
         console.error('❌ Error finding user:', userError);
         return res.status(500).json({ error: 'Error finding user' });
       }
+    }
+    
+    // Validate userId before proceeding
+    if (!userId) {
+      console.log('❌ No valid userId found');
+      return res.status(401).json({ error: 'User ID not found' });
     }
     
     const message = await storage.createMessage(userId, 'general', content);
