@@ -55,6 +55,24 @@ app.post('/api/test/register', (req, res) => {
   });
 });
 
+// Rota para verificar se email existe
+app.post('/api/check-email', async (req, res) => {
+  try {
+    console.log('📧 Verificando email:', req.body.email);
+    
+    const existingUser = await storage.getUserByEmail(req.body.email);
+    
+    res.json({
+      exists: !!existingUser,
+      email: req.body.email,
+      message: existingUser ? 'Email já cadastrado' : 'Email disponível'
+    });
+  } catch (error) {
+    console.error('❌ Erro ao verificar email:', error);
+    res.status(500).json({ error: 'Erro ao verificar email' });
+  }
+});
+
 // Middleware de autenticação JWT
 function requireAuth(req, res, next) {
   console.log('🔐 Verificando autenticação JWT...');
