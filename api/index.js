@@ -648,16 +648,22 @@ app.post('/api/messages/general', requireAuth, async (req, res) => {
     if (userId === 'cookie-auth') {
       console.log('🔍 Cookie auth detected, getting user from session...');
       
-      const allUsers = await storage.getUsersWithProfiles();
-      console.log('🔍 Found users:', allUsers.length);
-      
-      // Since we know Carlos is logged in, use his ID
-      const currentUser = allUsers.find(u => u.profile?.email === 'chpsalgado@hotmail.com');
-      if (currentUser) {
-        userId = currentUser.id;
-        console.log('🔍 Found current user ID:', userId);
-      } else {
-        return res.status(401).json({ error: 'User not found' });
+      try {
+        const allUsers = await storage.getUsersWithProfiles();
+        console.log('🔍 Found users:', allUsers.length);
+        
+        // Since we know Carlos is logged in, use his ID
+        const currentUser = allUsers.find(u => u.profile?.email === 'chpsalgado@hotmail.com');
+        if (currentUser) {
+          userId = currentUser.id;
+          console.log('🔍 Found current user ID:', userId);
+        } else {
+          console.log('❌ User not found in database');
+          return res.status(401).json({ error: 'User not found' });
+        }
+      } catch (userError) {
+        console.error('❌ Error finding user:', userError);
+        return res.status(500).json({ error: 'Error finding user' });
       }
     }
     

@@ -1,0 +1,72 @@
+🚀 Service Worker carregado - Comando Gólgota PWA
+sw.js:30 🔧 Service Worker: Instalando...
+sw.js:36 📦 Cacheando recursos essenciais...
+sw.js:48 ✅ Service Worker: Ativando...
+4
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13
+3
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13
+(anonymous)	@	sw.js:185
+index-By_sob6y.js:417 🚀 PWA Wrapper inicializado - Comando Gólgota
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 Service Worker registrado com sucesso: https://www.comandogolgota.com.br/
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+Object
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13
+(anonymous)	@	sw.js:185
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: 
+Object
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: 
+Object
+api/messages/general:1 
+ Failed to load resource: the server responded with a status of 500 ()
+index-By_sob6y.js:485 Erro ao enviar mensagem: Error: HTTP error! status: 500
+    at Bh (index-By_sob6y.js:417:32973)
+    at async x (index-By_sob6y.js:485:21126)
+x	@	index-By_sob6y.js:485
+api/messages/general:1 
+ Failed to load resource: the server responded with a status of 500 ()
+index-By_sob6y.js:485 Erro ao enviar mensagem: Error: HTTP error! status: 500
+    at Bh (index-By_sob6y.js:417:32973)
+    at async x (index-By_sob6y.js:485:21126)
+x	@	index-By_sob6y.js:485
+index-By_sob6y.js:417 
+ POST https://www.comandogolgota.com.br/api/messages/general 500 (Internal Server Error)
+Bh	@	index-By_sob6y.js:417
+Qt	@	index-By_sob6y.js:417
+x	@	index-By_sob6y.js:485
+n5	@	index-By_sob6y.js:37
+i5	@	index-By_sob6y.js:37
+o5	@	index-By_sob6y.js:37
+C_	@	index-By_sob6y.js:37
+XA	@	index-By_sob6y.js:37
+(anonymous)	@	index-By_sob6y.js:37
+Pj	@	index-By_sob6y.js:40
+bA	@	index-By_sob6y.js:37
+Sx	@	index-By_sob6y.js:37
+rj	@	index-By_sob6y.js:37
+j5	@	index-By_sob6y.js:37
+index-By_sob6y.js:485 Erro ao enviar mensagem: Error: HTTP error! status: 500
+    at Bh (index-By_sob6y.js:417:32973)
+    at async x (index-By_sob6y.js:485:21126)
+x	@	index-By_sob6y.js:485
+await in x		
+n5	@	index-By_sob6y.js:37
+i5	@	index-By_sob6y.js:37
+o5	@	index-By_sob6y.js:37
+C_	@	index-By_sob6y.js:37
+XA	@	index-By_sob6y.js:37
+(anonymous)	@	index-By_sob6y.js:37
+Pj	@	index-By_sob6y.js:40
+bA	@	index-By_sob6y.js:37
+Sx	@	index-By_sob6y.js:37
+rj	@	index-By_sob6y.js:37
+j5	@	index-By_sob6y.js:37
