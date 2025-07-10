@@ -59,25 +59,38 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
 
   const fetchMessages = async () => {
     try {
-      setLoading(true);
+      // Só mostra loading na primeira carga
+      if (messages.length === 0) {
+        setLoading(true);
+      }
+      
       const data = await apiGet('/api/messages/general');
-      setMessages(data.messages || []);
+      const newMessages = data.messages || [];
+      
+      // Só atualiza se realmente houver mudanças
+      if (JSON.stringify(newMessages) !== JSON.stringify(messages)) {
+        setMessages(newMessages);
+      }
     } catch (error) {
       console.error('Error fetching messages:', error);
-      toast({
-        title: "Erro ao carregar mensagens",
-        description: "Não foi possível carregar as mensagens.",
-        variant: "destructive"
-      });
+      if (messages.length === 0) { // Só mostra erro na primeira carga
+        toast({
+          title: "Erro ao carregar mensagens",
+          description: "Não foi possível carregar as mensagens.",
+          variant: "destructive"
+        });
+      }
     } finally {
-      setLoading(false);
+      if (messages.length === 0) {
+        setLoading(false);
+      }
     }
   };
 
   const { toast } = useToast();
 
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   };
 
   // Detecta se o usuário está rolando manualmente
@@ -96,10 +109,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
       if (isUserScrolling) {
         setHasNewMessages(true);
       } else {
-        const timer = setTimeout(() => {
-          scrollToBottom();
-        }, 100);
-        return () => clearTimeout(timer);
+        // Scroll suave sem delay para evitar piscamento
+        scrollToBottom();
       }
     }
     previousMessageCount.current = messages.length;
@@ -111,18 +122,28 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     scrollToBottom();
   };
 
-  // Carrega mensagens iniciais e configura refresh menos frequente
+  // Carrega mensagens iniciais e configura refresh muito menos frequente
   useEffect(() => {
     fetchMessages();
     fetchOnlineUsers();
     
-    // Auto-refresh messages every 8 seconds (menos frequente)
-    const interval = setInterval(() => {
-      fetchMessages();
+    // Auto-refresh messages apenas a cada 30 segundos para evitar piscamento
+    const messagesInterval = setInterval(() => {
+      if (!isUserScrolling) {
+        fetchMessages();
+      }
+    }, 30000);
+    
+    // Usuários online atualizados apenas a cada 60 segundos
+    const usersInterval = setInterval(() => {
       fetchOnlineUsers();
-    }, 8000);
-    return () => clearInterval(interval);
-  }, []);
+    }, 60000);
+    
+    return () => {
+      clearInterval(messagesInterval);
+      clearInterval(usersInterval);
+    };
+  }, [isUserScrolling]);
 
   const fetchOnlineUsers = async () => {
     try {
@@ -131,7 +152,12 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
       });
       if (response.ok) {
         const data = await response.json();
-        setOnlineUsers(data.users || []);
+        const newUsers = data.users || [];
+        
+        // Só atualiza se realmente houver mudanças
+        if (JSON.stringify(newUsers) !== JSON.stringify(onlineUsers)) {
+          setOnlineUsers(newUsers);
+        }
       }
     } catch (error) {
       console.error('Error fetching online users:', error);
@@ -162,7 +188,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
         
         // Force scroll after sending a message
         setIsUserScrolling(false);
-        setTimeout(() => scrollToBottom(), 200);
+        scrollToBottom();
         
         toast({
           title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
