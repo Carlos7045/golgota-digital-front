@@ -5,6 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { 
   Megaphone, 
   Calendar, 
@@ -15,11 +20,13 @@ import {
   MapPin,
   Star,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Plus,
+  Send
 } from 'lucide-react';
 import { User } from '@/pages/Community';
 import { useToast } from '@/hooks/use-toast';
-import { apiGet } from '@/lib/api';
+import { apiGet, apiPost } from '@/lib/api';
 
 interface MainContentProps {
   user: User;
@@ -48,7 +55,17 @@ const MainContent = ({ user }: MainContentProps) => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [recentActivities, setRecentActivities] = useState<RecentActivity[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const [newAnnouncement, setNewAnnouncement] = useState({
+    title: '',
+    content: '',
+    type: 'general' as 'general' | 'urgent' | 'event' | 'achievement',
+    is_pinned: false
+  });
+  const [creating, setCreating] = useState(false);
   const { toast } = useToast();
+
+  const isAdmin = user.rank === 'admin';
 
   useEffect(() => {
     loadData();
@@ -75,6 +92,45 @@ const MainContent = ({ user }: MainContentProps) => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateAnnouncement = async () => {
+    if (!newAnnouncement.title.trim() || !newAnnouncement.content.trim()) {
+      toast({
+        title: "Campos obrigatórios",
+        description: "Por favor, preencha o título e conteúdo do anúncio.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setCreating(true);
+      await apiPost('/api/announcements', newAnnouncement);
+      
+      toast({
+        title: "Anúncio criado com sucesso!",
+        description: "O anúncio foi publicado e todos os membros poderão visualizá-lo.",
+      });
+
+      setNewAnnouncement({
+        title: '',
+        content: '',
+        type: 'general',
+        is_pinned: false
+      });
+      setIsCreateDialogOpen(false);
+      await loadData(); // Recarregar dados
+    } catch (error) {
+      console.error('Erro ao criar anúncio:', error);
+      toast({
+        title: "Erro ao criar anúncio",
+        description: "Não foi possível criar o anúncio. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -141,9 +197,111 @@ const MainContent = ({ user }: MainContentProps) => {
               <Megaphone className="mr-2 text-military-gold" size={24} />
               Anúncios Oficiais
             </h2>
-            <Badge className="bg-military-gold text-black">
-              {announcements.length} anúncios
-            </Badge>
+            <div className="flex items-center space-x-3">
+              <Badge className="bg-military-gold text-black">
+                {announcements.length} anúncios
+              </Badge>
+              {isAdmin && (
+                <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      className="bg-military-gold hover:bg-military-gold/90 text-black"
+                    >
+                      <Plus size={16} className="mr-1" />
+                      Novo Anúncio
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-military-black-light border-military-gold/30 text-white max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-military-gold flex items-center">
+                        <Megaphone className="mr-2" size={20} />
+                        Criar Novo Anúncio Oficial
+                      </DialogTitle>
+                    </DialogHeader>
+                    
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="title">Título do Anúncio</Label>
+                        <Input
+                          id="title"
+                          value={newAnnouncement.title}
+                          onChange={(e) => setNewAnnouncement(prev => ({...prev, title: e.target.value}))}
+                          placeholder="Digite o título do anúncio..."
+                          className="bg-military-black border-military-gold/30 text-white"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="content">Conteúdo</Label>
+                        <Textarea
+                          id="content"
+                          value={newAnnouncement.content}
+                          onChange={(e) => setNewAnnouncement(prev => ({...prev, content: e.target.value}))}
+                          placeholder="Digite o conteúdo do anúncio..."
+                          rows={4}
+                          className="bg-military-black border-military-gold/30 text-white"
+                        />
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="type">Tipo do Anúncio</Label>
+                          <Select 
+                            value={newAnnouncement.type} 
+                            onValueChange={(value: any) => setNewAnnouncement(prev => ({...prev, type: value}))}
+                          >
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-military-black-light border-military-gold/30">
+                              <SelectItem value="general">Geral</SelectItem>
+                              <SelectItem value="urgent">Urgente</SelectItem>
+                              <SelectItem value="event">Evento</SelectItem>
+                              <SelectItem value="achievement">Conquista</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="pinned">Prioridade</Label>
+                          <Select 
+                            value={newAnnouncement.is_pinned ? 'true' : 'false'} 
+                            onValueChange={(value) => setNewAnnouncement(prev => ({...prev, is_pinned: value === 'true'}))}
+                          >
+                            <SelectTrigger className="bg-military-black border-military-gold/30 text-white">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-military-black-light border-military-gold/30">
+                              <SelectItem value="false">Normal</SelectItem>
+                              <SelectItem value="true">Fixado no Topo</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-end space-x-2 pt-4 border-t border-military-gold/20">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setIsCreateDialogOpen(false)}
+                        className="border-military-gold/30 text-white hover:bg-military-gold/10"
+                      >
+                        Cancelar
+                      </Button>
+                      <Button 
+                        onClick={handleCreateAnnouncement}
+                        disabled={creating}
+                        className="bg-military-gold hover:bg-military-gold/90 text-black"
+                      >
+                        <Send size={16} className="mr-1" />
+                        {creating ? 'Publicando...' : 'Publicar Anúncio'}
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">

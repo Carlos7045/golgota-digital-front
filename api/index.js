@@ -273,6 +273,16 @@ app.post('/api/auth/register', async (req, res) => {
         console.log('✅ ETAPA 6: Usuário criado com sucesso!');
         console.log('🎉 Usuário final:', user);
         
+        // Enviar mensagem automática de boas-vindas
+        try {
+          const welcomeMessage = `🎉 Bem-vindo(a) ao Comando Gólgota, ${userData.name}! Estamos felizes em tê-lo(a) conosco nesta jornada de crescimento e disciplina militar cristã. Explore os canais, participe das atividades e não hesite em fazer perguntas. Que Deus abençoe sua caminhada! 🙏`;
+          
+          await storage.createMessage('system', 'general', welcomeMessage);
+          console.log('📨 Mensagem de boas-vindas enviada automaticamente');
+        } catch (welcomeError) {
+          console.error('⚠️ Erro ao enviar mensagem de boas-vindas:', welcomeError);
+        }
+        
         // Resposta de sucesso
         const { password: _, ...userResponse } = user;
         res.status(201).json({ 
@@ -352,6 +362,16 @@ app.post('/api/auth/create-user', requireAuth, async (req, res) => {
     // Criar usuário
     const user = await storage.createUser(userData);
     console.log('✅ Usuário criado por admin:', user.id);
+    
+    // Enviar mensagem automática de boas-vindas
+    try {
+      const welcomeMessage = `🎉 Bem-vindo(a) ao Comando Gólgota, ${userData.name}! Estamos felizes em tê-lo(a) conosco nesta jornada de crescimento e disciplina militar cristã. Você foi adicionado por um administrador. Explore os canais, participe das atividades e não hesite em fazer perguntas. Que Deus abençoe sua caminhada! 🙏`;
+      
+      await storage.createMessage('system', 'general', welcomeMessage);
+      console.log('📨 Mensagem de boas-vindas enviada automaticamente');
+    } catch (welcomeError) {
+      console.error('⚠️ Erro ao enviar mensagem de boas-vindas:', welcomeError);
+    }
     
     // Resposta sem senha
     const { password: _, ...userResponse } = user;
@@ -1635,37 +1655,44 @@ app.post('/api/webhooks/asaas', async (req, res) => {
 
 // === ANÚNCIOS E NOTÍCIAS ===
 
+// Lista de anúncios em memória (para demonstração)
+let announcements = [
+  {
+    id: '1',
+    title: 'Bem-vindos ao Comando Gólgota',
+    content: 'Estamos felizes em tê-los conosco nesta jornada de crescimento e disciplina militar cristã. Este é o espaço oficial para comunicações importantes.',
+    type: 'general',
+    author_name: 'Carlos Henrique Pereira Salgado',
+    author_rank: 'admin',
+    created_at: new Date(Date.now() - 86400000).toISOString(),
+    is_pinned: true
+  },
+  {
+    id: '2',
+    title: 'Próximo Acampamento - Reservem a Data',
+    content: 'Nosso próximo acampamento será nos dias 25-27 de julho. Mais informações sobre inscrições serão divulgadas em breve. Preparem-se para uma experiência transformadora!',
+    type: 'event',
+    author_name: 'Carlos Henrique Pereira Salgado',
+    author_rank: 'admin',
+    created_at: new Date(Date.now() - 3600000).toISOString(),
+    is_pinned: false
+  }
+];
+
 // API para anúncios
 app.get('/api/announcements', async (req, res) => {
   try {
     console.log('📢 Buscando anúncios...');
     
-    // Mock data para anúncios
-    const announcements = [
-      {
-        id: '1',
-        title: 'Bem-vindos ao Comando Gólgota',
-        content: 'Estamos felizes em tê-los conosco nesta jornada de crescimento e disciplina militar cristã. Este é o espaço oficial para comunicações importantes.',
-        type: 'general',
-        author_name: 'Carlos Henrique Pereira Salgado',
-        author_rank: 'admin',
-        created_at: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
-        is_pinned: true
-      },
-      {
-        id: '2',
-        title: 'Próximo Acampamento - Reservem a Data',
-        content: 'Nosso próximo acampamento será nos dias 25-27 de julho. Mais informações sobre inscrições serão divulgadas em breve. Preparem-se para uma experiência transformadora!',
-        type: 'event',
-        author_name: 'Carlos Henrique Pereira Salgado',
-        author_rank: 'admin',
-        created_at: new Date(Date.now() - 3600000).toISOString(), // 1 hora atrás
-        is_pinned: false
-      }
-    ];
+    // Ordenar por pinned primeiro, depois por data
+    const sortedAnnouncements = [...announcements].sort((a, b) => {
+      if (a.is_pinned && !b.is_pinned) return -1;
+      if (!a.is_pinned && b.is_pinned) return 1;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
     
-    console.log(`✅ Retornando ${announcements.length} anúncios`);
-    res.json({ announcements });
+    console.log(`✅ Retornando ${sortedAnnouncements.length} anúncios`);
+    res.json({ announcements: sortedAnnouncements });
   } catch (error) {
     console.error('❌ Erro ao buscar anúncios:', error);
     res.status(500).json({ error: 'Erro ao buscar anúncios' });
@@ -1679,7 +1706,7 @@ app.post('/api/announcements', requireAuth, async (req, res) => {
     // Verificar se é admin
     const userRoles = await storage.getUserRoles(req.user.id);
     if (!userRoles.includes('admin')) {
-      return res.status(403).json({ error: 'Acesso negado' });
+      return res.status(403).json({ error: 'Acesso negado - apenas administradores podem criar anúncios' });
     }
 
     const { title, content, type = 'general', is_pinned = false } = req.body;
@@ -1696,7 +1723,10 @@ app.post('/api/announcements', requireAuth, async (req, res) => {
       created_at: new Date().toISOString()
     };
     
-    console.log('✅ Anúncio criado');
+    // Adicionar à lista
+    announcements.unshift(announcement);
+    
+    console.log('✅ Anúncio criado e adicionado');
     res.status(201).json({ announcement });
   } catch (error) {
     console.error('❌ Erro ao criar anúncio:', error);
