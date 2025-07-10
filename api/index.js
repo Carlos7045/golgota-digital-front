@@ -359,6 +359,46 @@ app.post('/api/payments/cancel-subscription', requireAuth, async (req, res) => {
   }
 });
 
+// === ENDPOINTS DE MENSAGENS ===
+
+// Buscar mensagens
+app.get('/api/messages/:channel', requireAuth, async (req, res) => {
+  try {
+    const { channel } = req.params;
+    console.log(`📨 Buscando mensagens do canal: ${channel}`);
+    
+    const messages = await storage.getChannelMessages(channel);
+    console.log(`✅ Retornando ${messages.length} mensagens`);
+    
+    res.json({ messages });
+  } catch (error) {
+    console.error('❌ Erro ao buscar mensagens:', error);
+    res.status(500).json({ error: 'Erro ao buscar mensagens' });
+  }
+});
+
+// Criar mensagem
+app.post('/api/messages/:channel', requireAuth, async (req, res) => {
+  try {
+    const { channel } = req.params;
+    const { content } = req.body;
+    
+    console.log(`📨 Criando mensagem no canal: ${channel}`);
+    
+    if (!content) {
+      return res.status(400).json({ error: 'Conteúdo é obrigatório' });
+    }
+    
+    const message = await storage.createMessage(req.user.id, channel, content);
+    console.log('✅ Mensagem criada com sucesso');
+    
+    res.json({ message });
+  } catch (error) {
+    console.error('❌ Erro ao criar mensagem:', error);
+    res.status(500).json({ error: 'Erro ao criar mensagem' });
+  }
+});
+
 // === ENDPOINTS DE EMPRESAS ===
 
 // Buscar empresas
@@ -373,6 +413,301 @@ app.get('/api/companies', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('❌ Erro ao buscar empresas:', error);
     res.status(500).json({ error: 'Erro ao buscar empresas' });
+  }
+});
+
+// Criar empresa
+app.post('/api/companies', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Criando nova empresa...');
+    const { name, commander_id, sub_commander_id, description, city, state, color, members } = req.body;
+    
+    if (!name) {
+      return res.status(400).json({ error: 'Nome da empresa é obrigatório' });
+    }
+    
+    const company = await storage.createCompany({
+      name,
+      commander_id: commander_id || null,
+      sub_commander_id: sub_commander_id || null,
+      description: description || null,
+      city: city || null,
+      state: state || null,
+      color: color || '#FFD700',
+      status: 'Planejamento'
+    });
+    
+    // Adicionar membros se fornecidos
+    if (members && members.length > 0) {
+      for (const member of members) {
+        if (member.user_id && member.user_id !== commander_id && member.user_id !== sub_commander_id) {
+          await storage.addCompanyMember(company.id, member.user_id, member.role || "Membro");
+        }
+      }
+    }
+    
+    console.log('✅ Empresa criada com sucesso');
+    res.json({ company });
+  } catch (error) {
+    console.error('❌ Erro ao criar empresa:', error);
+    res.status(500).json({ error: 'Erro ao criar empresa' });
+  }
+});
+
+// Atualizar empresa
+app.put('/api/companies/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Atualizando empresa: ${req.params.id}`);
+    
+    const company = await storage.updateCompany(req.params.id, req.body);
+    console.log('✅ Empresa atualizada com sucesso');
+    
+    res.json({ company });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar empresa:', error);
+    res.status(500).json({ error: 'Erro ao atualizar empresa' });
+  }
+});
+
+// Deletar empresa
+app.delete('/api/companies/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Deletando empresa: ${req.params.id}`);
+    
+    await storage.deleteCompany(req.params.id);
+    console.log('✅ Empresa deletada com sucesso');
+    
+    res.json({ message: 'Empresa deletada com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao deletar empresa:', error);
+    res.status(500).json({ error: 'Erro ao deletar empresa' });
+  }
+});
+
+// Buscar membros da empresa
+app.get('/api/companies/:id/members', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Buscando membros da empresa: ${req.params.id}`);
+    
+    const members = await storage.getCompanyMembers(req.params.id);
+    console.log(`✅ Retornando ${members.length} membros`);
+    
+    res.json({ members });
+  } catch (error) {
+    console.error('❌ Erro ao buscar membros da empresa:', error);
+    res.status(500).json({ error: 'Erro ao buscar membros da empresa' });
+  }
+});
+
+// Adicionar membro à empresa
+app.post('/api/companies/:id/members', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Adicionando membro à empresa: ${req.params.id}`);
+    const { user_id, role } = req.body;
+    
+    if (!user_id) {
+      return res.status(400).json({ error: 'ID do usuário é obrigatório' });
+    }
+    
+    await storage.addCompanyMember(req.params.id, user_id, role || 'Membro');
+    console.log('✅ Membro adicionado com sucesso');
+    
+    res.json({ message: 'Membro adicionado com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao adicionar membro:', error);
+    res.status(500).json({ error: 'Erro ao adicionar membro' });
+  }
+});
+
+// Remover membro da empresa
+app.delete('/api/companies/:id/members/:userId', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Removendo membro da empresa: ${req.params.id}`);
+    
+    await storage.removeCompanyMember(req.params.id, req.params.userId);
+    console.log('✅ Membro removido com sucesso');
+    
+    res.json({ message: 'Membro removido com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao remover membro:', error);
+    res.status(500).json({ error: 'Erro ao remover membro' });
+  }
+});
+
+// Atualizar role do membro
+app.put('/api/companies/:id/members/:userId', requireAuth, async (req, res) => {
+  try {
+    console.log(`🏢 Atualizando role do membro: ${req.params.userId}`);
+    const { role } = req.body;
+    
+    await storage.updateMemberRole(req.params.id, req.params.userId, role);
+    console.log('✅ Role atualizada com sucesso');
+    
+    res.json({ message: 'Role atualizada com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar role:', error);
+    res.status(500).json({ error: 'Erro ao atualizar role' });
+  }
+});
+
+// === ENDPOINTS DE EVENTOS ===
+
+// Buscar eventos
+app.get('/api/events', requireAuth, async (req, res) => {
+  try {
+    console.log('📅 Buscando eventos...');
+    
+    const events = await storage.getEvents();
+    console.log(`✅ Retornando ${events.length} eventos`);
+    
+    res.json({ events });
+  } catch (error) {
+    console.error('❌ Erro ao buscar eventos:', error);
+    res.status(500).json({ error: 'Erro ao buscar eventos' });
+  }
+});
+
+// Criar evento
+app.post('/api/events', requireAuth, async (req, res) => {
+  try {
+    console.log('📅 Criando novo evento...');
+    const eventData = req.body;
+    
+    if (!eventData.title || !eventData.start_date) {
+      return res.status(400).json({ error: 'Título e data de início são obrigatórios' });
+    }
+    
+    const event = await storage.createEvent(eventData);
+    console.log('✅ Evento criado com sucesso');
+    
+    res.json({ event });
+  } catch (error) {
+    console.error('❌ Erro ao criar evento:', error);
+    res.status(500).json({ error: 'Erro ao criar evento' });
+  }
+});
+
+// Atualizar evento
+app.put('/api/events/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`📅 Atualizando evento: ${req.params.id}`);
+    
+    const event = await storage.updateEvent(req.params.id, req.body);
+    console.log('✅ Evento atualizado com sucesso');
+    
+    res.json({ event });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar evento:', error);
+    res.status(500).json({ error: 'Erro ao atualizar evento' });
+  }
+});
+
+// Atualizar status do evento
+app.put('/api/events/:id/status', requireAuth, async (req, res) => {
+  try {
+    console.log(`📅 Atualizando status do evento: ${req.params.id}`);
+    const { status } = req.body;
+    
+    const event = await storage.updateEvent(req.params.id, { status });
+    console.log('✅ Status do evento atualizado');
+    
+    res.json({ event });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar status do evento:', error);
+    res.status(500).json({ error: 'Erro ao atualizar status do evento' });
+  }
+});
+
+// Deletar evento
+app.delete('/api/events/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`📅 Deletando evento: ${req.params.id}`);
+    
+    await storage.deleteEvent(req.params.id);
+    console.log('✅ Evento deletado com sucesso');
+    
+    res.json({ message: 'Evento deletado com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao deletar evento:', error);
+    res.status(500).json({ error: 'Erro ao deletar evento' });
+  }
+});
+
+// Inscrever-se em evento
+app.post('/api/events/:id/register', requireAuth, async (req, res) => {
+  try {
+    console.log(`📅 Inscrevendo usuário no evento: ${req.params.id}`);
+    const { paymentData } = req.body;
+    
+    const registration = await storage.registerForEvent(req.params.id, req.user.id, paymentData);
+    console.log('✅ Inscrição realizada com sucesso');
+    
+    res.json({ registration });
+  } catch (error) {
+    console.error('❌ Erro ao inscrever no evento:', error);
+    res.status(500).json({ error: 'Erro ao inscrever no evento' });
+  }
+});
+
+// Cancelar inscrição em evento
+app.delete('/api/events/:id/register', requireAuth, async (req, res) => {
+  try {
+    console.log(`📅 Cancelando inscrição no evento: ${req.params.id}`);
+    
+    await storage.unregisterFromEvent(req.params.id, req.user.id);
+    console.log('✅ Inscrição cancelada com sucesso');
+    
+    res.json({ message: 'Inscrição cancelada com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao cancelar inscrição:', error);
+    res.status(500).json({ error: 'Erro ao cancelar inscrição' });
+  }
+});
+
+// Buscar inscrições do usuário
+app.get('/api/user/event-registrations', requireAuth, async (req, res) => {
+  try {
+    console.log('📅 Buscando inscrições do usuário...');
+    
+    const registrations = await storage.getUserEventRegistrations(req.user.id);
+    console.log(`✅ Retornando ${registrations.length} inscrições`);
+    
+    res.json({ registrations });
+  } catch (error) {
+    console.error('❌ Erro ao buscar inscrições:', error);
+    res.status(500).json({ error: 'Erro ao buscar inscrições' });
+  }
+});
+
+// === ENDPOINTS DE USUÁRIOS ===
+
+// Buscar usuários online  
+app.get('/api/users/online', requireAuth, async (req, res) => {
+  try {
+    console.log('👥 Buscando usuários online...');
+    
+    const users = await storage.getUsersWithProfiles();
+    console.log(`✅ Retornando ${users.length} usuários`);
+    
+    res.json({ users });
+  } catch (error) {
+    console.error('❌ Erro ao buscar usuários online:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuários online' });
+  }
+});
+
+// Buscar perfis
+app.get('/api/profiles', requireAuth, async (req, res) => {
+  try {
+    console.log('👤 Buscando perfis...');
+    
+    const profiles = await storage.getAllProfiles();
+    console.log(`✅ Retornando ${profiles.length} perfis`);
+    
+    res.json({ profiles });
+  } catch (error) {
+    console.error('❌ Erro ao buscar perfis:', error);
+    res.status(500).json({ error: 'Erro ao buscar perfis' });
   }
 });
 

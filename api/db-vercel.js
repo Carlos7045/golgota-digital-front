@@ -438,4 +438,236 @@ export class VercelStorage {
       return [];
     }
   }
+
+  async createCompany(companyData) {
+    try {
+      console.log('🔍 Criando empresa...');
+      
+      const companyId = `comp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      // Inserir empresa real na tabela companies
+      const result = await db
+        .insert(companies)
+        .values({
+          id: companyId,
+          name: companyData.name,
+          commander_id: companyData.commander_id,
+          sub_commander_id: companyData.sub_commander_id,
+          description: companyData.description,
+          city: companyData.city,
+          state: companyData.state,
+          color: companyData.color || '#FFD700',
+          status: companyData.status || 'Planejamento',
+          founded_date: companyData.founded_date ? new Date(companyData.founded_date) : new Date(),
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning();
+      
+      console.log('✅ Empresa criada na base de dados');
+      return result[0];
+    } catch (error) {
+      console.error('Error creating company:', error);
+      throw error;
+    }
+  }
+
+  async updateCompany(companyId, data) {
+    try {
+      console.log(`🔍 Atualizando empresa: ${companyId}`);
+      
+      const result = await db
+        .update(companies)
+        .set({
+          ...data,
+          updated_at: new Date()
+        })
+        .where(eq(companies.id, companyId))
+        .returning();
+      
+      console.log('✅ Empresa atualizada na base de dados');
+      return result[0];
+    } catch (error) {
+      console.error('Error updating company:', error);
+      throw error;
+    }
+  }
+
+  async deleteCompany(companyId) {
+    try {
+      console.log(`🔍 Deletando empresa: ${companyId}`);
+      
+      await db
+        .delete(companies)
+        .where(eq(companies.id, companyId));
+      
+      console.log('✅ Empresa deletada da base de dados');
+      return true;
+    } catch (error) {
+      console.error('Error deleting company:', error);
+      throw error;
+    }
+  }
+
+  async getCompanyMembers(companyId) {
+    try {
+      console.log(`🔍 Buscando membros da empresa: ${companyId}`);
+      
+      // Por enquanto retornar array vazio
+      // Em um sistema real, faria join com tabela company_members
+      return [];
+    } catch (error) {
+      console.error('Error getting company members:', error);
+      return [];
+    }
+  }
+
+  async addCompanyMember(companyId, userId, role) {
+    try {
+      console.log(`🔍 Adicionando membro ${userId} à empresa ${companyId}`);
+      
+      // Por enquanto simular adição
+      console.log('✅ Membro adicionado (simulado)');
+      return true;
+    } catch (error) {
+      console.error('Error adding company member:', error);
+      throw error;
+    }
+  }
+
+  async removeCompanyMember(companyId, userId) {
+    try {
+      console.log(`🔍 Removendo membro ${userId} da empresa ${companyId}`);
+      
+      // Por enquanto simular remoção
+      console.log('✅ Membro removido (simulado)');
+      return true;
+    } catch (error) {
+      console.error('Error removing company member:', error);
+      throw error;
+    }
+  }
+
+  async updateMemberRole(companyId, userId, role) {
+    try {
+      console.log(`🔍 Atualizando role do membro ${userId} na empresa ${companyId}`);
+      
+      // Por enquanto simular atualização
+      console.log('✅ Role atualizada (simulada)');
+      return true;
+    } catch (error) {
+      console.error('Error updating member role:', error);
+      throw error;
+    }
+  }
+
+  // === MÉTODOS PARA EVENTOS ===
+  async getEvents() {
+    try {
+      console.log('🔍 Buscando eventos...');
+      
+      // Por enquanto retornar array vazio até criar tabela events
+      return [];
+    } catch (error) {
+      console.error('Error getting events:', error);
+      return [];
+    }
+  }
+
+  async createEvent(eventData) {
+    try {
+      console.log('🔍 Criando evento...');
+      
+      // Por enquanto simular criação
+      const event = {
+        id: `event_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...eventData,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Evento criado (simulado)');
+      return event;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw error;
+    }
+  }
+
+  async updateEvent(eventId, data) {
+    try {
+      console.log(`🔍 Atualizando evento: ${eventId}`);
+      
+      // Por enquanto simular atualização
+      const event = {
+        id: eventId,
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Evento atualizado (simulado)');
+      return event;
+    } catch (error) {
+      console.error('Error updating event:', error);
+      throw error;
+    }
+  }
+
+  async deleteEvent(eventId) {
+    try {
+      console.log(`🔍 Deletando evento: ${eventId}`);
+      
+      // Por enquanto simular delete
+      console.log('✅ Evento deletado (simulado)');
+      return true;
+    } catch (error) {
+      console.error('Error deleting event:', error);
+      throw error;
+    }
+  }
+
+  async registerForEvent(eventId, userId, paymentData) {
+    try {
+      console.log(`🔍 Registrando usuário ${userId} no evento ${eventId}`);
+      
+      // Por enquanto simular registro
+      const registration = {
+        id: `reg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        event_id: eventId,
+        user_id: userId,
+        payment_data: paymentData,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Registro criado (simulado)');
+      return registration;
+    } catch (error) {
+      console.error('Error registering for event:', error);
+      throw error;
+    }
+  }
+
+  async unregisterFromEvent(eventId, userId) {
+    try {
+      console.log(`🔍 Cancelando registro do usuário ${userId} no evento ${eventId}`);
+      
+      // Por enquanto simular cancelamento
+      console.log('✅ Registro cancelado (simulado)');
+      return true;
+    } catch (error) {
+      console.error('Error unregistering from event:', error);
+      throw error;
+    }
+  }
+
+  async getUserEventRegistrations(userId) {
+    try {
+      console.log(`🔍 Buscando registros do usuário: ${userId}`);
+      
+      // Por enquanto retornar array vazio
+      return [];
+    } catch (error) {
+      console.error('Error getting user event registrations:', error);
+      return [];
+    }
+  }
 }
