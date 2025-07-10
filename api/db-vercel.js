@@ -670,4 +670,247 @@ export class VercelStorage {
       return [];
     }
   }
+
+  // === MÉTODOS FINANCEIROS ===
+  async getFinancialTransactions(startDate, endDate) {
+    try {
+      console.log(`🔍 Buscando transações financeiras entre ${startDate} e ${endDate}`);
+      
+      // Por enquanto retornar dados simulados
+      const transactions = [
+        {
+          id: '1',
+          description: 'Mensalidade Janeiro',
+          amount: 10.00,
+          type: 'income',
+          category: 'Mensalidade',
+          date: new Date().toISOString(),
+          status: 'confirmed'
+        }
+      ];
+      
+      console.log(`✅ Retornando ${transactions.length} transações`);
+      return transactions;
+    } catch (error) {
+      console.error('Error getting financial transactions:', error);
+      return [];
+    }
+  }
+
+  async getFinancialCategories() {
+    try {
+      console.log('🔍 Buscando categorias financeiras...');
+      
+      const categories = [
+        { id: '1', name: 'Aluguel', type: 'expense' },
+        { id: '2', name: 'Material', type: 'expense' },
+        { id: '3', name: 'Alimentação', type: 'expense' },
+        { id: '4', name: 'Transporte', type: 'expense' },
+        { id: '5', name: 'Equipamentos', type: 'expense' },
+        { id: '6', name: 'Administrativo', type: 'expense' },
+        { id: '7', name: 'Mensalidade', type: 'income' },
+        { id: '8', name: 'Doações', type: 'income' },
+        { id: '9', name: 'Eventos', type: 'income' }
+      ];
+      
+      console.log(`✅ Retornando ${categories.length} categorias`);
+      return categories;
+    } catch (error) {
+      console.error('Error getting financial categories:', error);
+      return [];
+    }
+  }
+
+  async createFinancialTransaction(transactionData) {
+    try {
+      console.log('🔍 Criando transação financeira...');
+      
+      const transaction = {
+        id: `trans_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        ...transactionData,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Transação criada (simulada)');
+      return transaction;
+    } catch (error) {
+      console.error('Error creating financial transaction:', error);
+      throw error;
+    }
+  }
+
+  async updateFinancialTransaction(transactionId, data) {
+    try {
+      console.log(`🔍 Atualizando transação financeira: ${transactionId}`);
+      
+      const transaction = {
+        id: transactionId,
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Transação atualizada (simulada)');
+      return transaction;
+    } catch (error) {
+      console.error('Error updating financial transaction:', error);
+      throw error;
+    }
+  }
+
+  async getFinancialCategoryByName(name) {
+    try {
+      console.log(`🔍 Buscando categoria por nome: ${name}`);
+      
+      const categories = await this.getFinancialCategories();
+      const category = categories.find(c => c.name.toLowerCase() === name.toLowerCase());
+      
+      console.log('✅ Categoria encontrada:', category ? 'Sim' : 'Não');
+      return category || null;
+    } catch (error) {
+      console.error('Error getting financial category by name:', error);
+      return null;
+    }
+  }
+
+  // === MÉTODOS DE GESTÃO DE USUÁRIOS ===
+  async createUser(userData) {
+    try {
+      console.log('🔍 Criando usuário na base de dados...');
+      
+      // Inserir usuário real na tabela users
+      const result = await db
+        .insert(users)
+        .values({
+          id: userData.id,
+          email: userData.email,
+          password: userData.password,
+          created_at: new Date(),
+          updated_at: new Date()
+        })
+        .returning();
+      
+      // Criar perfil associado
+      await db
+        .insert(profiles)
+        .values({
+          id: `profile_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          user_id: userData.id,
+          name: userData.name || userData.email.split('@')[0],
+          cpf: userData.cpf,
+          phone: userData.phone,
+          rank: userData.rank || 'aluno',
+          company: userData.company,
+          created_at: new Date(),
+          updated_at: new Date()
+        });
+      
+      console.log('✅ Usuário criado na base de dados');
+      return result[0];
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw error;
+    }
+  }
+
+  async deleteUser(userId) {
+    try {
+      console.log(`🔍 Deletando usuário: ${userId}`);
+      
+      // Deletar perfil primeiro (chave estrangeira)
+      await db
+        .delete(profiles)
+        .where(eq(profiles.user_id, userId));
+      
+      // Deletar usuário
+      await db
+        .delete(users)
+        .where(eq(users.id, userId));
+      
+      console.log('✅ Usuário deletado da base de dados');
+      return true;
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      throw error;
+    }
+  }
+
+  async updateProfile(userId, data) {
+    try {
+      console.log(`🔍 Atualizando perfil do usuário: ${userId}`);
+      
+      // Por enquanto retornar dados simulados
+      const profile = {
+        id: `profile_${userId}`,
+        user_id: userId,
+        ...data,
+        updated_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Perfil atualizado (simulado)');
+      return profile;
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      throw error;
+    }
+  }
+
+  async getAvailableCommanders() {
+    try {
+      console.log('🔍 Buscando comandantes disponíveis...');
+      
+      // Por enquanto retornar dados simulados
+      const commanders = [
+        {
+          id: 'cmd_1',
+          name: 'Carlos Henrique Pereira Salgado',
+          email: 'chpsalgado@hotmail.com',
+          rank: 'comandante',
+          company: 'Quemuel'
+        }
+      ];
+      
+      console.log(`✅ Encontrados ${commanders.length} comandantes`);
+      return commanders;
+    } catch (error) {
+      console.error('Error getting available commanders:', error);
+      return [];
+    }
+  }
+
+  async getTrainings() {
+    try {
+      console.log('🔍 Buscando treinamentos...');
+      
+      // Por enquanto retornar dados simulados
+      const trainings = [
+        { id: '1', name: 'Treinamento Básico', level: 'Iniciante', duration: '2 horas' },
+        { id: '2', name: 'Treinamento Avançado', level: 'Avançado', duration: '4 horas' }
+      ];
+      
+      console.log(`✅ Retornando ${trainings.length} treinamentos`);
+      return trainings;
+    } catch (error) {
+      console.error('Error getting trainings:', error);
+      return [];
+    }
+  }
+
+  async getCourses() {
+    try {
+      console.log('🔍 Buscando cursos...');
+      
+      // Por enquanto retornar dados simulados
+      const courses = [
+        { id: '1', name: 'CPLG', category: 'Preparatório', duration: '5 dias' },
+        { id: '2', name: 'FEG', category: 'Especialização', duration: '3 dias' }
+      ];
+      
+      console.log(`✅ Retornando ${courses.length} cursos`);
+      return courses;
+    } catch (error) {
+      console.error('Error getting courses:', error);
+      return [];
+    }
+  }
 }

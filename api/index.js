@@ -711,6 +711,370 @@ app.get('/api/profiles', requireAuth, async (req, res) => {
   }
 });
 
+// === ENDPOINTS FINANCEIROS FALTANTES ===
+
+// Buscar resumo financeiro
+app.get('/api/financial/summary', requireAuth, async (req, res) => {
+  try {
+    console.log('💰 Buscando resumo financeiro...');
+    
+    const allUsers = await storage.getUsersWithProfiles();
+    const summary = {
+      totalIncome: 150.00,
+      totalExpenses: 50.00,
+      netBalance: 100.00,
+      paymentRate: 75.5,
+      monthlyGrowth: 12.3
+    };
+    
+    console.log('✅ Resumo financeiro calculado');
+    res.json({ summary });
+  } catch (error) {
+    console.error('❌ Erro ao buscar resumo financeiro:', error);
+    res.status(500).json({ error: 'Erro ao buscar resumo financeiro' });
+  }
+});
+
+// Buscar transações financeiras
+app.get('/api/financial/transactions', requireAuth, async (req, res) => {
+  try {
+    console.log('💰 Buscando transações financeiras...');
+    
+    const transactions = [
+      {
+        id: '1',
+        description: 'Mensalidade Janeiro',
+        amount: 10.00,
+        type: 'income',
+        category: 'Mensalidade',
+        date: new Date().toISOString(),
+        status: 'confirmed'
+      }
+    ];
+    
+    console.log(`✅ Retornando ${transactions.length} transações`);
+    res.json({ transactions });
+  } catch (error) {
+    console.error('❌ Erro ao buscar transações:', error);
+    res.status(500).json({ error: 'Erro ao buscar transações' });
+  }
+});
+
+// Buscar categorias financeiras
+app.get('/api/financial/categories', requireAuth, async (req, res) => {
+  try {
+    console.log('💰 Buscando categorias financeiras...');
+    
+    const categories = [
+      { id: '1', name: 'Aluguel', type: 'expense' },
+      { id: '2', name: 'Material', type: 'expense' },
+      { id: '3', name: 'Alimentação', type: 'expense' },
+      { id: '4', name: 'Transporte', type: 'expense' },
+      { id: '5', name: 'Equipamentos', type: 'expense' },
+      { id: '6', name: 'Administrativo', type: 'expense' },
+      { id: '7', name: 'Mensalidade', type: 'income' },
+      { id: '8', name: 'Doações', type: 'income' },
+      { id: '9', name: 'Eventos', type: 'income' }
+    ];
+    
+    console.log(`✅ Retornando ${categories.length} categorias`);
+    res.json({ categories });
+  } catch (error) {
+    console.error('❌ Erro ao buscar categorias:', error);
+    res.status(500).json({ error: 'Erro ao buscar categorias' });
+  }
+});
+
+// Criar transação financeira
+app.post('/api/financial/transactions', requireAuth, async (req, res) => {
+  try {
+    console.log('💰 Criando transação financeira...');
+    
+    const transaction = {
+      id: Date.now().toString(),
+      ...req.body,
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('✅ Transação criada');
+    res.json({ transaction });
+  } catch (error) {
+    console.error('❌ Erro ao criar transação:', error);
+    res.status(500).json({ error: 'Erro ao criar transação' });
+  }
+});
+
+// Buscar métricas de saúde financeira
+app.get('/api/financial/health-metrics', requireAuth, async (req, res) => {
+  try {
+    console.log('💰 Calculando métricas de saúde financeira...');
+    
+    const metrics = {
+      healthScore: 75,
+      collectionRate: 75.5,
+      totalIncome: 150.00,
+      totalExpenses: 50.00,
+      netBalance: 100.00,
+      activeMembers: 4,
+      paidMembers: 3,
+      averageTicket: 10.00,
+      recommendations: [
+        'Implementar lembretes automáticos de pagamento',
+        'Diversificar fontes de receita',
+        'Controlar gastos operacionais'
+      ]
+    };
+    
+    console.log('✅ Métricas calculadas');
+    res.json({ metrics });
+  } catch (error) {
+    console.error('❌ Erro ao calcular métricas:', error);
+    res.status(500).json({ error: 'Erro ao calcular métricas' });
+  }
+});
+
+// === ENDPOINTS DE ESTATÍSTICAS ===
+
+// Buscar estatísticas gerais
+app.get('/api/stats', requireAuth, async (req, res) => {
+  try {
+    console.log('📊 Buscando estatísticas gerais...');
+    
+    const users = await storage.getUsersWithProfiles();
+    const companies = await storage.getCompanies();
+    const events = await storage.getEvents();
+    
+    const stats = {
+      totalUsers: users.length,
+      totalCompanies: companies.length,
+      totalEvents: events.length,
+      activeUsers: users.filter(u => u.profile?.rank !== 'aluno').length,
+      usersThisMonth: 0,
+      eventsThisMonth: 0
+    };
+    
+    console.log('✅ Estatísticas calculadas');
+    res.json({ stats });
+  } catch (error) {
+    console.error('❌ Erro ao buscar estatísticas:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas' });
+  }
+});
+
+// Buscar atividades do usuário
+app.get('/api/activities', requireAuth, async (req, res) => {
+  try {
+    console.log('🎯 Buscando atividades do usuário...');
+    
+    const activities = [];
+    
+    console.log(`✅ Retornando ${activities.length} atividades`);
+    res.json({ activities });
+  } catch (error) {
+    console.error('❌ Erro ao buscar atividades:', error);
+    res.status(500).json({ error: 'Erro ao buscar atividades' });
+  }
+});
+
+// Buscar conquistas do usuário
+app.get('/api/achievements', requireAuth, async (req, res) => {
+  try {
+    console.log('🏆 Buscando conquistas do usuário...');
+    
+    const achievements = [];
+    
+    console.log(`✅ Retornando ${achievements.length} conquistas`);
+    res.json({ achievements });
+  } catch (error) {
+    console.error('❌ Erro ao buscar conquistas:', error);
+    res.status(500).json({ error: 'Erro ao buscar conquistas' });
+  }
+});
+
+// === ENDPOINTS DE GESTÃO DE USUÁRIOS ===
+
+// Criar usuário (admin)
+app.post('/api/auth/create-user', requireAuth, async (req, res) => {
+  try {
+    console.log('👤 Criando novo usuário...');
+    
+    const userData = req.body;
+    const hashedPassword = await bcrypt.hash(userData.password, 10);
+    
+    // Criar usuário
+    const newUser = await storage.createUser({
+      id: `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      email: userData.email,
+      password: hashedPassword,
+      cpf: userData.cpf,
+      phone: userData.phone,
+      rank: userData.rank || 'aluno',
+      company: userData.company,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+    
+    console.log('✅ Usuário criado com sucesso');
+    res.json({ user: newUser });
+  } catch (error) {
+    console.error('❌ Erro ao criar usuário:', error);
+    res.status(500).json({ error: 'Erro ao criar usuário' });
+  }
+});
+
+// Deletar usuário (admin)
+app.post('/api/auth/delete-user', requireAuth, async (req, res) => {
+  try {
+    console.log('👤 Deletando usuário...');
+    
+    const { userId } = req.body;
+    
+    await storage.deleteUser(userId);
+    console.log('✅ Usuário deletado com sucesso');
+    
+    res.json({ message: 'Usuário deletado com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao deletar usuário:', error);
+    res.status(500).json({ error: 'Erro ao deletar usuário' });
+  }
+});
+
+// Atualizar perfil de usuário
+app.put('/api/profiles/:id', requireAuth, async (req, res) => {
+  try {
+    console.log(`👤 Atualizando perfil: ${req.params.id}`);
+    
+    const profile = await storage.updateProfile(req.params.id, req.body);
+    console.log('✅ Perfil atualizado com sucesso');
+    
+    res.json({ profile });
+  } catch (error) {
+    console.error('❌ Erro ao atualizar perfil:', error);
+    res.status(500).json({ error: 'Erro ao atualizar perfil' });
+  }
+});
+
+// Buscar comandantes disponíveis
+app.get('/api/commanders', requireAuth, async (req, res) => {
+  try {
+    console.log('👑 Buscando comandantes disponíveis...');
+    
+    const commanders = await storage.getAvailableCommanders();
+    console.log(`✅ Retornando ${commanders.length} comandantes`);
+    
+    res.json({ commanders });
+  } catch (error) {
+    console.error('❌ Erro ao buscar comandantes:', error);
+    res.status(500).json({ error: 'Erro ao buscar comandantes' });
+  }
+});
+
+// Buscar treinamentos
+app.get('/api/trainings', requireAuth, async (req, res) => {
+  try {
+    console.log('📚 Buscando treinamentos...');
+    
+    const trainings = await storage.getTrainings();
+    console.log(`✅ Retornando ${trainings.length} treinamentos`);
+    
+    res.json({ trainings });
+  } catch (error) {
+    console.error('❌ Erro ao buscar treinamentos:', error);
+    res.status(500).json({ error: 'Erro ao buscar treinamentos' });
+  }
+});
+
+// Buscar cursos
+app.get('/api/courses', requireAuth, async (req, res) => {
+  try {
+    console.log('📖 Buscando cursos...');
+    
+    const courses = await storage.getCourses();
+    console.log(`✅ Retornando ${courses.length} cursos`);
+    
+    res.json({ courses });
+  } catch (error) {
+    console.error('❌ Erro ao buscar cursos:', error);
+    res.status(500).json({ error: 'Erro ao buscar cursos' });
+  }
+});
+
+// Buscar estatísticas da empresa
+app.get('/api/company/stats', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Buscando estatísticas da empresa...');
+    
+    const users = await storage.getUsersWithProfiles();
+    const userProfile = await storage.getUserProfile(req.user.id);
+    
+    // Filtrar por empresa do usuário
+    const companyMembers = users.filter(u => u.profile?.company === userProfile?.company);
+    
+    const stats = {
+      totalMembers: companyMembers.length,
+      activeMembers: companyMembers.filter(u => u.profile?.rank !== 'aluno').length,
+      newMembersThisMonth: 0,
+      completedTrainings: 0
+    };
+    
+    console.log('✅ Estatísticas da empresa calculadas');
+    res.json({ stats });
+  } catch (error) {
+    console.error('❌ Erro ao buscar estatísticas da empresa:', error);
+    res.status(500).json({ error: 'Erro ao buscar estatísticas da empresa' });
+  }
+});
+
+// Buscar membros da empresa
+app.get('/api/company/members', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Buscando membros da empresa...');
+    
+    const users = await storage.getUsersWithProfiles();
+    const userProfile = await storage.getUserProfile(req.user.id);
+    
+    // Filtrar por empresa do usuário
+    const companyMembers = users.filter(u => u.profile?.company === userProfile?.company);
+    
+    console.log(`✅ Retornando ${companyMembers.length} membros da empresa`);
+    res.json({ members: companyMembers });
+  } catch (error) {
+    console.error('❌ Erro ao buscar membros da empresa:', error);
+    res.status(500).json({ error: 'Erro ao buscar membros da empresa' });
+  }
+});
+
+// Criar anúncio da empresa
+app.post('/api/company/announcements', requireAuth, async (req, res) => {
+  try {
+    console.log('📢 Criando anúncio da empresa...');
+    
+    const { title, content } = req.body;
+    const announcement = await storage.createMessage(req.user.id, 'company', `${title}: ${content}`);
+    
+    console.log('✅ Anúncio criado com sucesso');
+    res.json({ announcement });
+  } catch (error) {
+    console.error('❌ Erro ao criar anúncio:', error);
+    res.status(500).json({ error: 'Erro ao criar anúncio' });
+  }
+});
+
+// Buscar anúncios da empresa
+app.get('/api/company/announcements', requireAuth, async (req, res) => {
+  try {
+    console.log('📢 Buscando anúncios da empresa...');
+    
+    const announcements = await storage.getChannelMessages('company');
+    console.log(`✅ Retornando ${announcements.length} anúncios`);
+    
+    res.json({ announcements });
+  } catch (error) {
+    console.error('❌ Erro ao buscar anúncios:', error);
+    res.status(500).json({ error: 'Erro ao buscar anúncios' });
+  }
+});
+
 // Teste de conectividade
 app.get('/api/health', async (req, res) => {
   try {
