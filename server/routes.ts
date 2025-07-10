@@ -989,6 +989,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get messages from channel
+  app.get('/api/messages/:channel', requireAuth, async (req: Request, res: Response) => {
+    try {
+      const messages = await storage.getChannelMessages(req.params.channel);
+      res.json({ messages });
+    } catch (error) {
+      console.error('Messages fetch error:', error);
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  });
+
+  // Create message in channel
   app.post('/api/messages/:channel', requireAuth, async (req: Request, res: Response) => {
     try {
       const { content } = req.body;
