@@ -162,98 +162,116 @@ async function authenticateUser(emailOrCpf, password) {
   }
 }
 
-// === ROTA DE REGISTRO ===
+// === ROTA DE REGISTRO - VERSÃO DE TESTE ===
 app.post('/api/auth/register', async (req, res) => {
-  console.log('👤 Tentativa de cadastro recebida...');
-  console.log('📦 Body completo recebido:', JSON.stringify(req.body, null, 2));
+  console.log('🚨 TESTE DE REGISTRO - INICIANDO...');
+  console.log('📦 Body completo:', JSON.stringify(req.body, null, 2));
   
   try {
+    // ETAPA 1: Validar se os dados chegaram
+    console.log('✅ ETAPA 1: Dados recebidos com sucesso');
+    
     const { email, password, fullName, cpf, phone, city, address, birthYear, company, rank } = req.body;
+    console.log('📝 Dados extraídos:', { email, fullName, cpf, company, rank, birthYear, city, phone });
     
-    console.log('📝 Dados extraídos:', { 
-      email, 
-      fullName, 
-      cpf: cpf ? 'Informado' : 'Não informado',
-      company,
-      rank: rank || 'aluno',
-      birthYear,
-      city,
-      phone
-    });
-    
-    // Validação básica
+    // ETAPA 2: Validação básica
     if (!email || !password || !fullName) {
-      console.log('❌ Dados obrigatórios faltando');
+      console.log('❌ ERRO: Dados obrigatórios faltando');
       return res.status(400).json({ message: 'Email, senha e nome completo são obrigatórios' });
     }
+    console.log('✅ ETAPA 2: Validação básica OK');
     
-    console.log('🔍 Verificando se usuário já existe...');
-    
-    // Verificar se usuário já existe
-    const existingUser = await storage.getUserByEmail(email);
-    if (existingUser) {
-      console.log('❌ Usuário já existe:', existingUser.email);
-      return res.status(400).json({ message: 'E-mail já está cadastrado no sistema' });
+    // ETAPA 3: Testar conexão com banco
+    console.log('🔍 ETAPA 3: Testando conexão com banco...');
+    try {
+      const testUser = await storage.getUserByEmail(email);
+      console.log('✅ ETAPA 3: Conexão com banco OK');
+      
+      if (testUser) {
+        console.log('❌ ERRO: Usuário já existe:', testUser.email);
+        return res.status(400).json({ message: 'E-mail já está cadastrado no sistema' });
+      }
+      console.log('✅ Email disponível para cadastro');
+    } catch (dbError) {
+      console.error('❌ ERRO NA CONEXÃO COM BANCO:', dbError);
+      return res.status(500).json({ message: 'Erro de conexão com banco', error: dbError.message });
     }
     
-    console.log('✅ Email disponível, prosseguindo...');
+    // ETAPA 4: Testar hash da senha
+    console.log('🔐 ETAPA 4: Testando hash da senha...');
+    try {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      console.log('✅ ETAPA 4: Hash da senha OK');
+      
+      // ETAPA 5: Preparar dados para inserção
+      const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      console.log('🆔 ETAPA 5: ID gerado:', userId);
+      
+      const userData = {
+        id: userId,
+        email,
+        password: hashedPassword,
+        name: fullName,
+        cpf: cpf?.replace(/\D/g, '') || '',
+        phone: phone || '',
+        city: city || '',
+        address: address || '',
+        birth_date: birthYear ? `${birthYear}-01-01` : null,
+        company: company || '',
+        rank: rank || 'aluno'
+      };
+      
+      console.log('📋 ETAPA 5: Dados preparados para inserção:', {
+        id: userData.id,
+        email: userData.email,
+        name: userData.name,
+        cpf: userData.cpf ? 'Sim' : 'Não',
+        company: userData.company,
+        rank: userData.rank
+      });
+      
+      // ETAPA 6: Tentar criar usuário
+      console.log('💾 ETAPA 6: Iniciando criação do usuário...');
+      try {
+        const user = await storage.createUser(userData);
+        console.log('✅ ETAPA 6: Usuário criado com sucesso!');
+        console.log('🎉 Usuário final:', user);
+        
+        // Resposta de sucesso
+        const { password: _, ...userResponse } = user;
+        res.status(201).json({ 
+          user: userResponse,
+          message: 'Cadastro realizado com sucesso!'
+        });
+        
+      } catch (createError) {
+        console.error('❌ ERRO NA CRIAÇÃO DO USUÁRIO:');
+        console.error('❌ Tipo:', createError.constructor.name);
+        console.error('❌ Mensagem:', createError.message);
+        console.error('❌ Stack:', createError.stack);
+        
+        return res.status(500).json({ 
+          message: 'Erro ao criar usuário no banco',
+          error: createError.message,
+          stage: 'create_user'
+        });
+      }
+      
+    } catch (hashError) {
+      console.error('❌ ERRO NO HASH DA SENHA:', hashError);
+      return res.status(500).json({ message: 'Erro ao processar senha', error: hashError.message });
+    }
     
-    // Hash da senha
-    console.log('🔐 Iniciando hash da senha...');
-    const hashedPassword = await bcrypt.hash(password, 10);
-    console.log('✅ Senha hasheada com sucesso');
-    
-    // Gerar UUID para o usuário
-    const userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log('🆔 ID gerado:', userId);
-    
-    // Dados do usuário
-    const userData = {
-      id: userId,
-      email,
-      password: hashedPassword,
-      name: fullName,
-      cpf: cpf?.replace(/\D/g, '') || '',
-      phone: phone || '',
-      city: city || '',
-      address: address || '',
-      birth_date: birthYear ? `${birthYear}-01-01` : null,
-      company: company || '',
-      rank: rank || 'aluno'
-    };
-    
-    console.log('📋 Dados finais do usuário preparados:', {
-      id: userData.id,
-      email: userData.email,
-      name: userData.name,
-      cpf: userData.cpf ? 'Sim' : 'Não',
-      company: userData.company,
-      rank: userData.rank
-    });
-    
-    console.log('💾 Iniciando criação do usuário na base de dados...');
-    
-    // Criar usuário
-    const user = await storage.createUser(userData);
-    console.log('✅ Usuário criado com sucesso na base:', user.id);
-    
-    // Resposta sem senha
-    const { password: _, ...userResponse } = user;
-    res.status(201).json({ 
-      user: userResponse,
-      message: 'Cadastro realizado com sucesso!'
-    });
-    
-  } catch (error) {
-    console.error('❌ Erro detalhado no cadastro:');
-    console.error('❌ Mensagem:', error.message);
-    console.error('❌ Stack:', error.stack);
-    console.error('❌ Tipo:', error.constructor.name);
+  } catch (generalError) {
+    console.error('❌ ERRO GERAL NO CADASTRO:');
+    console.error('❌ Tipo:', generalError.constructor.name);
+    console.error('❌ Mensagem:', generalError.message);
+    console.error('❌ Stack:', generalError.stack);
     
     res.status(500).json({ 
       message: 'Erro interno do servidor',
-      error: error.message,
-      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      error: generalError.message,
+      type: generalError.constructor.name
     });
   }
 });
