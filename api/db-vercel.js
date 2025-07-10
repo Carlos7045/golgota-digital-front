@@ -206,4 +206,122 @@ export class VercelStorage {
       return [];
     }
   }
+
+  // === MÉTODOS PARA MENSAGENS ===
+  async getChannelMessages(channel) {
+    try {
+      console.log(`🔍 Buscando mensagens do canal: ${channel}`);
+      
+      // Por enquanto retornar array vazio, pois a tabela de mensagens pode não existir
+      // Em um sistema real, faria join com a tabela de mensagens
+      const messages = [];
+      
+      console.log(`✅ Encontradas ${messages.length} mensagens`);
+      return messages;
+    } catch (error) {
+      console.error('Error getting channel messages:', error);
+      return [];
+    }
+  }
+
+  async createMessage(userId, channel, messageContent) {
+    try {
+      console.log(`🔍 Criando mensagem no canal: ${channel}`);
+      
+      // Por enquanto simular criação de mensagem
+      // Em um sistema real, inseriria na tabela de mensagens
+      const message = {
+        id: Date.now().toString(),
+        user_id: userId,
+        channel: channel,
+        content: messageContent,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Mensagem criada (simulada)');
+      return message;
+    } catch (error) {
+      console.error('Error creating message:', error);
+      throw error;
+    }
+  }
+
+  // === MÉTODOS PARA ASAAS (PAGAMENTOS) ===
+  async getAsaasSubscription(userId) {
+    try {
+      console.log(`🔍 Buscando assinatura Asaas para usuário: ${userId}`);
+      
+      // Por enquanto retornar null, implementar quando tabela existir
+      return null;
+    } catch (error) {
+      console.error('Error getting asaas subscription:', error);
+      return null;
+    }
+  }
+
+  async getAsaasPayments(userId) {
+    try {
+      console.log(`🔍 Buscando pagamentos Asaas para usuário: ${userId}`);
+      
+      // Por enquanto retornar array vazio
+      return [];
+    } catch (error) {
+      console.error('Error getting asaas payments:', error);
+      return [];
+    }
+  }
+
+  async createAsaasSubscription(data) {
+    try {
+      console.log('🔍 Criando assinatura Asaas...');
+      
+      // Por enquanto simular criação
+      const subscription = {
+        id: Date.now().toString(),
+        ...data,
+        status: 'ACTIVE',
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('✅ Assinatura criada (simulada)');
+      return subscription;
+    } catch (error) {
+      console.error('Error creating asaas subscription:', error);
+      throw error;
+    }
+  }
+
+  async updateAsaasSubscription(subscriptionId, data) {
+    try {
+      console.log(`🔍 Atualizando assinatura: ${subscriptionId}`);
+      
+      // Por enquanto simular atualização
+      console.log('✅ Assinatura atualizada (simulada)');
+      return { success: true };
+    } catch (error) {
+      console.error('Error updating asaas subscription:', error);
+      throw error;
+    }
+  }
+
+  // === MÉTODOS PARA EMPRESAS ===
+  async getCompanies() {
+    try {
+      console.log('🔍 Buscando empresas...');
+      
+      // Por enquanto retornar empresas fixas baseadas nos dados existentes
+      const companies = [
+        { id: '1', name: 'Quemuel', description: 'Companhia Alpha' },
+        { id: '2', name: 'Beta', description: 'Companhia Beta' },
+        { id: '3', name: 'Gamma', description: 'Companhia Gamma' },
+        { id: '4', name: 'Delta', description: 'Companhia Delta' }
+      ];
+      
+      console.log(`✅ Encontradas ${companies.length} empresas`);
+      return companies;
+    } catch (error) {
+      console.error('Error getting companies:', error);
+      return [];
+    }
+  }
 }

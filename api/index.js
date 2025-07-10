@@ -219,6 +219,163 @@ app.get('/api/users', requireAuth, async (req, res) => {
   }
 });
 
+// === ENDPOINTS DE CHAT/MENSAGENS ===
+
+// Buscar mensagens do canal geral
+app.get('/api/messages/general', requireAuth, async (req, res) => {
+  try {
+    console.log('💬 Buscando mensagens do canal geral...');
+    
+    const messages = await storage.getChannelMessages('general');
+    console.log(`✅ Retornando ${messages.length} mensagens`);
+    
+    res.json({ messages });
+  } catch (error) {
+    console.error('❌ Erro ao buscar mensagens:', error);
+    res.status(500).json({ error: 'Erro ao buscar mensagens' });
+  }
+});
+
+// Enviar mensagem no canal geral
+app.post('/api/messages/general', requireAuth, async (req, res) => {
+  try {
+    console.log('💬 Enviando mensagem para canal geral...');
+    
+    const { content } = req.body;
+    const message = await storage.createMessage(req.user.id, 'general', content);
+    
+    console.log('✅ Mensagem enviada com sucesso');
+    res.json({ message });
+  } catch (error) {
+    console.error('❌ Erro ao enviar mensagem:', error);
+    res.status(500).json({ error: 'Erro ao enviar mensagem' });
+  }
+});
+
+// Buscar usuários online
+app.get('/api/users/online', requireAuth, async (req, res) => {
+  try {
+    console.log('👥 Buscando usuários online...');
+    
+    // Por enquanto, vamos retornar todos os usuários como "online"
+    // Em um sistema real, isso seria baseado em sessões ativas
+    const users = await storage.getUsersWithProfiles();
+    const onlineUsers = users.map(user => ({
+      id: user.id,
+      name: user.profile?.name || user.email,
+      avatar_url: user.profile?.avatar_url,
+      rank: user.profile?.rank || 'aluno'
+    }));
+    
+    console.log(`✅ Retornando ${onlineUsers.length} usuários online`);
+    res.json({ users: onlineUsers });
+  } catch (error) {
+    console.error('❌ Erro ao buscar usuários online:', error);
+    res.status(500).json({ error: 'Erro ao buscar usuários online' });
+  }
+});
+
+// === ENDPOINTS DE PAGAMENTOS ===
+
+// Buscar assinatura do usuário
+app.get('/api/payments/subscription', requireAuth, async (req, res) => {
+  try {
+    console.log('💳 Buscando assinatura do usuário...');
+    
+    const subscription = await storage.getAsaasSubscription(req.user.id);
+    console.log('✅ Assinatura encontrada:', subscription ? 'Sim' : 'Não');
+    
+    res.json(subscription);
+  } catch (error) {
+    console.error('❌ Erro ao buscar assinatura:', error);
+    res.status(500).json({ error: 'Erro ao buscar assinatura' });
+  }
+});
+
+// Buscar histórico de pagamentos
+app.get('/api/payments/history', requireAuth, async (req, res) => {
+  try {
+    console.log('💳 Buscando histórico de pagamentos...');
+    
+    const payments = await storage.getAsaasPayments(req.user.id);
+    console.log(`✅ Retornando ${payments.length} pagamentos`);
+    
+    res.json(payments);
+  } catch (error) {
+    console.error('❌ Erro ao buscar histórico de pagamentos:', error);
+    res.status(500).json({ error: 'Erro ao buscar histórico de pagamentos' });
+  }
+});
+
+// Criar assinatura
+app.post('/api/payments/create-subscription', requireAuth, async (req, res) => {
+  try {
+    console.log('💳 Criando assinatura...');
+    
+    const { billingType } = req.body;
+    const profile = await storage.getUserProfile(req.user.id);
+    
+    if (!profile) {
+      return res.status(400).json({ error: 'Perfil não encontrado' });
+    }
+
+    // Criar assinatura via Asaas
+    const subscriptionData = {
+      customer: profile.email,
+      billingType: billingType || 'PIX',
+      nextDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      value: 10.00,
+      cycle: 'MONTHLY',
+      description: 'Mensalidade Comando Gólgota'
+    };
+
+    const subscription = await storage.createAsaasSubscription(subscriptionData);
+    console.log('✅ Assinatura criada com sucesso');
+    
+    res.json(subscription);
+  } catch (error) {
+    console.error('❌ Erro ao criar assinatura:', error);
+    res.status(500).json({ error: 'Erro ao criar assinatura' });
+  }
+});
+
+// Cancelar assinatura
+app.post('/api/payments/cancel-subscription', requireAuth, async (req, res) => {
+  try {
+    console.log('💳 Cancelando assinatura...');
+    
+    const subscription = await storage.getAsaasSubscription(req.user.id);
+    if (!subscription) {
+      return res.status(400).json({ error: 'Assinatura não encontrada' });
+    }
+
+    await storage.updateAsaasSubscription(subscription.asaas_subscription_id, { status: 'CANCELLED' });
+    console.log('✅ Assinatura cancelada com sucesso');
+    
+    res.json({ message: 'Assinatura cancelada com sucesso' });
+  } catch (error) {
+    console.error('❌ Erro ao cancelar assinatura:', error);
+    res.status(500).json({ error: 'Erro ao cancelar assinatura' });
+  }
+});
+
+// === ENDPOINTS DE EMPRESAS ===
+
+// Buscar empresas
+app.get('/api/companies', requireAuth, async (req, res) => {
+  try {
+    console.log('🏢 Buscando empresas...');
+    
+    const companies = await storage.getCompanies();
+    console.log(`✅ Retornando ${companies.length} empresas`);
+    
+    res.json({ companies });
+  } catch (error) {
+    console.error('❌ Erro ao buscar empresas:', error);
+    res.status(500).json({ error: 'Erro ao buscar empresas' });
+  }
+});
+
 // Teste de conectividade
 app.get('/api/health', async (req, res) => {
   try {
