@@ -62,6 +62,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     refetchInterval: 30000, // Atualiza a cada 30 segundos
     retry: 1,
     enabled: !!user?.id, // Só executa se user estiver definido
+    refetchOnMount: true,
+    refetchOnWindowFocus: false,
   });
 
   const messages = messagesData?.messages || [];
@@ -76,12 +78,23 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   // Add manual test button for debugging
   const testAuth = async () => {
     try {
+      console.log('🔍 Test Auth - Starting test...');
       const response = await fetch('/api/profile', {
         credentials: 'include'
       });
-      console.log('🔍 Auth test response:', response.status, await response.text());
+      console.log('🔍 Test Auth - Response status:', response.status);
+      const text = await response.text();
+      console.log('🔍 Test Auth - Response body:', text);
+      
+      // Test message fetch too
+      const msgResponse = await fetch('/api/messages/general', {
+        credentials: 'include'
+      });
+      console.log('🔍 Test Auth - Messages status:', msgResponse.status);
+      const msgText = await msgResponse.text();
+      console.log('🔍 Test Auth - Messages body:', msgText.substring(0, 200) + '...');
     } catch (err) {
-      console.log('🔍 Auth test error:', err);
+      console.log('🔍 Test Auth - Error:', err);
     }
   };
 

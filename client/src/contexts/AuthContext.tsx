@@ -107,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Token será pego do cookie automaticamente
         // Não precisa salvar no localStorage
         
+        // Set user data immediately
         setUser(data.user);
         setProfile(data.profile);
         setRoles(data.roles);
@@ -116,6 +117,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           window.location.href = '/change-password';
           return { error: null };
         }
+        
+        // Force a profile refresh to sync authentication state
+        setTimeout(() => {
+          fetchProfile();
+        }, 100);
         
         toast({
           title: "Login realizado com sucesso!",

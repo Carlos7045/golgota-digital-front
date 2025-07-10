@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: false }));
 app.use(session({
   secret: process.env.SESSION_SECRET || 'golgota-secret-key-development',
   resave: false,
-  saveUninitialized: false,
+  saveUninitialized: true, // Changed to true to ensure session creation
   cookie: { 
     secure: false, // Set to true in production with HTTPS
     httpOnly: true,
