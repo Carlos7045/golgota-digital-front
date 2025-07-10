@@ -142,7 +142,9 @@ const event_registrations = pgTable('event_registrations', {
 
 // Configuração do banco para Vercel
 const neonSql = neon(process.env.DATABASE_URL);
-const db = drizzle(neonSql);
+const db = drizzle(neonSql, { 
+  logger: process.env.NODE_ENV === 'development' 
+});
 
 export class VercelStorage {
   async getUserByEmail(email) {

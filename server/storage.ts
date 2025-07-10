@@ -9,10 +9,14 @@ export interface IStorage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByCpf(cpf: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  deleteUser(userId: string): Promise<void>;
   
   // Profile management
   getProfile(userId: string): Promise<Profile | undefined>;
+  getUserProfile(userId: string): Promise<Profile | undefined>;
   updateProfile(userId: string, data: Partial<Profile>): Promise<Profile | undefined>;
+  getAllProfiles(): Promise<Profile[]>;
+  getUsersWithProfiles(): Promise<any[]>;
   
   // Company management
   getCompanies(): Promise<Company[]>;
@@ -43,8 +47,7 @@ export interface IStorage {
   getUserRoles(userId: string): Promise<string[]>;
   assignRole(userId: string, role: string): Promise<void>;
   
-  // User deletion
-  deleteUser(userId: string): Promise<void>;
+
   
   // Activities and achievements
   getUserActivities(userId: string): Promise<UserActivity[]>;
@@ -52,7 +55,7 @@ export interface IStorage {
   
   // Messages (community)
   getChannelMessages(channel: string): Promise<any[]>;
-  createMessage(userId: string, channel: string, content: string): Promise<any>;
+  createMessage(userId: string, channel: string, content: string, parentMessageId?: string, threadId?: string): Promise<any>;
 
   // Financial management
   getFinancialCategories(): Promise<FinancialCategory[]>;
@@ -140,6 +143,48 @@ export class DatabaseStorage implements IStorage {
   async getProfile(userId: string): Promise<Profile | undefined> {
     const [profile] = await db.select().from(profiles).where(eq(profiles.user_id, userId));
     return profile;
+  }
+
+  async getUserProfile(userId: string): Promise<Profile | undefined> {
+    return this.getProfile(userId);
+  }
+
+  async getAllProfiles(): Promise<Profile[]> {
+    return await db.select().from(profiles).where(isNotNull(profiles.name));
+  }
+
+  async getUsersWithProfiles(): Promise<any[]> {
+    const usersWithProfiles = await db
+      .select({
+        id: users.id,
+        email: users.email,
+        created_at: users.created_at,
+        force_password_change: users.force_password_change,
+        profile: {
+          id: profiles.id,
+          user_id: profiles.user_id,
+          name: profiles.name,
+          cpf: profiles.cpf,
+          rank: profiles.rank,
+          company: profiles.company,
+          email: profiles.email,
+          phone: profiles.phone,
+          city: profiles.city,
+          birth_date: profiles.birth_date,
+          address: profiles.address,
+          avatar_url: profiles.avatar_url,
+          bio: profiles.bio,
+          specialties: profiles.specialties,
+          joined_at: profiles.joined_at,
+          created_at: profiles.created_at,
+          updated_at: profiles.updated_at,
+        }
+      })
+      .from(users)
+      .leftJoin(profiles, eq(users.id, profiles.user_id))
+      .where(isNotNull(profiles.name));
+    
+    return usersWithProfiles;
   }
 
   async updateProfile(userId: string, data: Partial<Profile>): Promise<Profile | undefined> {
@@ -697,38 +742,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
-    return await db.query.eventRegistrations.findMany({
-      where: eq(eventRegistrations.user_id, userId)
-    });
-  }
-
-  async getEventRegistrations(eventId: string): Promise<EventRegistration[]> {
-    return await db.query.eventRegistrations.findMany({
-      where: eq(eventRegistrations.event_id, eventId)
-    });
-  }
-
-  async isUserRegisteredForEvent(eventId: string, userId: string): Promise<boolean> {
-    const registration = await db.query.eventRegistrations.findFirst({
-      where: and(
-        eq(eventRegistrations.event_id, eventId),
-        eq(eventRegistrations.user_id, userId)
-      )
-    });
-    return !!registration;
-  }
-
-  async updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration> {
-    const [updated] = await db.update(eventRegistrations)
-      .set({ ...data, updated_at: new Date() })
-      .where(eq(eventRegistrations.id, registrationId))
-      .returning();
-    return updated;
-  }
-
-
-
-  async getUserEventRegistrations(userId: string): Promise<EventRegistration[]> {
     return await db.select()
       .from(eventRegistrations)
       .where(eq(eventRegistrations.user_id, userId))
@@ -752,8 +765,73 @@ export class DatabaseStorage implements IStorage {
     return !!registration;
   }
 
+  async updateEventRegistration(registrationId: string, data: any): Promise<EventRegistration> {
+    const [updated] = await db.update(eventRegistrations)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(eventRegistrations.id, registrationId))
+      .returning();
+    return updated;
+  }
+
   async getFinancialCategories(): Promise<FinancialCategory[]> {
     return await db.select().from(financialCategories).orderBy(financialCategories.name);
+  }
+
+  async createFinancialCategory(category: any): Promise<FinancialCategory> {
+    const [newCategory] = await db.insert(financialCategories).values(category).returning();
+    return newCategory;
+  }
+
+  async getMonthlyPayments(month?: number, year?: number): Promise<any[]> {
+    let query = db.select().from(monthlyPayments);
+    
+    if (month && year) {
+      const startDate = new Date(year, month - 1, 1);
+      const endDate = new Date(year, month, 0);
+      query = query.where(
+        and(
+          gte(monthlyPayments.due_date, startDate.toISOString().split('T')[0]),
+          lte(monthlyPayments.due_date, endDate.toISOString().split('T')[0])
+        )
+      );
+    }
+    
+    return await query.orderBy(desc(monthlyPayments.due_date));
+  }
+
+  async createMonthlyPayment(payment: any): Promise<MonthlyPayment> {
+    const [newPayment] = await db.insert(monthlyPayments).values(payment).returning();
+    return newPayment;
+  }
+
+  async updateMonthlyPayment(paymentId: string, data: any): Promise<MonthlyPayment> {
+    const [updated] = await db.update(monthlyPayments)
+      .set({ ...data, updated_at: new Date() })
+      .where(eq(monthlyPayments.id, paymentId))
+      .returning();
+    return updated;
+  }
+
+  async getFinancialSummary(month?: number, year?: number): Promise<any> {
+    const transactions = await this.getFinancialTransactions(
+      month && year ? `${year}-${month.toString().padStart(2, '0')}-01` : undefined,
+      month && year ? `${year}-${month.toString().padStart(2, '0')}-31` : undefined
+    );
+
+    const totalIncome = transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    const totalExpenses = transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + parseFloat(t.amount), 0);
+
+    return {
+      totalIncome,
+      totalExpenses,
+      netBalance: totalIncome - totalExpenses,
+      transactionCount: transactions.length
+    };
   }
 }
 
