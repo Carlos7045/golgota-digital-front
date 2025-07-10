@@ -2,12 +2,69 @@
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    
+    <!-- Meta viewport otimizado para PWA -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover" />
+    
+    <!-- SEO e meta tags básicas -->
     <title>Comando Gólgota - Comunidade Militar Cristã</title>
-    <meta name="description" content="Plataforma digital do Comando Gólgota - Treinamento militar cristão, comunidade e eventos." />
+    <meta name="description" content="Plataforma comunitária militar cristã para treinamentos, eventos, comunicação e gestão de pagamentos. Instale o app para funcionalidade offline completa." />
+    <meta name="keywords" content="comando gólgota, militar, cristão, treinamento, comunidade, events, pwa" />
+    <meta name="author" content="Comando Gólgota" />
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="Comando Gólgota" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="CmdGólgota" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    
+    <!-- Theme colors -->
+    <meta name="theme-color" content="#D4AF37" />
+    <meta name="msapplication-TileColor" content="#0A0A0A" />
+    <meta name="msapplication-navbutton-color" content="#D4AF37" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Comando Gólgota - Comunidade Militar Cristã" />
+    <meta property="og:description" content="Plataforma comunitária militar cristã para treinamentos, eventos e comunicação" />
+    <meta property="og:image" content="/icons/icon-512x512.png" />
+    <meta property="og:url" content="https://comandogolgota.com.br" />
+    <meta property="og:site_name" content="Comando Gólgota" />
+    
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Comando Gólgota" />
+    <meta name="twitter:description" content="Comunidade militar cristã digital" />
+    <meta name="twitter:image" content="/icons/icon-512x512.png" />
+    
+    <!-- Favicons -->
     <link rel="icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
-    <link rel="apple-touch-icon" href="/favicon.ico" />
+    
+    <!-- Apple Icons -->
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-152x152.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="167x167" href="/icons/icon-192x192.png" />
+    
+    <!-- Splash screens for iOS -->
+    <link rel="apple-touch-startup-image" href="/icons/icon-512x512.png" />
+    
+    <!-- Microsoft tiles -->
+    <meta name="msapplication-TileImage" content="/icons/icon-144x144.png" />
+    <meta name="msapplication-square70x70logo" content="/icons/icon-72x72.png" />
+    <meta name="msapplication-square150x150logo" content="/icons/icon-152x152.png" />
+    <meta name="msapplication-wide310x150logo" content="/icons/icon-384x384.png" />
+    <meta name="msapplication-square310x310logo" content="/icons/icon-384x384.png" />
+    
+    <!-- Manifest PWA -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Preload para melhor performance -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
   </head>
   <body>
     <div id="root"></div>

@@ -1,0 +1,18 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background with rounded corners -->
+  <rect width="192" height="192" rx="42" fill="#0A0A0A"/>
+  
+  <!-- Command symbol in military gold -->
+  <g transform="translate(48,48) scale(4,4)">
+    <!-- 3D Box/Command structure -->
+    <path d="M12 2L4 7L12 12L20 7L12 2Z" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M4 7V17L12 22L20 17V7" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <path d="M12 12V22" stroke="#D4AF37" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    
+    <!-- Cross symbol -->
+    <path d="M12 6L12 10M10 8L14 8" stroke="#D4AF37" stroke-width="1.5" stroke-linecap="round"/>
+  </g>
+  
+  <!-- Text at bottom -->
+  <text x="96" y="175" text-anchor="middle" fill="#D4AF37" font-family="Arial, sans-serif" font-size="14" font-weight="bold">GÓLGOTA</text>
+</svg>

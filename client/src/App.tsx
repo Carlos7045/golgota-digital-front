@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import PWAWrapper from "@/components/PWAWrapper";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -25,11 +26,12 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <SpeedInsights />
-        <BrowserRouter>
-          <Routes>
+        <PWAWrapper>
+          <Toaster />
+          <Sonner />
+          <SpeedInsights />
+          <BrowserRouter>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/login" element={<Login />} />
@@ -66,8 +68,9 @@ const App = () => (
             } />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+            </Routes>
+          </BrowserRouter>
+        </PWAWrapper>
       </TooltipProvider>
     </AuthProvider>
   </QueryClientProvider>
