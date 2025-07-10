@@ -305,10 +305,13 @@ export const eventRegistrations = pgTable("event_registrations", {
 // General messages and announcements table
 export const generalMessages = pgTable("general_messages", {
   id: uuid("id").primaryKey().defaultRandom(),
-  title: text("title"),
-  body: text("body").notNull(),
-  author_id: uuid("author_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
-  channel: text("channel").notNull().default("general"), // general, announcement_CompanyName, etc.
+  user_id: uuid("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  channel: text("channel").notNull().default("general"),
+  content: text("content").notNull(),
+  parent_message_id: uuid("parent_message_id").references(() => generalMessages.id, { onDelete: "cascade" }),
+  thread_id: uuid("thread_id"),
+  reply_count: integer("reply_count").default(0),
+  is_thread_starter: boolean("is_thread_starter").default(false),
   created_at: timestamp("created_at").defaultNow().notNull(),
 });
 

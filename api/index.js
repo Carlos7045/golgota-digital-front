@@ -778,15 +778,16 @@ app.get('/api/messages/:channel', requireAuth, async (req, res) => {
 app.post('/api/messages/:channel', requireAuth, async (req, res) => {
   try {
     const { channel } = req.params;
-    const { content } = req.body;
+    const { content, parent_message_id, thread_id } = req.body;
     
     console.log(`📨 Criando mensagem no canal: ${channel}`);
+    console.log('📋 Dados da mensagem:', { content, parent_message_id, thread_id });
     
     if (!content) {
       return res.status(400).json({ error: 'Conteúdo é obrigatório' });
     }
     
-    const message = await storage.createMessage(req.user.id, channel, content);
+    const message = await storage.createMessage(req.user.id, channel, content, parent_message_id, thread_id);
     console.log('✅ Mensagem criada com sucesso');
     
     res.json({ message });

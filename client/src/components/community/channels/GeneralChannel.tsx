@@ -18,11 +18,16 @@ interface Message {
   user_id: string;
   channel: string;
   content: string;
+  parent_message_id?: string;
+  thread_id?: string;
+  reply_count?: number;
+  is_thread_starter?: boolean;
   created_at: string;
   author_name?: string;
   author_rank?: string;
   author_company?: string;
   author_avatar?: string;
+  replies?: Message[];
 }
 
 const rankColors: Record<string, string> = {
@@ -44,6 +49,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState<User[]>([]);
+  const [replyingTo, setReplyingTo] = useState<Message | null>(null);
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const fetchMessages = async () => {
@@ -111,13 +118,26 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     if (newMessage.trim() && !sending) {
       setSending(true);
       try {
-        await apiPost('/api/messages/general', { content: newMessage });
+        const messageData: any = { 
+          content: newMessage 
+        };
+        
+        // If replying to a message, include thread information
+        if (replyingTo) {
+          messageData.parent_message_id = replyingTo.id;
+          messageData.thread_id = replyingTo.thread_id || replyingTo.id;
+        }
+        
+        await apiPost('/api/messages/general', messageData);
         setNewMessage('');
+        setReplyingTo(null); // Clear reply state
         await fetchMessages();
         
         toast({
-          title: "Mensagem enviada",
-          description: "Sua mensagem foi publicada com sucesso!",
+          title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
+          description: replyingTo 
+            ? "Sua resposta foi publicada com sucesso!" 
+            : "Sua mensagem foi publicada com sucesso!",
         });
       } catch (error) {
         console.error('Error sending message:', error);
@@ -131,6 +151,66 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
       }
     }
   };
+
+  const handleReply = (message: Message) => {
+    setReplyingTo(message);
+    // Focus on the input field
+    const textarea = document.querySelector('textarea') as HTMLTextAreaElement;
+    textarea?.focus();
+  };
+
+  const cancelReply = () => {
+    setReplyingTo(null);
+  };
+
+  const toggleThread = (messageId: string) => {
+    const newExpandedThreads = new Set(expandedThreads);
+    if (newExpandedThreads.has(messageId)) {
+      newExpandedThreads.delete(messageId);
+    } else {
+      newExpandedThreads.add(messageId);
+    }
+    setExpandedThreads(newExpandedThreads);
+  };
+
+  // Group messages into threads
+  const organizeMessagesIntoThreads = (messages: Message[]): Message[] => {
+    const messageMap = new Map<string, Message>();
+    const rootMessages: Message[] = [];
+    
+    // First pass: create map and identify root messages
+    messages.forEach(msg => {
+      messageMap.set(msg.id, { ...msg, replies: [] });
+      if (!msg.parent_message_id) {
+        rootMessages.push(messageMap.get(msg.id)!);
+      }
+    });
+    
+    // Second pass: organize replies under parent messages
+    messages.forEach(msg => {
+      if (msg.parent_message_id) {
+        const parent = messageMap.get(msg.parent_message_id);
+        const child = messageMap.get(msg.id);
+        if (parent && child) {
+          parent.replies!.push(child);
+        }
+      }
+    });
+    
+    // Sort root messages by creation time (newest first)
+    rootMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    
+    // Sort replies within each thread (oldest first)
+    rootMessages.forEach(msg => {
+      if (msg.replies) {
+        msg.replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+      }
+    });
+    
+    return rootMessages;
+  };
+
+  const organizedMessages = organizeMessagesIntoThreads(messages);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', { 
@@ -209,7 +289,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             <p className="text-sm">Seja o primeiro a enviar uma mensagem!</p>
           </div>
         ) : (
-          messages.map((message) => (
+          organizedMessages.map((message) => (
             <div key={message.id} className="group hover:bg-military-black-light/30 p-3 rounded-lg transition-all duration-200">
               <div className="flex items-start space-x-3">
                 <Avatar className="w-10 h-10 border-2 border-military-gold/30 shrink-0">
@@ -230,6 +310,12 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                     <span className="text-xs text-gray-400">
                       {formatDate(new Date(message.created_at))} às {formatTime(new Date(message.created_at))}
                     </span>
+                    {message.is_thread_starter && (
+                      <Badge className="bg-blue-600 text-white text-xs px-2 py-0.5">
+                        <MessageSquare size={12} className="mr-1" />
+                        Thread
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="bg-military-black-light/80 border border-military-gold/20 rounded-lg p-3 mb-2">
@@ -243,17 +329,31 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto"
                     >
                       <Heart size={16} className="mr-1" />
-                      <span className="text-sm">{message.interactions || 0}</span>
+                      <span className="text-sm">0</span>
                     </Button>
                     <Button
                       variant="ghost"
                       size="sm"
                       className="text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto"
                       title="Responder mensagem"
+                      onClick={() => handleReply(message)}
                     >
                       <Reply size={16} className="mr-1" />
                       <span className="text-sm">Responder</span>
                     </Button>
+                    {message.replies && message.replies.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-military-gold hover:bg-military-gold/10 p-1 h-auto"
+                        onClick={() => toggleThread(message.id)}
+                      >
+                        <MessageSquare size={16} className="mr-1" />
+                        <span className="text-sm">
+                          {message.replies.length} {message.replies.length === 1 ? 'resposta' : 'respostas'}
+                        </span>
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       size="sm"
@@ -262,6 +362,62 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       <MoreHorizontal size={16} />
                     </Button>
                   </div>
+
+                  {/* Thread Replies */}
+                  {message.replies && message.replies.length > 0 && expandedThreads.has(message.id) && (
+                    <div className="mt-4 ml-6 border-l-2 border-military-gold/30 pl-4 space-y-3">
+                      {message.replies.map((reply) => (
+                        <div key={reply.id} className="group/reply hover:bg-military-black-light/20 p-2 rounded-lg transition-all duration-200">
+                          <div className="flex items-start space-x-3">
+                            <Avatar className="w-8 h-8 border-2 border-military-gold/20 shrink-0">
+                              <AvatarImage src={reply.author_avatar} alt={reply.author_name || 'Usuário'} />
+                              <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
+                                {(reply.author_name || 'U').substring(0, 2).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className="text-military-gold font-medium text-sm hover:underline cursor-pointer">
+                                  {reply.author_name || 'Usuário'}
+                                </span>
+                                <Badge className={`${rankColors[reply.author_rank || 'aluno']} text-white text-xs px-1.5 py-0.5`}>
+                                  {reply.author_rank?.toUpperCase() || 'ALUNO'}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  {formatTime(new Date(reply.created_at))}
+                                </span>
+                              </div>
+                              
+                              <div className="bg-military-black-light/60 border border-military-gold/10 rounded-lg p-2 mb-1">
+                                <p className="text-gray-300 text-sm leading-relaxed">{reply.content}</p>
+                              </div>
+                              
+                              <div className="flex items-center space-x-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
+                                >
+                                  <Heart size={12} className="mr-1" />
+                                  <span>0</span>
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
+                                  onClick={() => handleReply(reply)}
+                                >
+                                  <Reply size={12} className="mr-1" />
+                                  <span>Responder</span>
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -272,6 +428,33 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
 
       {/* Input de Nova Mensagem */}
       <div className="p-4 border-t border-military-gold/20 bg-military-black-light/30">
+        {/* Reply Banner */}
+        {replyingTo && (
+          <div className="mb-3 p-3 bg-blue-600/20 border border-blue-600/30 rounded-lg">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Reply size={16} className="text-blue-400" />
+                <span className="text-sm text-blue-400 font-medium">
+                  Respondendo para {replyingTo.author_name}
+                </span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cancelReply}
+                className="text-gray-400 hover:text-white p-1 h-auto"
+              >
+                ×
+              </Button>
+            </div>
+            <div className="bg-military-black-light/50 border border-military-gold/10 rounded p-2">
+              <p className="text-gray-400 text-sm truncate">
+                {replyingTo.content}
+              </p>
+            </div>
+          </div>
+        )}
+        
         <div className="flex items-center space-x-3 mb-2">
           <Avatar className="w-8 h-8 border-2 border-military-gold/30">
             <AvatarImage src={user.avatar_url} alt={user.name} />
@@ -280,7 +463,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             </AvatarFallback>
           </Avatar>
           <span className="text-sm text-gray-400">
-            Escrevendo como <span className="text-military-gold">{user.name}</span>
+            {replyingTo ? 'Respondendo como' : 'Escrevendo como'} <span className="text-military-gold">{user.name}</span>
           </span>
         </div>
         <div className="flex space-x-2">
@@ -288,9 +471,12 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             <Textarea
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Digite sua mensagem para o canal geral..."
+              placeholder={replyingTo 
+                ? `Responder para ${replyingTo.author_name}...`
+                : "Digite sua mensagem para o canal geral..."
+              }
               className="flex-1 bg-military-black border-military-gold/30 text-white resize-none focus:border-military-gold pr-20"
-              rows={3}
+              rows={replyingTo ? 2 : 3}
               onKeyPress={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -322,9 +508,21 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </Button>
         </div>
         <div className="flex items-center justify-between mt-2">
-          <p className="text-xs text-gray-400">
-            Enter para enviar • Shift+Enter para quebrar linha
-          </p>
+          <div className="flex items-center space-x-4">
+            <p className="text-xs text-gray-400">
+              Enter para enviar • Shift+Enter para quebrar linha
+            </p>
+            {replyingTo && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cancelReply}
+                className="text-xs text-gray-500 hover:text-gray-300 p-1 h-auto"
+              >
+                Cancelar resposta
+              </Button>
+            )}
+          </div>
           <div className="text-xs text-gray-400">
             {newMessage.length}/2000 caracteres
           </div>

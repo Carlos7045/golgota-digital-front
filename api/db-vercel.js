@@ -1,6 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
-import { eq, desc, and } from 'drizzle-orm';
+import { eq, desc, and, sql } from 'drizzle-orm';
 import { pgTable, text, timestamp, integer, boolean, uuid } from 'drizzle-orm/pg-core';
 import crypto from 'crypto';
 
@@ -45,6 +45,10 @@ const general_messages = pgTable('general_messages', {
   user_id: uuid('user_id').references(() => users.id).notNull(),
   channel: text('channel').notNull(),
   content: text('content').notNull(),
+  parent_message_id: uuid('parent_message_id'),
+  thread_id: uuid('thread_id'),
+  reply_count: integer('reply_count').default(0),
+  is_thread_starter: boolean('is_thread_starter').default(false),
   created_at: timestamp('created_at').defaultNow()
 });
 
@@ -310,12 +314,16 @@ export class VercelStorage {
           user_id: general_messages.user_id,
           channel: general_messages.channel,
           content: general_messages.content,
+          parent_message_id: general_messages.parent_message_id,
+          thread_id: general_messages.thread_id,
+          reply_count: general_messages.reply_count,
+          is_thread_starter: general_messages.is_thread_starter,
           created_at: general_messages.created_at
         })
         .from(general_messages)
         .where(eq(general_messages.channel, channel))
         .orderBy(desc(general_messages.created_at))
-        .limit(50);
+        .limit(100);
       
       // Buscar perfis dos autores das mensagens
       const messagesWithAuthors = [];
@@ -338,9 +346,36 @@ export class VercelStorage {
     }
   }
 
-  async createMessage(userId, channel, messageContent) {
+  async createMessage(userId, channel, messageContent, parentMessageId = null, threadId = null) {
     try {
       console.log(`🔍 Criando mensagem no canal: ${channel}`);
+      
+      // If this is a reply, determine thread_id and update parent reply count
+      let finalThreadId = threadId;
+      let isThreadStarter = false;
+      
+      if (parentMessageId) {
+        // This is a reply
+        const parentMessage = await db
+          .select()
+          .from(general_messages)
+          .where(eq(general_messages.id, parentMessageId))
+          .limit(1);
+          
+        if (parentMessage[0]) {
+          // Use parent's thread_id if it exists, otherwise use parent's id as thread_id
+          finalThreadId = parentMessage[0].thread_id || parentMessage[0].id;
+          
+          // Update parent message reply count
+          await db
+            .update(general_messages)
+            .set({ 
+              reply_count: sql`${general_messages.reply_count} + 1`,
+              is_thread_starter: true // Mark parent as thread starter
+            })
+            .where(eq(general_messages.id, parentMessageId));
+        }
+      }
       
       // Inserir mensagem real na tabela general_messages usando schema correto
       const messageData = {
@@ -348,6 +383,10 @@ export class VercelStorage {
         user_id: userId,
         channel: channel,
         content: messageContent,
+        parent_message_id: parentMessageId,
+        thread_id: finalThreadId,
+        reply_count: 0,
+        is_thread_starter: isThreadStarter,
         created_at: new Date()
       };
       
