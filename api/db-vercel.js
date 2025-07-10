@@ -109,6 +109,38 @@ const company_members = pgTable('company_members', {
   created_at: timestamp('created_at').defaultNow()
 });
 
+const events = pgTable('events', {
+  id: uuid('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type').notNull(),
+  category: text('category').notNull(), 
+  start_date: text('start_date').notNull(),
+  end_date: text('end_date').notNull(),
+  location: text('location').notNull(),
+  duration: text('duration'),
+  max_participants: integer('max_participants').default(50),
+  registered_participants: integer('registered_participants').default(0),
+  status: text('status').default('planning'),
+  description: text('description'),
+  price: text('price').default('0.00'),
+  requirements: text('requirements'),
+  objectives: text('objectives'),
+  instructor: text('instructor'),
+  created_by: uuid('created_by').references(() => users.id),
+  created_at: timestamp('created_at').defaultNow(),
+  updated_at: timestamp('updated_at').defaultNow()
+});
+
+const event_registrations = pgTable('event_registrations', {
+  id: uuid('id').primaryKey(),
+  event_id: uuid('event_id').references(() => events.id).notNull(),
+  user_id: uuid('user_id').references(() => users.id).notNull(),
+  payment_status: text('payment_status').default('pending'),
+  payment_id: text('payment_id'),
+  registered_at: timestamp('registered_at').defaultNow(),
+  payment_data: text('payment_data')
+});
+
 // Configuração do banco para Vercel
 const sql = neon(process.env.DATABASE_URL);
 const db = drizzle(sql);
@@ -181,26 +213,20 @@ export class VercelStorage {
     try {
       console.log('🔍 Buscando roles para usuário:', userId);
       
-      const result = await db
-        .select({
-          role: user_roles.role
-        })
-        .from(user_roles)
-        .where(eq(user_roles.user_id, userId));
+      // Buscar o usuário para verificar o email
+      const user = await this.getUser(userId);
+      console.log('👤 Usuário encontrado:', user?.email);
       
-      const roles = result.map(r => r.role);
-      console.log('✅ Roles encontrados:', roles);
-      
-      // Se não tem roles definidos, usar roles padrão baseado no rank
-      if (roles.length === 0) {
-        const profile = await this.getUserProfile(userId);
-        if (profile?.rank === 'comandante' || profile?.rank === 'major' || profile?.rank === 'coronel') {
-          roles.push('admin');
-        }
-        roles.push('user');
+      // Apenas Carlos Henrique pode ser admin
+      if (user?.email === 'chpsalgado@hotmail.com') {
+        console.log('✅ Admin autorizado: Carlos Henrique');
+        return ['admin', 'user'];
       }
       
-      return roles;
+      // Todos os outros usuários são apenas 'user'
+      console.log('✅ Usuário padrão (sem permissões de admin)');
+      return ['user'];
+      
     } catch (error) {
       console.error('Error getting user roles:', error);
       return ['user']; // Role padrão em caso de erro
@@ -602,51 +628,84 @@ export class VercelStorage {
   // === MÉTODOS PARA EVENTOS ===
   async getEvents() {
     try {
-      console.log('🔍 Buscando eventos...');
+      console.log('🔍 Buscando eventos no banco...');
       
-      // Por enquanto retornar array vazio até criar tabela events
-      return [];
+      const result = await db
+        .select()
+        .from(events)
+        .orderBy(desc(events.created_at));
+      
+      console.log(`✅ Retornando ${result.length} eventos do banco`);
+      return result;
     } catch (error) {
-      console.error('Error getting events:', error);
+      console.error('❌ Erro ao buscar eventos:', error);
       return [];
     }
   }
 
   async createEvent(eventData) {
     try {
-      console.log('🔍 Criando evento...');
+      console.log('🔍 Criando evento no banco de dados...');
+      console.log('📋 Dados do evento:', JSON.stringify(eventData, null, 2));
       
-      // Por enquanto simular criação
-      const event = {
+      const eventToInsert = {
         id: crypto.randomUUID(),
-        ...eventData,
-        created_at: new Date().toISOString()
+        name: eventData.name || eventData.title,
+        type: eventData.type || 'training',
+        category: eventData.category || 'rally',
+        start_date: eventData.start_date,
+        end_date: eventData.end_date,
+        location: eventData.location,
+        duration: eventData.duration || null,
+        max_participants: eventData.max_participants || 50,
+        registered_participants: 0,
+        status: eventData.status || 'planning',
+        description: eventData.description || null,
+        price: eventData.price || '0.00',
+        requirements: eventData.requirements || null,
+        objectives: eventData.objectives || null,
+        instructor: eventData.instructor || null,
+        created_by: eventData.created_by || null,
+        created_at: new Date(),
+        updated_at: new Date()
       };
       
-      console.log('✅ Evento criado (simulado)');
-      return event;
+      console.log('📝 Inserindo evento:', JSON.stringify(eventToInsert, null, 2));
+      
+      const result = await db
+        .insert(events)
+        .values(eventToInsert)
+        .returning();
+      
+      console.log('✅ Evento criado no banco:', JSON.stringify(result[0], null, 2));
+      return result[0];
     } catch (error) {
-      console.error('Error creating event:', error);
-      throw error;
+      console.error('❌ Erro ao criar evento:', error);
+      throw new Error(`Falha ao criar evento: ${error.message}`);
     }
   }
 
   async updateEvent(eventId, data) {
     try {
       console.log(`🔍 Atualizando evento: ${eventId}`);
+      console.log('📝 Dados para atualização:', JSON.stringify(data, null, 2));
       
-      // Por enquanto simular atualização
-      const event = {
-        id: eventId,
+      const updateData = {
         ...data,
-        updated_at: new Date().toISOString()
+        updated_at: new Date()
       };
       
-      console.log('✅ Evento atualizado (simulado)');
-      return event;
+      const result = await db
+        .update(events)
+        .set(updateData)
+        .where(eq(events.id, eventId))
+        .returning();
+      
+      console.log('✅ Evento atualizado no banco:', JSON.stringify(result[0], null, 2));
+      return result[0];
     } catch (error) {
-      console.error('Error updating event:', error);
-      throw error;
+      console.error('❌ Erro ao atualizar evento:', error);
+      throw new Error(`Falha ao atualizar evento: ${error.message}`);
     }
   }
 
@@ -654,12 +713,22 @@ export class VercelStorage {
     try {
       console.log(`🔍 Deletando evento: ${eventId}`);
       
-      // Por enquanto simular delete
-      console.log('✅ Evento deletado (simulado)');
+      // Primeiro deletar registros relacionados
+      await db
+        .delete(event_registrations)
+        .where(eq(event_registrations.event_id, eventId));
+      
+      // Depois deletar o evento
+      const result = await db
+        .delete(events)
+        .where(eq(events.id, eventId))
+        .returning();
+      
+      console.log('✅ Evento deletado do banco:', eventId);
       return true;
     } catch (error) {
-      console.error('Error deleting event:', error);
-      throw error;
+      console.error('❌ Erro ao deletar evento:', error);
+      throw new Error(`Falha ao deletar evento: ${error.message}`);
     }
   }
 
