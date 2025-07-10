@@ -27,7 +27,7 @@ interface Message {
   author_rank?: string;
   author_company?: string;
   author_avatar?: string;
-  replies?: Message[];
+  isReply?: boolean;
 }
 
 const rankColors: Record<string, string> = {
@@ -155,11 +155,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
         await apiPost('/api/messages/general', messageData);
         setNewMessage('');
         
-        // Automatically expand the thread when replying
-        if (replyingTo) {
-          const threadId = replyingTo.thread_id || replyingTo.id;
-          setExpandedThreads(prev => new Set([...prev, threadId]));
-        }
+        // No need to expand threads in linear flow
         
         setReplyingTo(null); // Clear reply state
         await fetchMessages();
@@ -208,44 +204,42 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     setExpandedThreads(newExpandedThreads);
   };
 
-  // Group messages into threads
-  const organizeMessagesIntoThreads = (messages: Message[]): Message[] => {
+  // Organize messages in Instagram-style flow
+  const organizeMessagesInFlow = (messages: Message[]): Message[] => {
+    // Sort all messages by creation time (oldest first for natural flow)
+    const sortedMessages = [...messages].sort((a, b) => 
+      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+    
     const messageMap = new Map<string, Message>();
-    const rootMessages: Message[] = [];
+    const flowMessages: Message[] = [];
     
-    // First pass: create map and identify root messages
-    messages.forEach(msg => {
-      messageMap.set(msg.id, { ...msg, replies: [] });
+    // Create map for quick lookups
+    sortedMessages.forEach(msg => {
+      messageMap.set(msg.id, { ...msg });
+    });
+    
+    // Build flow: original messages followed by their replies
+    sortedMessages.forEach(msg => {
       if (!msg.parent_message_id) {
-        rootMessages.push(messageMap.get(msg.id)!);
+        // This is an original message
+        flowMessages.push(messageMap.get(msg.id)!);
+        
+        // Add all replies to this message immediately after
+        const replies = sortedMessages
+          .filter(reply => reply.parent_message_id === msg.id)
+          .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+        
+        replies.forEach(reply => {
+          flowMessages.push({ ...messageMap.get(reply.id)!, isReply: true });
+        });
       }
     });
     
-    // Second pass: organize replies under parent messages
-    messages.forEach(msg => {
-      if (msg.parent_message_id) {
-        const parent = messageMap.get(msg.parent_message_id);
-        const child = messageMap.get(msg.id);
-        if (parent && child) {
-          parent.replies!.push(child);
-        }
-      }
-    });
-    
-    // Sort root messages by creation time (newest first)
-    rootMessages.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-    
-    // Sort replies within each thread (oldest first)
-    rootMessages.forEach(msg => {
-      if (msg.replies) {
-        msg.replies.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
-      }
-    });
-    
-    return rootMessages;
+    return flowMessages;
   };
 
-  const organizedMessages = organizeMessagesIntoThreads(messages);
+  const organizedMessages = organizeMessagesInFlow(messages);
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('pt-BR', { 
@@ -328,153 +322,100 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             <p className="text-sm">Seja o primeiro a enviar uma mensagem!</p>
           </div>
         ) : (
-          organizedMessages.map((message) => (
-            <div key={message.id} className="group hover:bg-military-black-light/30 p-3 rounded-lg transition-all duration-200">
-              <div className="flex items-start space-x-3">
-                <Avatar className="w-10 h-10 border-2 border-military-gold/30 shrink-0">
-                  <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
-                  <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold">
-                    {(message.author_name || 'U').substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <span className="text-military-gold font-medium hover:underline cursor-pointer">
-                      {message.author_name || 'Usuário'}
-                    </span>
-                    <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-2 py-0.5`}>
-                      {message.author_rank?.toUpperCase() || 'ALUNO'}
-                    </Badge>
-                    <span className="text-xs text-gray-400">
-                      {formatDate(new Date(message.created_at))} às {formatTime(new Date(message.created_at))}
-                    </span>
-                    {message.is_thread_starter && (
-                      <Badge className="bg-blue-600 text-white text-xs px-2 py-0.5">
-                        <MessageSquare size={12} className="mr-1" />
-                        Thread
+          organizedMessages.map((message) => {
+            const isReply = message.isReply;
+            const originalMessage = isReply && message.parent_message_id 
+              ? messages.find(m => m.id === message.parent_message_id)
+              : null;
+
+            return (
+              <div 
+                key={message.id} 
+                className={`group hover:bg-military-black-light/30 rounded-lg transition-all duration-200 ${
+                  isReply ? 'ml-8 mt-2 p-2' : 'p-3'
+                }`}
+              >
+                {isReply && originalMessage && (
+                  <div className="mb-2 p-2 bg-military-black/40 border-l-4 border-blue-400/40 rounded-r text-xs">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <Reply size={12} className="text-blue-400" />
+                      <span className="text-blue-400">Respondendo para</span>
+                      <span className="text-military-gold font-medium">
+                        {originalMessage.author_name}
+                      </span>
+                    </div>
+                    <p className="text-gray-500 italic truncate">
+                      "{originalMessage.content}"
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-start space-x-3">
+                  <Avatar className={`border-2 border-military-gold/30 shrink-0 ${isReply ? 'w-8 h-8' : 'w-10 h-10'}`}>
+                    <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
+                    <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold">
+                      {(message.author_name || 'U').substring(0, 2).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <span className="text-military-gold font-medium hover:underline cursor-pointer">
+                        {message.author_name || 'Usuário'}
+                      </span>
+                      <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-2 py-0.5`}>
+                        {message.author_rank?.toUpperCase() || 'ALUNO'}
                       </Badge>
-                    )}
-                  </div>
-                  
-                  <div className="bg-military-black-light/80 border border-military-gold/20 rounded-lg p-3 mb-2">
-                    <p className="text-gray-300 leading-relaxed">{message.content}</p>
-                  </div>
-                  
-                  <div className="flex items-center space-x-4">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto"
-                    >
-                      <Heart size={16} className="mr-1" />
-                      <span className="text-sm">0</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto"
-                      title="Responder mensagem"
-                      onClick={() => handleReply(message)}
-                    >
-                      <Reply size={16} className="mr-1" />
-                      <span className="text-sm">Responder</span>
-                    </Button>
-                    {message.replies && message.replies.length > 0 && (
+                      <span className="text-xs text-gray-400">
+                        {formatTime(new Date(message.created_at))}
+                        {!isReply && (
+                          <span className="ml-2">
+                            {formatDate(new Date(message.created_at))}
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                    
+                    <div className={`bg-military-black-light/80 border border-military-gold/20 rounded-lg mb-2 ${
+                      isReply ? 'p-2' : 'p-3'
+                    }`}>
+                      <p className={`text-gray-300 leading-relaxed ${isReply ? 'text-sm' : ''}`}>
+                        {message.content}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center space-x-4">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-gray-400 hover:text-military-gold hover:bg-military-gold/10 p-1 h-auto"
-                        onClick={() => toggleThread(message.id)}
+                        className="text-gray-400 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto"
                       >
-                        <MessageSquare size={16} className="mr-1" />
-                        <span className="text-sm">
-                          {expandedThreads.has(message.id) ? 'Ocultar' : 'Ver'} {message.replies.length} {message.replies.length === 1 ? 'resposta' : 'respostas'}
-                        </span>
+                        <Heart size={isReply ? 12 : 16} className="mr-1" />
+                        <span className="text-sm">0</span>
                       </Button>
-                    )}
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-gray-400 hover:text-gray-300 hover:bg-gray-400/10 p-1 h-auto opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      <MoreHorizontal size={16} />
-                    </Button>
-                  </div>
-
-                  {/* Thread Replies */}
-                  {message.replies && message.replies.length > 0 && expandedThreads.has(message.id) && (
-                    <div className="mt-4 ml-6 border-l-2 border-military-gold/30 pl-4 space-y-3">
-                      {message.replies.map((reply) => (
-                        <div key={reply.id} className="group/reply hover:bg-military-black-light/20 p-2 rounded-lg transition-all duration-200">
-                          <div className="flex items-start space-x-3">
-                            <Avatar className="w-8 h-8 border-2 border-military-gold/20 shrink-0">
-                              <AvatarImage src={reply.author_avatar} alt={reply.author_name || 'Usuário'} />
-                              <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
-                                {(reply.author_name || 'U').substring(0, 2).toUpperCase()}
-                              </AvatarFallback>
-                            </Avatar>
-                            
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <span className="text-military-gold font-medium text-sm hover:underline cursor-pointer">
-                                  {reply.author_name || 'Usuário'}
-                                </span>
-                                <Badge className={`${rankColors[reply.author_rank || 'aluno']} text-white text-xs px-1.5 py-0.5`}>
-                                  {reply.author_rank?.toUpperCase() || 'ALUNO'}
-                                </Badge>
-                                <span className="text-xs text-gray-500">
-                                  {formatTime(new Date(reply.created_at))}
-                                </span>
-                              </div>
-                              
-                              {/* Contexto da Mensagem Original */}
-                              <div className="mb-2 p-2 bg-military-black/60 border-l-4 border-blue-400/30 rounded-r">
-                                <div className="flex items-center space-x-2 mb-1">
-                                  <Reply size={12} className="text-blue-400" />
-                                  <span className="text-xs text-blue-400">Respondendo para</span>
-                                  <span className="text-xs text-military-gold font-medium">
-                                    {message.author_name}
-                                  </span>
-                                </div>
-                                <p className="text-xs text-gray-500 italic truncate">
-                                  "{message.content}"
-                                </p>
-                              </div>
-                              
-                              <div className="bg-military-black-light/60 border border-military-gold/10 rounded-lg p-2 mb-1">
-                                <p className="text-gray-300 text-sm leading-relaxed">{reply.content}</p>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
-                                >
-                                  <Heart size={12} className="mr-1" />
-                                  <span>0</span>
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
-                                  onClick={() => handleReply(reply)}
-                                >
-                                  <Reply size={12} className="mr-1" />
-                                  <span>Responder</span>
-                                </Button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto"
+                        title="Responder mensagem"
+                        onClick={() => handleReply(message)}
+                      >
+                        <Reply size={isReply ? 12 : 16} className="mr-1" />
+                        <span className="text-sm">Responder</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-gray-300 hover:bg-gray-400/10 p-1 h-auto opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <MoreHorizontal size={isReply ? 12 : 16} />
+                      </Button>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
         <div ref={messagesEndRef} />
         
