@@ -22,9 +22,7 @@ const Footer = () => {
               Treinando para servir. Capacitamos missionários e líderes através de 
               treinamentos transformadores baseados em princípios cristãos e disciplina militar.
             </p>
-            <div className="mt-4 text-sm text-gray-500">
-              Filiado à IEADI - Igreja Evangélica Assembleia de Deus Itinerante
-            </div>
+            <div className="mt-4 text-sm text-gray-500">ASGOL - ASSOCIAÇÂO GOLGOTA</div>
           </div>
 
           {/* Contatos */}
