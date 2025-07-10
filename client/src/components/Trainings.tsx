@@ -15,18 +15,18 @@ const Trainings = () => {
     },
     {
       icon: Crown,
-      title: 'CPLG - Curso de Liderança',
-      description: 'Formação completa em liderança cristã, submissão e superação pessoal dividido em fases progressivas',
+      title: 'CPLG - Curso Preparatprio de Liderança Gólgota',
+      description: 'Formação completa em liderança gólgota, submissão e superação pessoal',
       features: ['Liderança Estratégica', 'Submissão Consciente', 'Superação de Limites', 'Mentoria Personalizada'],
-      duration: 'Fases Progressivas',
+      duration: '4 dias de treinamento',
       level: 'Intermediário a Avançado'
     },
     {
       icon: Compass,
-      title: 'FEG - Formação Especial',
-      description: 'Treinamento avançado de sobrevivência e a tradicional Gadita Gólgota',
+      title: 'FEG - Força Especial Gólgota',
+      description: 'Treinamento avançado de sobrevivência e tecnicas avançadas',
       features: ['Sobrevivência na Selva', 'Gadita Gólgota', 'Resistência Extrema', 'Formação Elite'],
-      duration: '7 dias intensivos',
+      duration: '2 fases',
       level: 'Avançado'
     }
   ];
