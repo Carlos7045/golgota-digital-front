@@ -73,6 +73,32 @@ app.post('/api/check-email', async (req, res) => {
   }
 });
 
+// Rota para testar conexão com banco
+app.get('/api/test/database', async (req, res) => {
+  try {
+    console.log('🗄️ Testando conexão com banco...');
+    
+    // Tentar buscar usuários existentes
+    const users = await storage.getUsersWithProfiles();
+    
+    console.log(`✅ Banco conectado, encontrados ${users.length} usuários`);
+    
+    res.json({
+      success: true,
+      message: 'Banco conectado com sucesso',
+      userCount: users.length,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('❌ Erro ao conectar com banco:', error);
+    res.status(500).json({ 
+      success: false,
+      error: error.message,
+      stack: error.stack
+    });
+  }
+});
+
 // Middleware de autenticação JWT
 function requireAuth(req, res, next) {
   console.log('🔐 Verificando autenticação JWT...');
