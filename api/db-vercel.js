@@ -813,12 +813,12 @@ export class VercelStorage {
 
   // === MÉTODOS DE GESTÃO DE USUÁRIOS ===
   async createUser(userData) {
-    console.log('🔍 VERSÃO SIMPLIFICADA - Criando usuário...');
+    console.log('🔍 CRIANDO USUÁRIO COMPLETO - Usuário + Perfil...');
     console.log('📋 Dados recebidos:', JSON.stringify(userData, null, 2));
     
     try {
-      // APENAS criar usuário básico - sem perfil por enquanto
-      console.log('📝 Inserindo APENAS usuário básico na tabela users...');
+      // ETAPA 1: Criar usuário básico na tabela users
+      console.log('📝 ETAPA 1: Inserindo usuário básico na tabela users...');
       
       const userToInsert = {
         id: userData.id,
@@ -828,19 +828,72 @@ export class VercelStorage {
         force_password_change: false
       };
       
-      console.log('📝 Objeto para inserção:', JSON.stringify(userToInsert, null, 2));
+      console.log('📝 Dados do usuário:', JSON.stringify(userToInsert, null, 2));
       
       const userResult = await db
         .insert(users)
         .values(userToInsert)
         .returning();
       
-      console.log('✅ SUCCESS: Usuário básico criado:', JSON.stringify(userResult[0], null, 2));
+      console.log('✅ ETAPA 1 CONCLUÍDA: Usuário básico criado:', JSON.stringify(userResult[0], null, 2));
+      
+      // ETAPA 2: Criar perfil do usuário na tabela profiles
+      console.log('📝 ETAPA 2: Criando perfil do usuário...');
+      
+      const profileData = {
+        id: crypto.randomUUID(),
+        user_id: userData.id,
+        name: userData.name || userData.email.split('@')[0],
+        cpf: userData.cpf || '',
+        phone: userData.phone || '',
+        address: userData.address || '',
+        city: userData.city || '',
+        birth_date: userData.birth_date || null,
+        rank: userData.rank || 'aluno',
+        company: userData.company || '',
+        email: userData.email,
+        bio: null,
+        avatar_url: null,
+        specialties: null,
+        joined_at: new Date(),
+        created_at: new Date(),
+        updated_at: new Date()
+      };
+      
+      console.log('📝 Dados do perfil:', JSON.stringify(profileData, null, 2));
+      
+      const profileResult = await db
+        .insert(profiles)
+        .values(profileData)
+        .returning();
+      
+      console.log('✅ ETAPA 2 CONCLUÍDA: Perfil criado:', JSON.stringify(profileResult[0], null, 2));
+      
+      // ETAPA 3: Adicionar à companhia se especificada
+      if (userData.company) {
+        try {
+          console.log('🏢 ETAPA 3: Tentando adicionar à companhia...');
+          const companies = await this.getCompanies();
+          const company = companies.find(c => c.name.toLowerCase().includes(userData.company.toLowerCase()));
+          
+          if (company) {
+            console.log(`🏢 Companhia encontrada: ${company.name}`);
+            await this.addCompanyMember(company.id, userData.id, 'Membro');
+            console.log('✅ ETAPA 3 CONCLUÍDA: Usuário adicionado à companhia');
+          } else {
+            console.log(`⚠️ Companhia "${userData.company}" não encontrada, pulando...`);
+          }
+        } catch (companyError) {
+          console.log('⚠️ Erro ao adicionar à companhia (não crítico):', companyError.message);
+        }
+      }
+      
+      console.log('🎉 PROCESSO COMPLETO: Usuário + Perfil criados com sucesso!');
       
       return userResult[0];
       
     } catch (error) {
-      console.error('❌ ERRO DETALHADO na criação básica:');
+      console.error('❌ ERRO CRÍTICO na criação do usuário:');
       console.error('❌ Nome:', error.name);
       console.error('❌ Mensagem:', error.message);
       console.error('❌ Código:', error.code);
@@ -854,7 +907,7 @@ export class VercelStorage {
         console.error('❌ Constraint violada:', error.constraint);
       }
       
-      throw new Error(`Falha na criação básica: ${error.message}`);
+      throw new Error(`Falha na criação do usuário: ${error.message}`);
     }
   }
 
