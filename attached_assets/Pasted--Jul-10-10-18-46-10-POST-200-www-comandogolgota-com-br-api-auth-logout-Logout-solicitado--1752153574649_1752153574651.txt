@@ -1,0 +1,510 @@
+
+Jul 10 10:18:46.10
+POST
+200
+www.comandogolgota.com.br
+/api/auth/logout
+🔐 Logout solicitado
+Jul 10 10:18:44.92
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:44.56
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:44.56
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:41.61
+PUT
+200
+www.comandogolgota.com.br
+/api/profile
+9
+✅ Perfil atualizado
+Jul 10 10:18:29.17
+POST
+200
+www.comandogolgota.com.br
+/api/profile/avatar
+10
+✅ Avatar atualizado
+Jul 10 10:18:26.23
+GET
+200
+www.comandogolgota.com.br
+/api/activities
+7
+✅ Retornando 2 atividades
+Jul 10 10:18:26.23
+GET
+200
+www.comandogolgota.com.br
+/api/achievements
+7
+✅ Retornando 2 conquistas
+Jul 10 10:18:24.70
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:24.70
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:22.00
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:21.69
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:21.67
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:21.24
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+15
+🚀 Enviando resposta JSON...
+Jul 10 10:18:18.71
+POST
+200
+www.comandogolgota.com.br
+/api/auth/logout
+🔐 Logout solicitado
+Jul 10 10:18:18.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:18.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:15.81
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:15.66
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:15.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:15.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:12.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:12.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:10.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:10.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:09.47
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:09.47
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:06.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:06.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:05.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:05.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:03.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:03.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:00.86
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:18:00.48
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:18:00.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:56.96
+PUT
+200
+www.comandogolgota.com.br
+/api/profile
+9
+✅ Perfil atualizado
+Jul 10 10:17:46.42
+POST
+200
+www.comandogolgota.com.br
+/api/profile/avatar
+10
+✅ Avatar atualizado
+Jul 10 10:17:43.15
+GET
+200
+www.comandogolgota.com.br
+/api/achievements
+7
+✅ Retornando 2 conquistas
+Jul 10 10:17:43.15
+GET
+200
+www.comandogolgota.com.br
+/api/activities
+7
+✅ Retornando 2 atividades
+Jul 10 10:17:41.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:41.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:40.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:40.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:39.41
+POST
+500
+www.comandogolgota.com.br
+/api/messages/general
+9
+❌ Erro ao enviar mensagem: NeonDbError: column "parent_message_id" of relation "general_messages" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.createMessage (file:///var/task/api/db-vercel.js:393:22) at async file:///var/task/api/index.js:612:21 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '72', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_target.c', line: '1066', routine: 'checkInsertTargets', sourceError: undefined }
+Jul 10 10:17:37.45
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:37.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:36.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:36.46
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:34.46
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:31.80
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:31.45
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:31.44
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:31.23
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles: [ 'user' ]
+Jul 10 10:17:27.33
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:25.27
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:24.94
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:24.92
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:23.37
+GET
+200
+www.comandogolgota.com.br
+/api/profile
+11
+✅ Roles: [ 'user' ]
+Jul 10 10:17:11.49
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:10.26
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:10.26
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:07.26
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:07.26
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:06.66
+POST
+500
+www.comandogolgota.com.br
+/api/messages/general
+9
+❌ Erro ao enviar mensagem: NeonDbError: column "parent_message_id" of relation "general_messages" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.createMessage (file:///var/task/api/db-vercel.js:393:22) at async file:///var/task/api/index.js:612:21 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '72', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_target.c', line: '1066', routine: 'checkInsertTargets', sourceError: undefined }
+Jul 10 10:17:06.25
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:06.25
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:04.27
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+12
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:04.26
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:01.57
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:17:01.27
+GET
+200
+www.comandogolgota.com.br
+/api/messages/general
+9
+Error getting channel messages: NeonDbError: column "parent_message_id" does not exist at execute (file:///var/task/node_modules/@neondatabase/serverless/index.mjs:1556:55) at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async NeonHttpPreparedQuery.execute (file:///var/task/node_modules/drizzle-orm/neon-http/session.js:40:20) at async VercelStorage.getChannelMessages (file:///var/task/api/db-vercel.js:311:22) at async file:///var/task/api/index.js:596:22 { severity: 'ERROR', code: '42703', detail: undefined, hint: undefined, position: '47', internalPosition: undefined, internalQuery: undefined, where: undefined, schema: undefined, table: undefined, column: undefined, dataType: undefined, constraint: undefined, file: 'parse_relation.c', line: '3722', routine: 'errorMissingColumn', sourceError: undefined }
+Jul 10 10:17:01.24
+GET
+200
+www.comandogolgota.com.br
+/api/users/online
+9
+✅ Retornando 6 usuários online
+Jul 10 10:16:59.92
+POST
+200
+www.comandogolgota.com.br
+/api/auth/login
+17
+🚀 Enviando resposta JSON...
