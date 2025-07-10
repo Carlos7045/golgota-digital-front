@@ -1,0 +1,31 @@
+Jul 10 10:14:23.33
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 10:14:02.86
+POST
+500
+www.comandogolgota.com.br
+/api/auth/login
+SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 10:13:59.07
+GET
+500
+www.comandogolgota.com.br
+/api/profile
+SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 10:13:55.36
+GET
+500
+golgota-digital-front-kcn2j0djk-carlos-salgados-projects.vercel.app
+/api/profile
+SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+Jul 10 10:13:55.34
+GET
+500
+golgota-digital-front-kcn2j0djk-carlos-salgados-projects.vercel.app
+/api/profile
+SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue. SyntaxError: Identifier 'sql' has already been declared at compileSourceTextModule (node:internal/modules/esm/utils:344:16) at ModuleLoader.moduleStrategy (node:internal/modules/esm/translators:105:18) at #translate (node:internal/modules/esm/loader:534:12) at ModuleLoader.loadAndTranslate (node:internal/modules/esm/loader:581:27) Node.js process exited with exit status: 1. The logs above can help with debugging the issue.
+No more logs to show within selected timeline
