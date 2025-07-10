@@ -5,6 +5,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import CommunityHeader from '@/components/community/CommunityHeader';
 import CommunitySidebar from '@/components/community/CommunitySidebar';
 import ChannelContent from '@/components/community/ChannelContent';
+import MainContent from '@/components/community/MainContent';
+import CompactChat from '@/components/community/CompactChat';
 
 export type UserRank = 'aluno' | 'soldado' | 'cabo' | 'sargento' | 'tenente' | 'capitao' | 'major' | 'coronel' | 'comandante' | 'admin';
 
@@ -63,17 +65,32 @@ const Community = () => {
         onToggle={() => setSidebarOpen(!sidebarOpen)}
       />
       
-      <div className="flex-1 flex flex-col">
-        <CommunityHeader 
-          user={user}
-          activeChannel={activeChannel}
-          onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
-        />
+      <div className="flex-1 flex">
+        {/* Área Principal - Notícias e Conteúdo */}
+        <div className="flex-1 flex flex-col">
+          <CommunityHeader 
+            user={user}
+            activeChannel={activeChannel}
+            onMenuToggle={() => setSidebarOpen(!sidebarOpen)}
+          />
+          
+          {/* Conteúdo baseado no canal ativo */}
+          {activeChannel === 'geral' ? (
+            <MainContent user={user} />
+          ) : (
+            <ChannelContent 
+              user={user}
+              channel={activeChannel}
+            />
+          )}
+        </div>
         
-        <ChannelContent 
-          user={user}
-          channel={activeChannel}
-        />
+        {/* Chat Sidebar - Só aparece no canal geral */}
+        {activeChannel === 'geral' && (
+          <div className="w-80 border-l border-military-gold/20 bg-military-black-light">
+            <CompactChat user={user} />
+          </div>
+        )}
       </div>
     </div>
   );

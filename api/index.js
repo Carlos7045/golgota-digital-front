@@ -1633,6 +1633,121 @@ app.post('/api/webhooks/asaas', async (req, res) => {
   }
 });
 
+// === ANÚNCIOS E NOTÍCIAS ===
+
+// API para anúncios
+app.get('/api/announcements', async (req, res) => {
+  try {
+    console.log('📢 Buscando anúncios...');
+    
+    // Mock data para anúncios
+    const announcements = [
+      {
+        id: '1',
+        title: 'Bem-vindos ao Comando Gólgota',
+        content: 'Estamos felizes em tê-los conosco nesta jornada de crescimento e disciplina militar cristã. Este é o espaço oficial para comunicações importantes.',
+        type: 'general',
+        author_name: 'Carlos Henrique Pereira Salgado',
+        author_rank: 'admin',
+        created_at: new Date(Date.now() - 86400000).toISOString(), // 1 dia atrás
+        is_pinned: true
+      },
+      {
+        id: '2',
+        title: 'Próximo Acampamento - Reservem a Data',
+        content: 'Nosso próximo acampamento será nos dias 25-27 de julho. Mais informações sobre inscrições serão divulgadas em breve. Preparem-se para uma experiência transformadora!',
+        type: 'event',
+        author_name: 'Carlos Henrique Pereira Salgado',
+        author_rank: 'admin',
+        created_at: new Date(Date.now() - 3600000).toISOString(), // 1 hora atrás
+        is_pinned: false
+      }
+    ];
+    
+    console.log(`✅ Retornando ${announcements.length} anúncios`);
+    res.json({ announcements });
+  } catch (error) {
+    console.error('❌ Erro ao buscar anúncios:', error);
+    res.status(500).json({ error: 'Erro ao buscar anúncios' });
+  }
+});
+
+app.post('/api/announcements', requireAuth, async (req, res) => {
+  try {
+    console.log('📢 Criando novo anúncio...');
+    
+    // Verificar se é admin
+    const userRoles = await storage.getUserRoles(req.user.id);
+    if (!userRoles.includes('admin')) {
+      return res.status(403).json({ error: 'Acesso negado' });
+    }
+
+    const { title, content, type = 'general', is_pinned = false } = req.body;
+    const profile = await storage.getUserProfile(req.user.id);
+    
+    const announcement = {
+      id: `ann_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+      title,
+      content,
+      type,
+      is_pinned,
+      author_name: profile?.name || 'Admin',
+      author_rank: profile?.rank || 'admin',
+      created_at: new Date().toISOString()
+    };
+    
+    console.log('✅ Anúncio criado');
+    res.status(201).json({ announcement });
+  } catch (error) {
+    console.error('❌ Erro ao criar anúncio:', error);
+    res.status(500).json({ error: 'Erro ao criar anúncio' });
+  }
+});
+
+// API para atividades recentes
+app.get('/api/activities/recent', async (req, res) => {
+  try {
+    console.log('📊 Buscando atividades recentes...');
+    
+    const activities = [
+      {
+        id: '1',
+        type: 'achievement',
+        description: 'foi promovido ao posto de Soldado',
+        user_name: 'João Silva',
+        created_at: new Date(Date.now() - 1800000).toISOString() // 30 min atrás
+      },
+      {
+        id: '2',
+        type: 'event_registration',
+        description: 'se inscreveu no próximo acampamento',
+        user_name: 'Maria Santos',
+        created_at: new Date(Date.now() - 3600000).toISOString() // 1 hora atrás
+      },
+      {
+        id: '3',
+        type: 'payment',
+        description: 'confirmou o pagamento da mensalidade',
+        user_name: 'Pedro Costa',
+        created_at: new Date(Date.now() - 7200000).toISOString() // 2 horas atrás
+      },
+      {
+        id: '4',
+        type: 'promotion',
+        description: 'foi promovido ao posto de Cabo',
+        user_name: 'Ana Oliveira',
+        created_at: new Date(Date.now() - 10800000).toISOString() // 3 horas atrás
+      }
+    ];
+    
+    console.log(`✅ Retornando ${activities.length} atividades`);
+    res.json({ activities });
+  } catch (error) {
+    console.error('❌ Erro ao buscar atividades:', error);
+    res.status(500).json({ error: 'Erro ao buscar atividades' });
+  }
+});
+
 // Teste de conectividade
 app.get('/api/health', async (req, res) => {
   try {
