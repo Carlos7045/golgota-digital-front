@@ -61,7 +61,7 @@ const Login = () => {
                   value={loginData.emailOrCpf}
                   onChange={(e) => setLoginData(prev => ({ ...prev, emailOrCpf: e.target.value }))}
                   className="bg-military-black border-military-gold/30 text-white"
-                  placeholder="000.000.000-00 ou seu@email.com"
+                  placeholder="Digite seu CPF ou Email"
                   required
                 />
               </div>

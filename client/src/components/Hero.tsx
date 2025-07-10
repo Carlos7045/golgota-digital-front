@@ -21,14 +21,14 @@ const Hero = () => {
 
           {/* Main Title */}
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white mb-6 leading-tight">
-            COMANDO
+            COMUNIDADE
             <span className="text-military-gold block">GÓLGOTA</span>
           </h1>
 
           {/* Subtitle */}
           <p className="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto leading-relaxed">
-            Participe dos nossos treinamentos missionários e acampamentos para 
-            <span className="text-military-gold font-semibold"> fortalecer sua fé e liderança</span>
+            Participe de nossa comunidade Gólgota para não perder nenhuma programação 
+            <span className="text-military-gold font-semibold"> e fortalecer sua fé e liderança</span>
           </p>
 
           {/* CTA Buttons */}
@@ -60,7 +60,7 @@ const Hero = () => {
               <div className="text-gray-400">Membros Treinados</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-military-gold">50+</div>
+              <div className="text-3xl font-bold text-military-gold">456+</div>
               <div className="text-gray-400">Acampamentos Realizados</div>
             </div>
           </div>
