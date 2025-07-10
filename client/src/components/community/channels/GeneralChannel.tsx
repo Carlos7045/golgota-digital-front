@@ -57,13 +57,19 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const { toast } = useToast();
 
   // Use TanStack Query para buscar mensagens
-  const { data: messagesData, isLoading: loading, refetch } = useQuery({
+  const { data: messagesData, isLoading: loading, refetch, error } = useQuery({
     queryKey: ['api', '/api/messages/general'],
     refetchInterval: 30000, // Atualiza a cada 30 segundos
     retry: 1,
   });
 
   const messages = messagesData?.messages || [];
+  
+  // Debug: Log dos dados recebidos
+  console.log('🔍 Debug - Messages data:', messagesData);
+  console.log('🔍 Debug - Messages array:', messages);
+  console.log('🔍 Debug - Loading:', loading);
+  console.log('🔍 Debug - Error:', error);
 
   // Use TanStack Query para buscar usuários online
   const { data: onlineUsersData } = useQuery({
@@ -256,11 +262,21 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           <div className="text-center text-gray-400 py-8">
             Carregando mensagens...
           </div>
+        ) : error ? (
+          <div className="text-center text-red-400 py-8">
+            <MessageSquare className="mx-auto mb-4" size={48} />
+            <p>Erro ao carregar mensagens</p>
+            <p className="text-sm">Erro: {(error as any)?.message || 'Erro desconhecido'}</p>
+            <Button onClick={() => refetch()} className="mt-2 bg-military-gold text-black">
+              Tentar novamente
+            </Button>
+          </div>
         ) : messages.length === 0 ? (
           <div className="text-center text-gray-400 py-8">
             <MessageSquare className="mx-auto mb-4" size={48} />
             <p>Nenhuma mensagem ainda.</p>
             <p className="text-sm">Seja o primeiro a enviar uma mensagem!</p>
+            <p className="text-xs mt-2">Debug: messagesData = {JSON.stringify(messagesData)}</p>
           </div>
         ) : (
           organizedMessages.map((message) => {
