@@ -87,7 +87,7 @@ const Community = () => {
         
         {/* Chat Sidebar - Só aparece no canal geral */}
         {activeChannel === 'geral' && (
-          <div className="w-80 border-l border-military-gold/20 bg-military-black-light">
+          <div className="w-80 border-l border-military-gold/20 bg-military-black-light h-screen flex flex-col">
             <CompactChat user={user} />
           </div>
         )}
