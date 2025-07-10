@@ -76,13 +76,8 @@ const Profile = () => {
 
   const fetchActivities = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
       const response = await fetch('/api/activities', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include'
       });
 
       if (response.ok) {
@@ -96,13 +91,8 @@ const Profile = () => {
 
   const fetchAchievements = async () => {
     try {
-      const token = localStorage.getItem('authToken');
-      if (!token) return;
-
       const response = await fetch('/api/achievements', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
+        credentials: 'include'
       });
 
       if (response.ok) {

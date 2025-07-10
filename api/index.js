@@ -4,7 +4,39 @@ import bcrypt from 'bcryptjs';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import crypto from 'crypto';
+import multer from 'multer';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { VercelStorage } from './db-vercel.js';
+
+// ES modules fix
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Configurar multer para upload de arquivos
+const multerStorage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.join(__dirname, '../public/uploads'));
+  },
+  filename: function (req, file, cb) {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, 'avatar-' + uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage: multerStorage,
+  limits: { 
+    fileSize: 5 * 1024 * 1024 // 5MB limit
+  },
+  fileFilter: function (req, file, cb) {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Apenas imagens são permitidas!'), false);
+    }
+  }
+});
 
 const app = express();
 const storage = new VercelStorage();
@@ -31,6 +63,9 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+
+// Servir arquivos estáticos (avatars)
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'comando-golgota-jwt-secret-2024';
@@ -639,35 +674,65 @@ app.get('/api/payments/history', requireAuth, async (req, res) => {
   }
 });
 
-// Criar assinatura
+// Criar pagamento PIX/Boleto
 app.post('/api/payments/create-subscription', requireAuth, async (req, res) => {
   try {
-    console.log('💳 Criando assinatura...');
+    console.log('💳 Criando pagamento para mensalidade...');
     
     const { billingType } = req.body;
     const profile = await storage.getUserProfile(req.user.id);
+    const user = await storage.getUser(req.user.id);
     
-    if (!profile) {
+    if (!profile || !user) {
       return res.status(400).json({ error: 'Perfil não encontrado' });
     }
 
-    // Criar assinatura via Asaas
-    const subscriptionData = {
-      customer: profile.email,
-      billingType: billingType || 'PIX',
-      nextDueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    console.log('📋 Dados do pagamento:', { billingType, email: user.email, cpf: profile.cpf });
+
+    // Simular criação de pagamento (demo)
+    const paymentId = `payment_${Date.now()}`;
+    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    let paymentUrl;
+    if (billingType === 'PIX') {
+      // URL de exemplo para PIX
+      paymentUrl = `https://sandbox.asaas.com/checkout/${paymentId}/pix`;
+    } else if (billingType === 'BOLETO') {
+      // URL de exemplo para Boleto
+      paymentUrl = `https://sandbox.asaas.com/checkout/${paymentId}/boleto`;
+    }
+
+    const paymentData = {
+      id: paymentId,
       value: 10.00,
-      cycle: 'MONTHLY',
-      description: 'Mensalidade Comando Gólgota'
+      status: 'PENDING',
+      billing_type: billingType,
+      due_date: dueDate,
+      description: 'Mensalidade Comando Gólgota',
+      payment_url: paymentUrl,
+      pix_code: billingType === 'PIX' ? `00020126580014br.gov.bcb.pix0136${paymentId}${Math.random().toString(36).substring(7)}` : null
     };
 
-    const subscription = await storage.createAsaasSubscription(subscriptionData);
-    console.log('✅ Assinatura criada com sucesso');
+    // Salvar no banco para demonstração
+    await storage.createAsaasPayment({
+      user_id: req.user.id,
+      asaas_payment_id: paymentId,
+      value: '10.00',
+      status: 'PENDING',
+      billing_type: billingType,
+      due_date: new Date(dueDate),
+      description: 'Mensalidade Comando Gólgota'
+    });
+
+    console.log('✅ Pagamento criado com sucesso:', paymentData);
     
-    res.json(subscription);
+    res.json({ 
+      payment: paymentData,
+      redirect_url: paymentUrl
+    });
   } catch (error) {
-    console.error('❌ Erro ao criar assinatura:', error);
-    res.status(500).json({ error: 'Erro ao criar assinatura' });
+    console.error('❌ Erro ao criar pagamento:', error);
+    res.status(500).json({ error: 'Erro ao criar pagamento' });
   }
 });
 
@@ -1044,6 +1109,38 @@ app.get('/api/profiles', requireAuth, async (req, res) => {
 });
 
 // === ROTAS DE PERFIL ADICIONAIS ===
+
+// Upload de avatar
+app.post('/api/profile/avatar', requireAuth, upload.single('avatar'), async (req, res) => {
+  try {
+    console.log('📸 Upload de avatar iniciado...');
+    
+    if (!req.file) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado' });
+    }
+    
+    console.log('📁 Arquivo recebido:', req.file.filename);
+    
+    // Construir URL do avatar
+    const avatarUrl = `/uploads/${req.file.filename}`;
+    
+    // Atualizar perfil com novo avatar
+    const updatedProfile = await storage.updateProfile(req.user.id, { 
+      avatar_url: avatarUrl 
+    });
+    
+    console.log('✅ Avatar atualizado:', avatarUrl);
+    
+    res.json({ 
+      message: 'Avatar atualizado com sucesso',
+      avatar_url: avatarUrl,
+      profile: updatedProfile
+    });
+  } catch (error) {
+    console.error('❌ Erro no upload de avatar:', error);
+    res.status(500).json({ error: 'Erro ao fazer upload do avatar' });
+  }
+});
 
 // Atualizar perfil 
 app.put('/api/profile', requireAuth, async (req, res) => {

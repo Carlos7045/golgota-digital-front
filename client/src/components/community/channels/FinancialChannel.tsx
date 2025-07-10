@@ -116,16 +116,27 @@ const FinancialChannel = () => {
   const createSubscription = async (billingType: 'BOLETO' | 'PIX') => {
     setCreating(true);
     try {
-      await apiPost('/api/payments/create-subscription', { billingType });
-      toast({
-        title: "Assinatura criada",
-        description: "Sua assinatura mensal foi criada com sucesso!"
-      });
+      const response = await apiPost('/api/payments/create-subscription', { billingType });
+      
+      if (response.redirect_url) {
+        // Redirecionar para a página de pagamento
+        window.open(response.redirect_url, '_blank');
+        toast({
+          title: "Redirecionando para pagamento",
+          description: `Você será direcionado para a página de pagamento ${billingType}!`
+        });
+      } else {
+        toast({
+          title: "Pagamento criado",
+          description: "Seu pagamento foi criado com sucesso!"
+        });
+      }
+      
       await fetchPaymentData();
     } catch (error: any) {
       toast({
         title: "Erro",
-        description: error.message || "Erro ao criar assinatura",
+        description: error.message || "Erro ao criar pagamento",
         variant: "destructive"
       });
     } finally {
