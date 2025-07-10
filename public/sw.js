@@ -179,9 +179,10 @@ async function staleWhileRevalidateStrategy(request) {
   const cache = await caches.open(DYNAMIC_CACHE_NAME);
   const cachedResponse = await cache.match(request);
   
-  // Buscar na rede em background
+  // Buscar na rede em background  
   const networkPromise = fetch(request).then(networkResponse => {
-    if (networkResponse.status === 200) {
+    // Only cache GET requests with successful responses
+    if (networkResponse.status === 200 && request.method === 'GET') {
       cache.put(request, networkResponse.clone());
     }
     return networkResponse;

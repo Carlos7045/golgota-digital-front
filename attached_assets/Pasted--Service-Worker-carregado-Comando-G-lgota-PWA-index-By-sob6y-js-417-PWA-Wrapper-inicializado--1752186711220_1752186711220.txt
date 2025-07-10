@@ -1,0 +1,27 @@
+🚀 Service Worker carregado - Comando Gólgota PWA
+index-By_sob6y.js:417 🚀 PWA Wrapper inicializado - Comando Gólgota
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 Service Worker registrado com sucesso: https://www.comandogolgota.com.br/
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: Object
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13Understand this error
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: {user: {…}, profile: {…}, roles: Array(1), token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2O…DE3fQ.djnKURsjhsFiPUbRev1k07LbHGq2PwsP_BXUlDi2YIk', message: 'Login realizado com sucesso'}
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: {profile: null, roles: Array(1)}
+sw.js:185 Uncaught (in promise) TypeError: Failed to execute 'put' on 'Cache': Request method 'POST' is unsupported
+    at sw.js:185:13
+(anonymous) @ sw.js:185
+Promise.then
+staleWhileRevalidateStrategy @ sw.js:183
+await in staleWhileRevalidateStrategy
+(anonymous) @ sw.js:95Understand this error
+index-By_sob6y.js:417 🔍 AuthContext - Attempting login...
+index-By_sob6y.js:417 🔍 AuthContext - Login response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Login successful: {user: {…}, profile: {…}, roles: Array(1), token: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2O…DU4fQ.fIsE6-NawenNWuW5UcAgOSWYMTTPGwcTjap-ExliJjE', message: 'Login realizado com sucesso'}message: "Login realizado com sucesso"profile: {id: '78700f66-05ff-467d-85a2-cb705af3908d', user_id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', name: 'Carlos Henrique Pereira Salgado', cpf: '05018022310', birth_date: '1995-09-23', …}roles: ['admin']token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjA2OGIzZWY4LWNlYjktNDFkZi04MWMzLWFjZWVjMjVhNWZmYyIsImVtYWlsIjoiY2hwc2FsZ2Fkb0Bob3RtYWlsLmNvbSIsImlhdCI6MTc1MjE4NjY1OCwiZXhwIjoxNzUyMjczMDU4fQ.fIsE6-NawenNWuW5UcAgOSWYMTTPGwcTjap-ExliJjE"user: {id: '068b3ef8-ceb9-41df-81c3-aceec25a5ffc', email: 'chpsalgado@hotmail.com', force_password_change: false, created_at: '2025-07-07T03:59:26.934Z'}[[Prototype]]: Object
+index-By_sob6y.js:417 🔍 AuthContext - Fetching profile...
+index-By_sob6y.js:417 🔍 AuthContext - Profile response: 200
+index-By_sob6y.js:417 🔍 AuthContext - Profile data: {profile: null, roles: Array(1)}

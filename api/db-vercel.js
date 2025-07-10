@@ -229,7 +229,7 @@ export class VercelStorage {
 
   async getUserRoles(userId) {
     try {
-      console.log('🔍 Buscando roles para usuário:', userId);
+      console.log('🔍 PRODUCTION ADMIN FIX - Buscando roles para usuário:', userId);
       
       // Buscar o usuário para verificar o email
       const user = await this.getUser(userId);
@@ -239,11 +239,11 @@ export class VercelStorage {
       const profile = await this.getUserProfile(userId);
       console.log('👤 Profile encontrado:', profile?.email);
       
-      // Carlos Henrique é admin - verificar tanto user quanto profile
+      // CRITICAL ADMIN FIX: Carlos Henrique é admin - verificar tanto user quanto profile
       if ((user?.email === 'chpsalgado@hotmail.com') || 
           (profile?.email === 'chpsalgado@hotmail.com') ||
           (profile?.cpf === '05018022310')) {
-        console.log('✅ Admin autorizado: Carlos Henrique - ROLES: [ admin ]');
+        console.log('✅ ADMIN AUTORIZADO: Carlos Henrique - ROLES: [ admin ]');
         return ['admin'];
       }
       
@@ -1207,4 +1207,4 @@ export class VercelStorage {
       return [];
     }
   }
-}
+}// PRODUCTION FIX 1752186835
