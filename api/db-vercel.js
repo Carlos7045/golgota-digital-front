@@ -308,29 +308,37 @@ export class VercelStorage {
     try {
       console.log(`🔍 Buscando mensagens do canal: ${channel}`);
       
-      // Buscar mensagens reais da tabela general_messages
+      // Buscar mensagens reais da tabela general_messages usando schema correto
       const result = await db
         .select({
           id: general_messages.id,
-          title: general_messages.title,
-          body: general_messages.body,
-          author_id: general_messages.author_id,
-          created_at: general_messages.created_at,
-          views: general_messages.views,
-          interactions: general_messages.interactions,
-          author_name: general_messages.author_name,
-          author_rank: general_messages.author_rank,
-          author_company: general_messages.author_company
+          user_id: general_messages.user_id,
+          channel: general_messages.channel,
+          content: general_messages.content,
+          created_at: general_messages.created_at
         })
         .from(general_messages)
+        .where(eq(general_messages.channel, channel))
         .orderBy(desc(general_messages.created_at))
         .limit(50);
       
-      console.log(`✅ Encontradas ${result.length} mensagens reais`);
-      return result;
+      // Buscar perfis dos autores das mensagens
+      const messagesWithAuthors = [];
+      for (const message of result) {
+        const authorProfile = await this.getUserProfile(message.user_id);
+        messagesWithAuthors.push({
+          ...message,
+          author_name: authorProfile?.name || 'Usuário',
+          author_rank: authorProfile?.rank || 'aluno',
+          author_company: authorProfile?.company || 'N/A',
+          author_avatar: authorProfile?.avatar_url || null
+        });
+      }
+      
+      console.log(`✅ Encontradas ${messagesWithAuthors.length} mensagens reais`);
+      return messagesWithAuthors;
     } catch (error) {
       console.error('Error getting channel messages:', error);
-      // Se tabela não existir, retornar array vazio
       return [];
     }
   }
@@ -339,23 +347,12 @@ export class VercelStorage {
     try {
       console.log(`🔍 Criando mensagem no canal: ${channel}`);
       
-      // Buscar dados do autor
-      const authorProfile = await this.getUserProfile(userId);
-      if (!authorProfile) {
-        throw new Error('Perfil do autor não encontrado');
-      }
-      
-      // Inserir mensagem real na tabela general_messages
+      // Inserir mensagem real na tabela general_messages usando schema correto
       const messageData = {
         id: crypto.randomUUID(),
-        title: 'Mensagem no Canal Geral',
-        body: messageContent,
-        author_id: userId,
-        author_name: authorProfile.name,
-        author_rank: authorProfile.rank || 'aluno',
-        author_company: authorProfile.company || 'N/A',
-        views: 0,
-        interactions: 0,
+        user_id: userId,
+        channel: channel,
+        content: messageContent,
         created_at: new Date()
       };
       
