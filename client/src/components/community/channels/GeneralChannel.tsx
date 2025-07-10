@@ -291,19 +291,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           </div>
         ) : (
           organizedMessages.map((message) => {
-            // Debug para entender o problema
             const isMyMessage = String(message.user_id) === String(user?.id);
-            if (messages.length > 0) {
-              console.log('Debug user comparison:', {
-                messageUserId: message.user_id,
-                messageUserIdType: typeof message.user_id,
-                currentUserId: user?.id,
-                currentUserIdType: typeof user?.id,
-                userObject: user,
-                isMyMessage: isMyMessage,
-                stringComparison: `"${String(message.user_id)}" === "${String(user?.id)}"`
-              });
-            }
             const originalMessage = message.parent_message_id 
               ? messages.find(m => m.id === message.parent_message_id)
               : null;
@@ -311,45 +299,84 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
             return (
               <div 
                 key={message.id} 
-                className={`mb-4 flex group ${isMyMessage ? 'justify-end' : 'justify-start'}`}
+                className={`mb-3 group ${isMyMessage ? 'flex justify-end' : 'flex justify-start'}`}
               >
-                <div className={`max-w-[85%] ${isMyMessage ? 'order-2' : 'order-1'}`}>
-                  
-                  {/* Avatar para mensagens de outros (lado esquerdo) */}
-                  <div className="flex items-start space-x-3">
-                    {!isMyMessage && (
-                      <Avatar className="w-8 h-8 border-2 border-military-gold/30 shrink-0 mt-1">
-                        <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
-                        <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
-                          {(message.author_name || 'U').substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                      </Avatar>
+                {isMyMessage ? (
+                  // Minhas mensagens (lado direito)
+                  <div className="max-w-[70%]">
+                    {/* Mensagem citada para respostas */}
+                    {originalMessage && (
+                      <div className="mb-2 p-2 rounded-lg bg-black/20 border-l-4 border-black/30 text-xs text-black/80">
+                        <div className="flex items-center space-x-1 mb-1">
+                          <span className="font-medium text-black">
+                            {originalMessage.author_name}
+                          </span>
+                        </div>
+                        <p className="italic truncate">
+                          {originalMessage.content}
+                        </p>
+                      </div>
                     )}
                     
+                    {/* Balão da mensagem */}
+                    <div className="bg-military-gold text-black rounded-2xl rounded-br-md p-3 shadow-lg">
+                      <p className="leading-relaxed text-sm">
+                        {message.content}
+                      </p>
+                      <div className="text-xs mt-2 flex items-center justify-end gap-1 text-black/70">
+                        <span>{formatTime(new Date(message.created_at))}</span>
+                        <span className="text-black/60">✓✓</span>
+                      </div>
+                    </div>
+
+                    {/* Botões de ação */}
+                    <div className="mt-2 flex justify-end space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-500 hover:text-red-400 hover:bg-red-400/10 p-1 h-auto text-xs"
+                      >
+                        <Heart size={12} className="mr-1" />
+                        <span>0</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-500 hover:text-blue-400 hover:bg-blue-400/10 p-1 h-auto text-xs"
+                        title="Responder mensagem"
+                        onClick={() => handleReply(message)}
+                      >
+                        <Reply size={12} className="mr-1" />
+                        <span>Responder</span>
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Mensagens dos outros (lado esquerdo)
+                  <div className="max-w-[70%] flex items-start space-x-3">
+                    <Avatar className="w-8 h-8 border-2 border-military-gold/30 shrink-0 mt-1">
+                      <AvatarImage src={message.author_avatar} alt={message.author_name || 'Usuário'} />
+                      <AvatarFallback className="bg-military-gold/20 text-military-gold font-semibold text-xs">
+                        {(message.author_name || 'U').substring(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    
                     <div className="flex-1">
-                      {/* Nome do usuário (apenas para mensagens de outros) */}
-                      {!isMyMessage && (
-                        <div className="flex items-center space-x-2 mb-1">
-                          <span className="text-military-gold font-medium text-sm">
-                            {message.author_name || 'Usuário'}
-                          </span>
-                          <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-1.5 py-0.5`}>
-                            {message.author_rank?.toUpperCase() || 'ALUNO'}
-                          </Badge>
-                        </div>
-                      )}
+                      {/* Nome do usuário */}
+                      <div className="flex items-center space-x-2 mb-1">
+                        <span className="text-military-gold font-medium text-sm">
+                          {message.author_name || 'Usuário'}
+                        </span>
+                        <Badge className={`${rankColors[message.author_rank || 'aluno']} text-white text-xs px-1.5 py-0.5`}>
+                          {message.author_rank?.toUpperCase() || 'ALUNO'}
+                        </Badge>
+                      </div>
                       
-                      {/* Mensagem citada (quando é resposta) */}
+                      {/* Mensagem citada para respostas */}
                       {originalMessage && (
-                        <div className={`mb-2 p-2 rounded-lg border-l-4 text-xs ${
-                          isMyMessage 
-                            ? 'bg-black/20 border-black/30 text-black/80' 
-                            : 'bg-gray-600/50 border-gray-500 text-gray-300'
-                        }`}>
+                        <div className="mb-2 p-2 rounded-lg bg-gray-600/50 border-l-4 border-gray-500 text-xs text-gray-300">
                           <div className="flex items-center space-x-1 mb-1">
-                            <span className={`font-medium ${
-                              isMyMessage ? 'text-black' : 'text-gray-200'
-                            }`}>
+                            <span className="font-medium text-gray-200">
                               {originalMessage.author_name}
                             </span>
                           </div>
@@ -360,26 +387,17 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       )}
                       
                       {/* Balão da mensagem */}
-                      <div className={`rounded-2xl p-3 shadow-lg max-w-full break-words ${
-                        isMyMessage 
-                          ? 'bg-military-gold text-black rounded-br-md ml-auto' 
-                          : 'bg-gray-700 text-white rounded-bl-md'
-                      }`}>
+                      <div className="bg-gray-700 text-white rounded-2xl rounded-bl-md p-3 shadow-lg">
                         <p className="leading-relaxed text-sm">
                           {message.content}
                         </p>
-                        <div className={`text-xs mt-2 flex items-center justify-end gap-1 ${
-                          isMyMessage ? 'text-black/70' : 'text-gray-400'
-                        }`}>
+                        <div className="text-xs mt-2 flex items-center justify-end gap-1 text-gray-400">
                           <span>{formatTime(new Date(message.created_at))}</span>
-                          {isMyMessage && (
-                            <span className="text-black/60 text-xs">✓✓</span>
-                          )}
                         </div>
                       </div>
-                      
-                      {/* Botões de ação (aparece no hover) */}
-                      <div className={`mt-2 flex space-x-2 ${isMyMessage ? 'justify-end' : 'justify-start'} opacity-0 group-hover:opacity-100 transition-opacity`}>
+
+                      {/* Botões de ação */}
+                      <div className="mt-2 flex justify-start space-x-2 opacity-0 group-hover:opacity-100 transition-opacity">
                         <Button
                           variant="ghost"
                           size="sm"
@@ -401,7 +419,7 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
                       </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
             );
           })
