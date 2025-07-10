@@ -52,6 +52,10 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
   const [replyingTo, setReplyingTo] = useState<Message | null>(null);
   const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isUserScrolling, setIsUserScrolling] = useState(false);
+  const [hasNewMessages, setHasNewMessages] = useState(false);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const previousMessageCount = useRef(0);
 
   const fetchMessages = async () => {
     try {
@@ -70,40 +74,53 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
     }
   };
 
-  // Auto-refresh messages every 5 seconds for better real-time experience
-  useEffect(() => {
-    const interval = setInterval(() => {
-      fetchMessages();
-      fetchOnlineUsers();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
   const { toast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    // Só rola automaticamente se o usuário estiver próximo do final da página
-    const container = messagesEndRef.current?.parentElement;
+  // Detecta se o usuário está rolando manualmente
+  const handleScroll = () => {
+    const container = messagesContainerRef.current;
     if (container) {
-      const isNearBottom = container.scrollTop + container.clientHeight >= container.scrollHeight - 100;
-      if (isNearBottom) {
-        scrollToBottom();
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isNearBottom = scrollTop + clientHeight >= scrollHeight - 50;
+      setIsUserScrolling(!isNearBottom);
+    }
+  };
+
+  // Detecta novas mensagens e rola automaticamente se apropriado
+  useEffect(() => {
+    if (messages.length > previousMessageCount.current && previousMessageCount.current > 0) {
+      if (isUserScrolling) {
+        setHasNewMessages(true);
+      } else {
+        const timer = setTimeout(() => {
+          scrollToBottom();
+        }, 100);
+        return () => clearTimeout(timer);
       }
     }
-  }, [messages]);
+    previousMessageCount.current = messages.length;
+  }, [messages, isUserScrolling]);
 
+  const scrollToBottomAndClearNotification = () => {
+    setHasNewMessages(false);
+    setIsUserScrolling(false);
+    scrollToBottom();
+  };
+
+  // Carrega mensagens iniciais e configura refresh menos frequente
   useEffect(() => {
     fetchMessages();
     fetchOnlineUsers();
     
-    // Auto-refresh messages every 3 seconds for real-time feel
+    // Auto-refresh messages every 8 seconds (menos frequente)
     const interval = setInterval(() => {
       fetchMessages();
       fetchOnlineUsers();
-    }, 3000);
+    }, 8000);
     return () => clearInterval(interval);
   }, []);
 
@@ -148,7 +165,8 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
         await fetchMessages();
         
         // Force scroll after sending a message
-        setTimeout(() => scrollToBottom(), 100);
+        setIsUserScrolling(false);
+        setTimeout(() => scrollToBottom(), 200);
         
         toast({
           title: replyingTo ? "Resposta enviada" : "Mensagem enviada",
@@ -294,7 +312,11 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
       </div>
 
       {/* Mensagens */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-2">
+      <div 
+        ref={messagesContainerRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto p-4 space-y-2 relative"
+      >
         {loading ? (
           <div className="text-center text-gray-400 py-8">
             Carregando mensagens...
@@ -455,6 +477,20 @@ const GeneralChannel = ({ user }: GeneralChannelProps) => {
           ))
         )}
         <div ref={messagesEndRef} />
+        
+        {/* Indicador de novas mensagens */}
+        {hasNewMessages && isUserScrolling && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10">
+            <Button
+              onClick={scrollToBottomAndClearNotification}
+              className="bg-military-gold hover:bg-military-gold/80 text-black font-medium shadow-lg"
+              size="sm"
+            >
+              <MessageSquare size={16} className="mr-2" />
+              Novas mensagens ↓
+            </Button>
+          </div>
+        )}
       </div>
 
       {/* Input de Nova Mensagem */}
